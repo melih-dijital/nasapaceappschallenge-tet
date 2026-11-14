@@ -13,6 +13,7 @@ import {
 import { STATE_IDS } from '@/core/types'
 import { EarthLinkPanel } from '@/ui/components/EarthLinkPanel'
 import { EmptyState } from '@/ui/components/EmptyState'
+import { GroundStationPanel } from '@/ui/components/GroundStationPanel'
 import { SectionCard } from '@/ui/components/SectionCard'
 import { SeverityIcon } from '@/ui/components/SeverityIcon'
 import { EarthDelayBadge, StatusBadge } from '@/ui/components/StatusBadge'
@@ -208,9 +209,10 @@ export function GroundPage() {
           </SectionCard>
         </div>
 
-        {/* Sağ: Tam Earth Link Kontrol & Kuyruk Paneli */}
+        {/* Sağ: Tam Earth Link Kontrol & Kuyruk Paneli + İsteğe Bağlı Ground Station WS */}
         <div className="space-y-4 lg:col-span-5">
           <EarthLinkPanel />
+          <GroundStationPanel />
           <div className="rounded-lg border border-border/60 bg-card/50 p-3 text-[11px] text-muted-foreground">
             Crew directory on ground manifest: {CREW_PROFILES.map((c) => c.code).join(' · ')}
           </div>

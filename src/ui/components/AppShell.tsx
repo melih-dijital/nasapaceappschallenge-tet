@@ -1,6 +1,6 @@
 // FAZ 9 §3.3 — AppShell: Üst çubuk (Mission Clock, Senaryo, Hız, Play/Pause/Reset, Bookmark, Dil, Earth Link),
 // Kişi seçici (4 astronot + durum halkası + aktif uyarı sayısı) ve Sol ince navigasyon.
-import type { ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import {
   Activity,
   Bell,
@@ -14,6 +14,8 @@ import {
   Radio,
   RotateCcw,
   ShieldCheck,
+  Wifi,
+  WifiOff,
 } from 'lucide-react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
@@ -34,6 +36,7 @@ import {
   actions,
   CREW_PROFILES,
   DEMO_MAIN_BOOKMARKS,
+  isDemoModeQuery,
   selectActiveAlerts,
   selectCriticalActNowAlerts,
   selectHighestSeverity,
@@ -85,6 +88,23 @@ export function AppShell({ children }: { children: ReactNode }) {
   const earthConfig = useEarthLinkStore((s) => s.config)
   const roundTripMin = useEarthLinkStore((s) => s.roundTripMin)
   const pendingReplyCount = useEarthLinkStore((s) => s.pendingReplyCount)
+  const storeDemoMode = useSessionStore((s) => s.demoMode)
+  const demoMode = storeDemoMode || isDemoModeQuery(location.search)
+
+  const [isOnline, setIsOnline] = useState<boolean>(() =>
+    typeof navigator !== 'undefined' ? navigator.onLine : true,
+  )
+
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true)
+    const handleOffline = () => setIsOnline(false)
+    window.addEventListener('online', handleOnline)
+    window.addEventListener('offline', handleOffline)
+    return () => {
+      window.removeEventListener('online', handleOnline)
+      window.removeEventListener('offline', handleOffline)
+    }
+  }, [])
 
   const totalActiveAlerts = selectActiveAlerts({ alerts }).length
   const criticalActNowAlerts = selectCriticalActNowAlerts({ alerts })
@@ -315,8 +335,40 @@ export function AppShell({ children }: { children: ReactNode }) {
             )}
           </div>
 
-          {/* Sağ: Earth Link Rozeti + Dil Değiştirici */}
+          {/* Sağ: Bağlantı Rozeti + Demo Rozeti + Earth Link Rozeti + Dil Değiştirici */}
           <div className="flex items-center gap-2">
+            {/* Tarayıcı Ağ Bağlantısı Rozeti (navigator.onLine, bilgi amaçlı) */}
+            <div
+              role="status"
+              data-testid="network-connection-badge"
+              data-online={String(isOnline)}
+              title={t('network.badge.title')}
+              className={cn(
+                'flex items-center gap-1.5 rounded-lg border px-2 py-1 font-mono text-[11px] font-semibold',
+                isOnline
+                  ? 'border-primary/40 bg-primary/10 text-primary'
+                  : 'border-status-warning/60 bg-status-warning/15 text-status-warning',
+              )}
+            >
+              {isOnline ? (
+                <Wifi aria-hidden="true" className="size-3.5 shrink-0" />
+              ) : (
+                <WifiOff aria-hidden="true" className="size-3.5 shrink-0" />
+              )}
+              <span>
+                {isOnline ? t('network.badge.online') : t('network.badge.offline')}
+              </span>
+            </div>
+
+            {demoMode && (
+              <span
+                data-testid="demo-mode-badge"
+                className="rounded-lg border border-status-info/50 bg-status-info/15 px-2 py-1 font-mono text-[11px] font-semibold text-status-info"
+              >
+                {t('demo.modeBadge')}
+              </span>
+            )}
+
             {/* Earth Link Rozeti */}
             <div
               data-testid="earth-link-badge"
