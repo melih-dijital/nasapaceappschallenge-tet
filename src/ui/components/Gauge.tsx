@@ -3,7 +3,8 @@ import type { Severity } from '@/core/types'
 import { cn } from '@/lib/utils'
 import { useT } from '@/ui/i18n'
 import { ProvenanceTag } from './ProvenanceTag'
-import { StatusBadge, type DisplaySeverity } from './StatusBadge'
+import type { DisplaySeverity } from './SeverityIcon'
+import { StatusBadge } from './StatusBadge'
 
 /**
  * [0, 1] aralığındaki oranı derece cinsinden gösterge açısına dönüştürür.
