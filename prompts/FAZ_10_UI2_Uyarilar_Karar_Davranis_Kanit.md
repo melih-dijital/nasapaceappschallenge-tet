@@ -38,7 +38,7 @@ Gecikme-bilinçli triyajı, açıklanabilir uyarıları, eylem kartlarını, gö
 ### 3.4 Kanıt sayfası (`/evidence`) — şeffaflık hero'su
 - Tüm `EvidenceEntry` tablosu: id, değer+birim, tür (`ProvenanceTag`), kaynak başlığı/URL (yeni sekmede, `rel="noopener noreferrer"`), `verified` ✓/⚠, not; filtre (tür, doğrulanmamış), arama, sıralama. "Where used" sütunu: bu id'yi kullanan bileşen/modül listesi (`scripts/build-evidence.ts` ile `usedBy` çıkarmak için kod taraması **istemiyoruz**; bunun yerine Faz 1 registry'ye `registerUsage(id, 'moduleName')` çağrılarıyla çalışma zamanında toplama eklenmiş olabilir — yoksa bu sütunu **atla** ve §14'e yaz).
 - Üstte özet kartlar: "N thresholds · X NASA standard · Y NASA HRP · Z peer-reviewed · W demo parameters (unverified)". **Dürüstlük metni:** "Parameters labeled DEMO are illustrative; they are not NASA medical limits."
-- Radyasyon limitleri için ayrıntı kartı: 600 mSv (kariyer), 250 mSv (SPE), ISS 0.2–0.5 mSv/gün; kaynak bağlantıları.
+- Radyasyon limitleri ve hedefleri için ayrıntı kartı: 600 mSv (kariyer), 250 mSv ("design reference SPE protection target"; kişisel olay-başı limit değil), ISS 0.2–0.5 mSv/gün; kaynak bağlantıları.
 - Kalibrasyon provenance: simülatör kalibrasyon md'lerinden gelen metrikler listesi (`getCalibrationProvenance`).
 
 ### 3.5 Doğrulama sayfası (`/validation`)

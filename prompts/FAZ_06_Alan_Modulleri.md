@@ -28,7 +28,7 @@ interface EngineModule { name:string; process(ctx:EngineContext): ModuleReport[]
   - `SUSPECTED`: `rateRatio ≥ rad.spe.detect.ratio` **veya** `protonFluxPfu ≥ noaa.s1.proton_flux.pfu` (Evidence; doğrulanmamışsa UI etiketi) en az 1 kare.
   - `CONFIRMED`: koşul `rad.spe.detect.minFrames` ardışık kare sürdü.
   - `DECAYING`: oran `< rad.spe.decay.ratio × baselineRate` olana kadar; `speDoseMsv` olay süresince integre; `IDLE`'e dönüşte olay özeti üret (`SpeSummary {startT,endT,peakRatio,doseMsv,fractionOfSpeLimit}`).
-  - `speFractionOfLimit = speDoseMsv / rad.spe.limit.msv` → ≥ 0.5 WARNING, ≥ 0.8 CRITICAL (bu iki oran Faz 1'de DEMO parametre olarak eklendi: `rad.spe.warn.fraction`, `rad.spe.critical.fraction`).
+  - `speFractionOfLimit = speDoseMsv / rad.spe.limit.msv` — alan adı korunur; anlamı: olay dozunun 250 mSv **"design reference SPE protection target"**'a oranı (kişisel olay-başı limit DEĞİL; `SpeSummary.fractionOfSpeLimit` aynı orandır; metinlerde "limit" denmez) → ≥ 0.5 WARNING, ≥ 0.8 CRITICAL (bu iki oran Faz 1'de DEMO parametre olarak eklendi: `rad.spe.warn.fraction`, `rad.spe.critical.fraction`).
 - **L1/L4 bağlantısı:** `CONFIRMED` iken `radiation_event` durumu `score=1`, severity `CRITICAL` (tek istisna: durum çıkarımı CRITICAL üretebilen yol), `timeToHarmMin = earth.timeToHarmMin.radiation_event`; `SUSPECTED` iken ADVISORY/WARNING. Kariyer doz yaklaşımı L1 kancasından (`rad.career.warn/critical.fraction`).
 - **Ortam farkı:** beklenen hız ortam başına (Evidence/kalibrasyon); ortam değişince uyarı üretmez, baseline bin'i değişir (Faz 4).
 - **Dürüstlük:** `provenance.anyUnverified` — GCR tasarım referansı gibi doğrulanmamış değer kullanılırsa true.

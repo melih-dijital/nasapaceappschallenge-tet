@@ -16,7 +16,7 @@ owner: Kişi B                           # kim doğruladı
 | evidenceId | metric | value | unit | status | scope | note |
 |---|---|---|---|---|---|---|
 | rad.career.limit.msv | career_effective_dose | 600 | mSv | VERIFIED | tüm astronotlar, cinsiyet/yaş bağımsız | kariyer boyu etkin doz üst sınırı |
-| rad.spe.limit.msv | spe_effective_dose | 250 | mSv | VERIFIED | güneş partikül olayı başına | |
+| rad.spe.limit.msv | spe_effective_dose | 250 | mSv | PARTIAL | tasarım referansı SPE (Ekim 1989 olaylarının toplamı) için mürettebat koruma hedefi; kişisel olay-başı limit değil | tasarım referansı SPE koruma hedefi, kişisel olay-başı limit değil; 30 günlük kan yapıcı organ limiti (mGy-Eq) doğrulanmadı |
 
 ## Sınırlamalar / dikkat
 - Değer tasarım referansı mı, bireysel limit mi? Çelişen kaynak var mı?
