@@ -1,4 +1,5 @@
 // Web Worker giriş noktası (FAZ_03 §3.4). Gerçek setInterval yalnızca burada enjekte edilir.
+import '../core/schema/jitless'
 import { DexieFrameStore } from '../store/dexieFrameStore'
 import type { WorkerToUiMessage } from './protocol'
 import { createWorkerHandler } from './workerHandler'
@@ -23,6 +24,12 @@ const handler = createWorkerHandler({
   scheduler: {
     setInterval: (cb, ms) => globalThis.setInterval(cb, ms),
     clearInterval: (id) => globalThis.clearInterval(id),
+  },
+  // FAZ_11 §3.3: yalnızca `INIT {source:'ws'}` seçilirse kullanılır (varsayılan yerel simülatör).
+  ...(typeof globalThis.WebSocket === 'function' ? { webSocket: globalThis.WebSocket } : {}),
+  timers: {
+    setTimeout: (cb, ms) => globalThis.setTimeout(cb, ms),
+    clearTimeout: (id) => globalThis.clearTimeout(id as number),
   },
 })
 

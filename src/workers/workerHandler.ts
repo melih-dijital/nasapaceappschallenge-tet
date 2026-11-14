@@ -2,8 +2,17 @@
 // Math.random ve Date.now yok.
 import { createDefaultEngine, extractChartFrames, type Engine, type EngineOutput } from '../core/pipeline'
 import { MemoryFrameStore, type FrameStore, type StorageWarning } from '../core/storage'
-import { InProcessSimSource, type IntervalScheduler } from '../core/telemetry'
+import {
+  InProcessSimSource,
+  WebSocketSource,
+  type IntervalScheduler,
+  type TelemetrySource,
+  type TimeoutScheduler,
+  type WebSocketConstructor,
+} from '../core/telemetry'
+import type { SourceStatus } from '../core/types'
 import { getScenario } from '../sim/scenarios'
+import { Simulator } from '../sim/simulator'
 import type { EngineOutputLite, UiToWorkerMessage, WorkerToUiMessage } from './protocol'
 import { parseUiToWorkerMessage } from './protocolSchema'
 
@@ -21,6 +30,16 @@ export interface WorkerHandlerDeps<THandle = unknown> {
   scheduler: IntervalScheduler<THandle>
   frameStore?: SessionInitStore
   tickMs?: number
+  /** FAZ_11 §3.3: INIT {source:'ws'} için enjekte edilen WebSocket kurucusu ve zamanlayıcı (yoksa yerel kaynak). */
+  webSocket?: WebSocketConstructor
+  timers?: TimeoutScheduler
+}
+
+type ActiveSource = TelemetrySource & { getStatus(): SourceStatus; close?(): void }
+
+interface SourceChoice {
+  source?: 'local' | 'ws' | undefined
+  wsUrl?: string | undefined
 }
 
 export interface WorkerHandler {
@@ -50,7 +69,9 @@ export function createWorkerHandler<THandle = unknown>(
   const store: SessionInitStore = deps.frameStore ?? new MemoryFrameStore()
   const tickMs = deps.tickMs ?? DEFAULT_TICK_MS
 
-  let source: InProcessSimSource<THandle> | null = null
+  let source: ActiveSource | null = null
+  // ws modunda mürettebat profili/görev süresi yerelde aynı senaryo+seed'den türetilir (radyasyon modülü için).
+  let metaRef: { sim: Simulator } | null = null
   let engine: Engine | null = null
   let unsubFrames: (() => void) | null = null
   let unsubStatus: (() => void) | null = null
@@ -58,24 +79,62 @@ export function createWorkerHandler<THandle = unknown>(
 
   const detachSource = (): void => {
     source?.pause()
+    source?.close?.()
     unsubFrames?.()
     unsubStatus?.()
     unsubFrames = null
     unsubStatus = null
   }
 
-  const initPipeline = (scenarioId: string, seed: number | undefined, speed: number): void => {
-    detachSource()
-    // Senaryo varlığını doğrula (yoksa açık hata)
-    getScenario(scenarioId)
-
-    const currentSource = new InProcessSimSource({
+  const createLocal = (scenarioId: string, seed: number | undefined, speed: number): InProcessSimSource<THandle> =>
+    new InProcessSimSource({
       scheduler: deps.scheduler,
       scenarioId,
       ...(seed !== undefined ? { seed } : {}),
       speed,
       tickMs,
     })
+
+  const createSource = (
+    scenarioId: string,
+    seed: number | undefined,
+    speed: number,
+    choice: SourceChoice,
+  ): { src: ActiveSource; crewSim: () => Simulator } => {
+    if (choice.source === 'ws') {
+      if (choice.wsUrl && deps.webSocket && deps.timers) {
+        const meta = { sim: new Simulator(getScenario(scenarioId), seed !== undefined ? { seed } : {}) }
+        metaRef = meta
+        const ws = new WebSocketSource({
+          url: choice.wsUrl,
+          WebSocket: deps.webSocket,
+          timers: deps.timers,
+          scenarioId,
+          ...(seed !== undefined ? { seed } : {}),
+          speed,
+          fallbackToLocal: true,
+          createLocalSource: (req) => createLocal(req.scenarioId, req.seed, req.speed),
+          onProtocolError: (message) => deps.postMessage({ type: 'ERROR', code: 'WS_PROTOCOL', message }),
+        })
+        return { src: ws, crewSim: () => meta.sim }
+      }
+      deps.postMessage({
+        type: 'ERROR',
+        code: 'WS_UNAVAILABLE',
+        message: choice.wsUrl ? 'WebSocket bu ortamda yok; yerel simülatör kullanılıyor' : 'wsUrl verilmedi; yerel simülatör kullanılıyor',
+      })
+    }
+    metaRef = null
+    const local = createLocal(scenarioId, seed, speed)
+    return { src: local, crewSim: () => local.getSimulator() }
+  }
+
+  const initPipeline = (scenarioId: string, seed: number | undefined, speed: number, choice: SourceChoice = {}): void => {
+    detachSource()
+    // Senaryo varlığını doğrula (yoksa açık hata)
+    getScenario(scenarioId)
+
+    const { src: currentSource, crewSim } = createSource(scenarioId, seed, speed, choice)
     const currentEngine = createDefaultEngine({
       persist: store,
       onPersistError: (err) => {
@@ -86,11 +145,10 @@ export function createWorkerHandler<THandle = unknown>(
       },
       // Radyasyon modülü: o anki senaryonun mürettebat kariyer dozu ve görev süresi (SET_SCENARIO sonrası da güncel).
       priorCareerDoseMsv: (crewId) =>
-        currentSource
-          .getSimulator()
+        crewSim()
           .getCrew()
           .find((c) => c.id === crewId)?.priorCareerDoseMsv,
-      missionDays: () => currentSource.getSimulator().scenario.durationDays,
+      missionDays: () => crewSim().scenario.durationDays,
     })
 
     if (store.initSession) {
@@ -139,7 +197,7 @@ export function createWorkerHandler<THandle = unknown>(
   const dispatch = (msg: UiToWorkerMessage): void => {
     switch (msg.type) {
       case 'INIT': {
-        initPipeline(msg.scenarioId, msg.seed, msg.speed)
+        initPipeline(msg.scenarioId, msg.seed, msg.speed, { source: msg.source, wsUrl: msg.wsUrl })
         deps.postMessage({ type: 'READY' })
         if (source && engine) {
           deps.postMessage({ type: 'STATUS', status: source.getStatus() })
@@ -179,7 +237,8 @@ export function createWorkerHandler<THandle = unknown>(
         if (!source || !engine) {
           initPipeline(msg.id, msg.seed, 1)
         } else {
-          getScenario(msg.id)
+          const scenario = getScenario(msg.id)
+          if (metaRef) metaRef.sim = new Simulator(scenario, msg.seed !== undefined ? { seed: msg.seed } : {})
           source.setScenario(msg.id, msg.seed)
           engine.reset()
           void store.clear().catch(() => undefined)
