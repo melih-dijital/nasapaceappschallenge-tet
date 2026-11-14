@@ -32,7 +32,8 @@ import type {
 import { Gauge } from './Gauge'
 import { ProvenanceTag } from './ProvenanceTag'
 import { SectionCard } from './SectionCard'
-import { StatusBadge, type DisplaySeverity } from './StatusBadge'
+import type { DisplaySeverity } from './SeverityIcon'
+import { StatusBadge } from './StatusBadge'
 
 // jsdom ortamında ResizeObserver yoksa güvenli yedek tanımla (konsol hatası olmaması için)
 if (typeof globalThis !== 'undefined' && typeof globalThis.ResizeObserver === 'undefined') {

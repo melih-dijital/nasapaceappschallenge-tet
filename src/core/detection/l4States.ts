@@ -22,6 +22,11 @@ export interface ExtraStateInput {
   score: number
   confidence: number
   contributors: StateContributor[]
+  /**
+   * true ise bu durum modülce belirlenir ve metrik tabanlı L4 tahmini yok sayılır
+   * (ör. `radiation_event` = SPE durum makinesi; tek metrikli doz-hızı gürültüsü uyarı üretmesin).
+   */
+  replace?: boolean
 }
 
 export interface StateInputs {
@@ -45,6 +50,18 @@ export function estimateState(
   inputs: StateInputs,
   params: DetectionParams,
 ): StateEstimate | null {
+  const replaced = inputs.extra?.[state]
+  if (replaced?.replace) {
+    return {
+      crewId: inputs.crewId,
+      t: inputs.t,
+      state,
+      score: replaced.score,
+      confidence: replaced.confidence,
+      contributors: [...replaced.contributors],
+    }
+  }
+
   const weights = params.weights[state]
   let totalW = 0
   let presentW = 0

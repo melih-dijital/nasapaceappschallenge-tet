@@ -33,13 +33,8 @@ export interface ZSnapshot {
   baselineSigma: number | null
 }
 
-/** Faz 6 modül raporları için genişletilebilir yer tutucu. */
-export interface ModuleReport {
-  kind: string
-  crewId: string
-  t: SimTimeMs
-  payload: unknown
-}
+/** Faz 6 modül raporları: sözleşme `core/modules/types.ts`'de. */
+export type { ModuleReport } from '../modules/types'
 
 /** Faz 7 karar/planlama çıktısı için genişletilebilir yer tutucu. */
 export interface DecisionSnapshot {
@@ -61,7 +56,7 @@ export interface EngineOutput {
   baselines?: ZSnapshot[]
   states?: StateEstimate[]
   alertEvents?: AlertEvent[]
-  moduleReports?: ModuleReport[]
+  moduleReports?: import('../modules/types').ModuleReport[]
   decisions?: DecisionSnapshot[]
 }
 
@@ -92,6 +87,8 @@ export interface EngineStage {
   listAlerts?(t: SimTimeMs): Alert[]
   /** Kullanıcı onayı (ACK_ALERT). Uyarı yoksa/ACTIVE değilse null. */
   ackAlert?(alertId: string, t: SimTimeMs): AlertEvent | null
+  /** Modül aşaması: kişi başına son modül raporları (Engine.snapshot().modules). */
+  snapshotModules?(): Record<CrewId, import('../modules/types').ModuleReport[]>
 }
 
 /** 1. Aşama: Biçim (Zod), SpO2 0–100 normalize, makullük, monoton zaman, kopya bastırma ve stale izleme. */
@@ -193,16 +190,8 @@ export class BaselineStage implements EngineStage {
   }
 }
 
-/** 4. Aşama (Faz 6 yer tutucusu): Radyasyon, uyku, kardiyo/kemik ve davranış modülleri (backfill atlanır). */
-export class ModulesStage implements EngineStage {
-  readonly name = 'ModulesStage'
-  readonly runOnBackfill = false
-
-  process(ctx: EngineContext): void {
-    if (ctx.liveFrames.length === 0) return
-    ctx.output.moduleReports ??= []
-  }
-}
+/** 4. Aşama: alan modülleri (Faz 6; şimdilik radyasyon) — uygulama `core/modules`'da. */
+export { ModulesStage } from '../modules/modulesStage'
 
 /** 5. Aşama: L1–L4 algılama + AlertManager (backfill atlanır) — uygulama `core/detection`'da (Faz 5). */
 export { DetectionStage } from '../detection/detectionStage'

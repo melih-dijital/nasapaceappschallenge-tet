@@ -4,7 +4,7 @@ import type { BaselineEngine } from '../baseline'
 import { registry, type EvidenceRegistry } from '../evidence/registry'
 import type { PlausibleRanges } from '../ingest'
 import type { PersistPort } from '../storage'
-import type { AlertEvent, SimTimeMs } from '../types'
+import type { AlertEvent, CrewId, SimTimeMs } from '../types'
 import { EngineBuffers } from './buffer'
 import {
   BaselineStage,
@@ -30,6 +30,10 @@ export interface DefaultEngineOptions {
   persist?: PersistPort
   plausibleRanges?: PlausibleRanges
   onPersistError?: (err: unknown, simT: SimTimeMs) => void
+  /** Radyasyon modülü: CrewProfile.priorCareerDoseMsv (yoksa 0). */
+  priorCareerDoseMsv?: (crewId: CrewId) => number | undefined
+  /** Radyasyon projeksiyonu için senaryo görev süresi (gün) veya onu veren fonksiyon; yoksa Evidence varsayımı. */
+  missionDays?: number | (() => number | undefined)
 }
 
 export class Engine {
@@ -114,6 +118,9 @@ export class Engine {
    * (FAZ_05 §3.5 `snapshot().alerts`). UI `selectActiveAlerts` RESOLVED'ı zaten süzer.
    */
   snapshot(): EngineSnapshot {
+    const modules = Object.assign({}, ...this.stages.map((stage) => stage.snapshotModules?.() ?? {})) as NonNullable<
+      EngineSnapshot['modules']
+    >
     return {
       t: this.simT,
       latest: this.buffers.getLatestSnapshot(),
@@ -121,6 +128,7 @@ export class Engine {
       states: this.previousOutput?.states ?? [],
       cards: [],
       dataQualityCount: this.dataQualityCount,
+      modules,
     }
   }
 
@@ -154,7 +162,11 @@ export function createDefaultEngine(opts: DefaultEngineOptions = {}): Engine {
         evidence,
         ...(opts.baselineEngine ? { baselineEngine: opts.baselineEngine } : {}),
       }),
-      new ModulesStage(),
+      new ModulesStage({
+        evidence,
+        ...(opts.priorCareerDoseMsv ? { priorCareerDoseMsv: opts.priorCareerDoseMsv } : {}),
+        ...(opts.missionDays !== undefined ? { missionDays: opts.missionDays } : {}),
+      }),
       new DetectionStage(),
       new DecisionStage(),
       new PersistStage(opts.persist, opts.onPersistError),

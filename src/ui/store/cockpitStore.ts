@@ -192,7 +192,7 @@ function buildInitialTelemetryState(
     for (const metricId of Object.keys(METRIC_META) as MetricId[]) {
       const baseParam = crew.baselines[metricId]
       const minScaleKey = `minScale.${metricId}` as Parameters<typeof getNumber>[0]
-      let minScaleVal = 1
+      let minScaleVal: number
       try {
         minScaleVal = getNumber(minScaleKey)
       } catch {

@@ -14,12 +14,17 @@ describe('App (jsdom ortamı)', () => {
   })
 
   it.each(['Evidence', 'Validation', 'Ground', 'Cockpit'])(
-    '%s rotası gezilebilir ve bant her sayfada kalır',
-    (label) => {
+    '%s rotası gezilebilir (lazy sayfalar dahil) ve bant her sayfada kalır',
+    async (label) => {
       render(<App />)
       fireEvent.click(screen.getByRole('link', { name: label }))
-      expect(screen.getByRole('heading', { level: 1, name: label })).toBeInTheDocument()
+      expect(await screen.findByRole('heading', { level: 1, name: label })).toBeInTheDocument()
       expect(screen.getByRole('note')).toHaveTextContent(DISCLAIMER)
     },
   )
+
+  it('bağlantı rozeti her sayfada görünür', () => {
+    render(<App />)
+    expect(screen.getByText(/no network dependency|fully operational/)).toBeInTheDocument()
+  })
 })

@@ -2,6 +2,7 @@
 // Asgari tip şekilleri: Faz 3/7 alan EKLEYEBİLİR, mevcut alanı değiştiremez.
 // Faz 3 worker girişinde bu birleşimleri Zod ile doğrular.
 import type { DataQualityEvent } from '../core/ingest'
+import type { ModuleReport } from '../core/modules/types'
 import type { EngineFault, ZSnapshot } from '../core/pipeline'
 import type { StorageWarning } from '../core/storage'
 import type {
@@ -35,6 +36,8 @@ export interface EngineOutputLite {
   dataQuality?: DataQualityEvent[]
   faults?: EngineFault[]
   storageWarning?: StorageWarning
+  /** Faz 6: bu batch'in son modül raporları (kişi başına). */
+  moduleReports?: ModuleReport[]
 }
 
 export interface EngineSnapshot {
@@ -45,6 +48,8 @@ export interface EngineSnapshot {
   states: StateEstimate[]
   cards: ActionCard[]
   dataQualityCount: number
+  /** Faz 6: kişi başına son alan modülü raporları (radyasyon paneli vb.). */
+  modules?: Record<CrewId, ModuleReport[]>
 }
 
 export const latestKey = (crewId: CrewId, metric: MetricId): string => `${crewId}|${metric}`
