@@ -1,6 +1,7 @@
 // Senaryo entegrasyonu (FAZ_05 §3.7 hızlı sürüm; tam ölçüm Faz 8 tests/validation/).
 import { describe, expect, it } from 'vitest'
 import { BaselineEngine } from '@/core/baseline'
+import { classify } from '@/core/decision/triage'
 import { DetectionStage } from '@/core/detection'
 import { registry } from '@/core/evidence/registry'
 import { createDefaultEngine } from '@/core/pipeline'
@@ -49,14 +50,46 @@ describe('senaryo entegrasyonu', () => {
     },
   )
 
-  // Beklenti `radiation_event ≥ WARNING` + `mustBeEarthClass: ACT_NOW`: SPE durum makinesi Faz 6, nihai
-  // gecikme-bilinçli triyaj (ACT_NOW) Faz 7'de. Faz 5'te L4 radiation_event CRITICAL üretse de
-  // earthDelayClass bilerek varsayılan CAN_WAIT_FOR_EARTH kalır → Faz 6'da etkinleştirilecek (FAZ_05 §3.7).
-  it.skip('solar_particle_event: radiation_event ≥ WARNING ve ACT_NOW, +60 sim-dk içinde (Faz 6/7)', () => {
-    const { events } = runScenario('solar_particle_event')
-    for (const exp of getScenario('solar_particle_event').expected) {
-      expect(detectedInWindow(events, exp)).toBe(true)
+  // Faz 6 radyasyon modülüyle etkinleştirildi (FAZ_05 §3.7 / FAZ_06 §4.6). ACT_NOW: DecisionStage henüz
+  // pipeline'a bağlı değil (Faz 7 §3.5); sınıf Faz 7 `classify()` ile senaryonun Earth Link ayarında doğrulanır.
+  it('solar_particle_event: CONFIRMED ≤ 60 sim-dk; radiation_event ≥ WARNING pencerede; triyaj ACT_NOW', () => {
+    const scenario = getScenario('solar_particle_event')
+    const spe = scenario.events.find((e) => e.kind === 'SPE')!
+    const sim = new Simulator(scenario)
+    const engine = createDefaultEngine({ missionDays: scenario.durationDays })
+    engine.ingest(sim.backfill(), 0)
+
+    const step = 15 * 60 * 1000
+    const events: AlertEvent[] = []
+    const confirmedAt = new Map<string, number>()
+    for (let t = step; t <= spe.fromT + 4 * MS_PER_HOUR; t += step) {
+      events.push(...(engine.ingest(sim.advanceTo(t), t).alertEvents ?? []))
+      for (const [crewId, reports] of Object.entries(engine.snapshot().modules ?? {})) {
+        const r = reports[0]
+        if (r && r.payload.speState === 'CONFIRMED' && !confirmedAt.has(crewId)) confirmedAt.set(crewId, r.t)
+      }
     }
+
+    expect([...confirmedAt.keys()].sort()).toEqual(['cdr', 'eng', 'md', 'sci'])
+    for (const t of confirmedAt.values()) {
+      expect(t).toBeGreaterThanOrEqual(spe.fromT)
+      expect(t - spe.fromT).toBeLessThanOrEqual(60 * 60 * 1000)
+    }
+
+    const link = { ...scenario.earthLinkPreset!, blackout: scenario.earthLinkPreset?.blackout ?? false }
+    for (const exp of scenario.expected) {
+      expect(detectedInWindow(events, exp), exp.id).toBe(true)
+      const hits = events.filter(
+        (e) =>
+          e.alert.state === 'radiation_event' &&
+          e.t >= exp.fromT &&
+          e.t <= exp.toT &&
+          (e.alert.severity === 'WARNING' || e.alert.severity === 'CRITICAL'),
+      )
+      expect(new Set(hits.map((e) => e.alert.crewId)).size).toBe(scenario.crewCount)
+      for (const e of hits) expect(classify(e.alert, link).cls).toBe(exp.mustBeEarthClass)
+    }
+    expect(criticalOnlyViaL1OrRadiation(events)).toBe(true)
   })
 
   it('new_crew_member (düşük baseline güveni): WARNING+ uyarı yok, düşük güven işaretli', () => {

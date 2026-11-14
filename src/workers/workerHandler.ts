@@ -36,6 +36,7 @@ function toOutputLite(output: EngineOutput, totalDataQualityCount: number, warni
     ...(output.baselines && output.baselines.length > 0 ? { baselines: output.baselines } : {}),
     ...(output.alertEvents ? { alertEvents: output.alertEvents } : {}),
     ...(output.states ? { states: output.states } : {}),
+    ...(output.moduleReports && output.moduleReports.length > 0 ? { moduleReports: output.moduleReports } : {}),
     dataQualityCount: totalDataQualityCount,
     ...(output.dataQuality.length > 0 ? { dataQuality: output.dataQuality } : {}),
     ...(output.faults.length > 0 ? { faults: output.faults } : {}),
@@ -68,6 +69,13 @@ export function createWorkerHandler<THandle = unknown>(
     // Senaryo varlığını doğrula (yoksa açık hata)
     getScenario(scenarioId)
 
+    const currentSource = new InProcessSimSource({
+      scheduler: deps.scheduler,
+      scenarioId,
+      ...(seed !== undefined ? { seed } : {}),
+      speed,
+      tickMs,
+    })
     const currentEngine = createDefaultEngine({
       persist: store,
       onPersistError: (err) => {
@@ -76,13 +84,13 @@ export function createWorkerHandler<THandle = unknown>(
           message: err instanceof Error ? err.message : String(err),
         }
       },
-    })
-    const currentSource = new InProcessSimSource({
-      scheduler: deps.scheduler,
-      scenarioId,
-      ...(seed !== undefined ? { seed } : {}),
-      speed,
-      tickMs,
+      // Radyasyon modülü: o anki senaryonun mürettebat kariyer dozu ve görev süresi (SET_SCENARIO sonrası da güncel).
+      priorCareerDoseMsv: (crewId) =>
+        currentSource
+          .getSimulator()
+          .getCrew()
+          .find((c) => c.id === crewId)?.priorCareerDoseMsv,
+      missionDays: () => currentSource.getSimulator().scenario.durationDays,
     })
 
     if (store.initSession) {
