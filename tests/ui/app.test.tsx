@@ -27,8 +27,25 @@ describe('App (jsdom ortamı)', () => {
     },
   )
 
-  it('bağlantı rozeti her sayfada görünür', () => {
+  it('bağlantı rozeti tekil ve her sayfada görünür (FAZ 12: sağ alt kopya kaldırıldı)', () => {
     render(<App />)
-    expect(screen.getByText(/no network dependency|fully operational/)).toBeInTheDocument()
+    const badges = screen.getAllByTestId('network-connection-badge')
+    expect(badges).toHaveLength(1)
+    expect(badges[0]).toHaveTextContent(/no network dependency|fully operational/)
+  })
+
+  it('bilinmeyen rota: boş durum + kokpite dönüş bağlantısı', async () => {
+    window.history.pushState({}, '', '/no-such-view')
+    render(<App />)
+    expect(await screen.findByTestId('not-found')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Back to cockpit' })).toHaveAttribute('href', '/')
+    window.history.pushState({}, '', '/')
+  })
+
+  it('erişilebilirlik: içeriğe atla bağlantısı ana içeriğe gider', () => {
+    render(<App />)
+    const skip = screen.getByRole('link', { name: 'Skip to main content' })
+    expect(skip).toHaveAttribute('href', '#main-content')
+    expect(document.getElementById('main-content')).toHaveAttribute('tabindex', '-1')
   })
 })

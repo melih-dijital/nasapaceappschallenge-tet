@@ -34,7 +34,13 @@ let cleanup: (() => void) | null = null
 afterEach(() => {
   cleanup?.()
   cleanup = null
-  usePwaStore.setState({ online: true, demo: false, needRefresh: false, offlineReady: false, applyUpdate: () => undefined })
+  usePwaStore.setState({
+    online: true,
+    demo: false,
+    needRefresh: false,
+    offlineReady: false,
+    applyUpdate: () => undefined,
+  })
 })
 
 describe('PWA durumu', () => {
@@ -45,15 +51,16 @@ describe('PWA durumu', () => {
     expect(isDemoMode('')).toBe(false)
   })
 
-  it('rozet navigator.onLine değişimini izler: "Offline mode — fully operational"', () => {
+  it('store navigator.onLine değişimini izler (rozet AppShell üst çubuğunda; burada yalnızca istem)', () => {
     const env = fakeEnv(true)
     cleanup = initPwa({ search: '', ...env })
-    render(<PwaStatus />)
-    expect(screen.getByRole('status')).toHaveTextContent('Online · no network dependency')
+    const { container } = render(<PwaStatus />)
+    expect(container).toBeEmptyDOMElement()
+    expect(usePwaStore.getState().online).toBe(true)
     act(() => env.goOffline())
-    expect(screen.getByRole('status')).toHaveTextContent('Offline mode — fully operational')
+    expect(usePwaStore.getState().online).toBe(false)
     act(() => env.goOnline())
-    expect(screen.getByRole('status')).toHaveAttribute('data-online', 'true')
+    expect(usePwaStore.getState().online).toBe(true)
   })
 
   it('normal mod: yeni sürümde istem çıkar; Reload → updateSW(true); Later → kapanır', () => {
@@ -62,7 +69,9 @@ describe('PWA durumu', () => {
     render(<PwaStatus />)
     expect(screen.queryByRole('alertdialog')).toBeNull()
     act(() => env.fireNeedRefresh())
-    expect(screen.getByRole('alertdialog', { name: 'Update available' })).toBeInTheDocument()
+    expect(
+      screen.getByRole('alertdialog', { name: 'A new version is available.' }),
+    ).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'Reload' }))
     expect(env.updateSW).toHaveBeenCalledWith(true)
     expect(screen.queryByRole('alertdialog')).toBeNull()

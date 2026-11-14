@@ -20,7 +20,10 @@
   --status-info: oklch(0.72 0.15 245);
   --status-advisory: oklch(0.86 0.16 92);
   --status-warning: oklch(0.76 0.17 55);
-  --status-critical: oklch(0.66 0.23 25);
+  /* FAZ 12 kontrast AA (WCAG 2.x): kritik metin 0.66 → 0.72 (muted/rozet zeminlerinde ≥ 4.5:1);
+     dolu kritik bant zemini ayrı ve koyu: beyaz metinle 5.61:1 */
+  --status-critical: oklch(0.72 0.23 25);
+  --status-critical-strong: oklch(0.54 0.2 25);
 
   /* Boyut ölçeği (tipografi) */
   --text-2xs: 0.6875rem; /* 11px */
@@ -61,6 +64,24 @@
 
 .status-critical-pulse {
   animation: status-critical-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* FAZ 12 erişilebilirlik — klavye odak halkası: yalnızca klavye odağında, her etkileşimli öğede görünür */
+:where(a, button, [role='button'], [role='tab'], [role='switch'], [role='slider'], [role='checkbox'], input, select, textarea, summary, [tabindex]:not([tabindex='-1'])):focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+/* FAZ 12 Presenter Mode (?demo=1 / D): projeksiyonda okunabilirlik — rem tabanlı tüm metin %12.5 büyür;
+   piksel sabit küçük metinler (text-[10px]/[11px]) de en az 12/13 px olur. */
+html.presenter {
+  font-size: 112.5%;
+}
+html.presenter .text-\[10px\] {
+  font-size: 0.75rem;
+}
+html.presenter .text-\[11px\] {
+  font-size: 0.8125rem;
 }
 
 @media (prefers-reduced-motion: reduce) {

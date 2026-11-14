@@ -9,6 +9,7 @@ import {
   FileCheck2,
   Gauge as GaugeIcon,
   Globe,
+  Keyboard,
   Pause,
   Play,
   Radio,
@@ -40,6 +41,7 @@ import {
   selectActiveAlerts,
   selectCriticalActNowAlerts,
   selectHighestSeverity,
+  setPresenterHelpOpen,
   UI_SCENARIOS,
   useAlertStore,
   useEarthLinkStore,
@@ -49,6 +51,7 @@ import '@/ui/theme/tokens.css'
 import { AlertAudioToggle } from './AlertAudioMonitor'
 import { DisclaimerBar } from './DisclaimerBar'
 import { ErrorBoundary } from './ErrorBoundary'
+import { PresenterController } from './PresenterMode'
 import { SeverityIcon, type DisplaySeverity } from './SeverityIcon'
 
 const SPEED_PRESETS = [0.5, 1, 5, 20, 50] as const
@@ -127,7 +130,18 @@ export function AppShell({ children }: { children: ReactNode }) {
       : `${formatNumber(earthConfig.oneWayDelaySec / 60, 1)}m`
 
   return (
-    <div className="flex min-h-screen flex-col bg-background text-foreground">
+    <div
+      className="flex min-h-screen flex-col bg-background text-foreground"
+      data-presenter={demoMode ? 'true' : 'false'}
+    >
+      {/* Erişilebilirlik: klavye kullanıcısı için içeriğe atla bağlantısı (FAZ 12 §3.1) */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[60] focus:rounded-md focus:bg-primary focus:px-3 focus:py-2 focus:text-sm focus:font-semibold focus:text-primary-foreground"
+      >
+        {t('a11y.skipToContent')}
+      </a>
+      <PresenterController presenterOn={demoMode} />
       <DisclaimerBar />
 
       {/* Kalıcı CRITICAL + ACT_NOW Bandı (ACK ile iner, kapatılamaz) */}
@@ -135,7 +149,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <div
           role="alert"
           data-testid="critical-act-now-banner"
-          className="flex flex-wrap items-center justify-between gap-2 border-b border-status-critical bg-status-critical px-4 py-2 text-xs font-semibold text-white"
+          className="flex flex-wrap items-center justify-between gap-2 border-b border-status-critical bg-status-critical-strong px-4 py-2 text-xs font-semibold text-white"
         >
           <div className="flex items-center gap-2">
             <SeverityIcon severity="CRITICAL" />
@@ -361,12 +375,26 @@ export function AppShell({ children }: { children: ReactNode }) {
             </div>
 
             {demoMode && (
-              <span
-                data-testid="demo-mode-badge"
-                className="rounded-lg border border-status-info/50 bg-status-info/15 px-2 py-1 font-mono text-[11px] font-semibold text-status-info"
-              >
-                {t('demo.modeBadge')}
-              </span>
+              <div className="flex items-center gap-1">
+                <span
+                  data-testid="demo-mode-badge"
+                  className="rounded-lg border border-status-info/50 bg-status-info/15 px-2 py-1 font-mono text-[11px] font-semibold text-status-info"
+                >
+                  {t('demo.modeBadge')}
+                </span>
+                <Button
+                  type="button"
+                  size="xs"
+                  variant="outline"
+                  onClick={() => setPresenterHelpOpen(true)}
+                  aria-label={t('presenter.help.open')}
+                  title={t('presenter.help.open')}
+                  data-testid="presenter-help-btn"
+                >
+                  <Keyboard aria-hidden="true" className="size-3" />
+                  <span aria-hidden="true">?</span>
+                </Button>
+              </div>
             )}
 
             {/* Earth Link Rozeti */}
@@ -505,7 +533,12 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       {/* Gövde: Sol İnce Navigasyon + Sayfa İçeriği */}
       <div className="mx-auto flex w-full max-w-[1600px] flex-1 flex-col md:flex-row">
-        <aside className="shrink-0 border-b border-border/70 bg-sidebar md:w-48 md:border-r md:border-b-0">
+        <aside
+          className={cn(
+            'shrink-0 border-b border-border/70 bg-sidebar md:border-r md:border-b-0',
+            demoMode ? 'md:w-16' : 'md:w-48',
+          )}
+        >
           {/* Ana 4 rota (tests/ui/app.test.tsx ile %100 uyumlu: aria-label="Main", 4 bağlantı) */}
           <nav
             aria-label="Main"
@@ -518,6 +551,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                   key={item.to}
                   to={item.to}
                   end={item.to === '/'}
+                  title={demoMode ? t(item.labelKey) : undefined}
                   className={({ isActive }) =>
                     cn(
                       'flex items-center gap-2 rounded-lg px-2.5 py-2 text-xs font-medium whitespace-nowrap text-muted-foreground transition-colors hover:bg-muted hover:text-foreground',
@@ -526,7 +560,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                   }
                 >
                   <Icon aria-hidden="true" className="size-4 shrink-0" />
-                  <span>{t(item.labelKey)}</span>
+                  <span className={demoMode ? 'md:sr-only' : undefined}>{t(item.labelKey)}</span>
                 </NavLink>
               )
             })}
@@ -534,7 +568,12 @@ export function AppShell({ children }: { children: ReactNode }) {
 
           {/* Faz 10 Modül Rotaları (Alerts & Actions, Behavioral) */}
           <div className="border-t border-border/50 px-2 py-2">
-            <div className="mb-1 hidden px-2 font-mono text-[10px] tracking-wider text-muted-foreground uppercase md:block">
+            <div
+              className={cn(
+                'mb-1 hidden px-2 font-mono text-[10px] tracking-wider text-muted-foreground uppercase',
+                !demoMode && 'md:block',
+              )}
+            >
               {t('nav.modulesLabel')}
             </div>
             <nav
@@ -547,6 +586,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                   <NavLink
                     key={item.to}
                     to={item.to}
+                    title={demoMode ? t(item.labelKey) : undefined}
                     className={({ isActive }) =>
                       cn(
                         'flex items-center justify-between gap-2 rounded-lg px-2.5 py-2 text-xs font-medium whitespace-nowrap text-muted-foreground transition-colors hover:bg-muted hover:text-foreground',
@@ -556,7 +596,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                   >
                     <span className="flex items-center gap-2">
                       <Icon aria-hidden="true" className="size-4 shrink-0" />
-                      <span>{t(item.labelKey)}</span>
+                      <span className={demoMode ? 'md:sr-only' : undefined}>{t(item.labelKey)}</span>
                     </span>
                     {item.to === '/alerts' && totalActiveAlerts > 0 && (
                       <span className="rounded-full bg-status-critical/20 px-1.5 py-0.5 font-mono text-[10px] font-bold text-status-critical tabular-nums">
@@ -570,7 +610,9 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
         </aside>
 
-        <main className="min-w-0 flex-1 p-3 lg:p-4">{routedContent}</main>
+        <main id="main-content" tabIndex={-1} className="min-w-0 flex-1 p-3 outline-none lg:p-4">
+          {routedContent}
+        </main>
       </div>
     </div>
   )

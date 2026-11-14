@@ -1,49 +1,32 @@
-// Bağlantı rozeti + SW güncelleme istemi (FAZ_11 §3.1). Metinler şimdilik sabit İngilizce; Faz 9 i18n sözlüğüne
-// `pwa.*` anahtarlarıyla taşınabilir (data-i18n-key). Rozet yalnızca bilgi verir: uygulama ağa bağımlı değildir.
+// SW güncelleme istemi (FAZ_11 §3.1). Bağlantı rozeti FAZ 12'de tekilleştirildi: üst çubuktaki `AppShell`
+// `network-connection-badge` ("Offline mode — fully operational"). Sunum modunda (`?demo=1` / `D`) istem hiç çıkmaz.
 import { Button } from '@/components/ui/button'
+import { useT } from '@/ui/i18n'
 import { usePwaStore } from './pwaStore'
 
 export function PwaStatus() {
-  const online = usePwaStore((s) => s.online)
+  const { t } = useT()
   const demo = usePwaStore((s) => s.demo)
   const needRefresh = usePwaStore((s) => s.needRefresh)
   const applyUpdate = usePwaStore((s) => s.applyUpdate)
   const dismissUpdate = usePwaStore((s) => s.dismissUpdate)
 
+  if (!needRefresh || demo) return null
+
   return (
-    <div className="pointer-events-none fixed right-3 bottom-3 z-50 flex flex-col items-end gap-2">
-      {needRefresh && !demo && (
-        <div
-          role="alertdialog"
-          aria-label="Update available"
-          className="pointer-events-auto flex items-center gap-2 rounded-md border border-border bg-card px-3 py-2 text-xs shadow-md"
-        >
-          <span data-i18n-key="pwa.update.available">A new version is available.</span>
-          <Button size="sm" onClick={applyUpdate} data-i18n-key="pwa.update.reload">
-            Reload
-          </Button>
-          <Button size="sm" variant="ghost" onClick={dismissUpdate} data-i18n-key="pwa.update.later">
-            Later
-          </Button>
-        </div>
-      )}
+    <div className="fixed right-3 bottom-3 z-50">
       <div
-        role="status"
-        aria-live="polite"
-        data-online={online}
-        className="pointer-events-auto flex items-center gap-2 rounded-full border border-border bg-card/90 px-3 py-1 text-xs text-muted-foreground"
+        role="alertdialog"
+        aria-label={t('pwa.update.available')}
+        className="flex items-center gap-2 rounded-md border border-border bg-card px-3 py-2 text-xs shadow-md"
       >
-        <span
-          aria-hidden="true"
-          className={online ? 'size-2 rounded-full bg-status-info' : 'size-2 rounded-full bg-status-advisory'}
-        />
-        {online ? (
-          <span data-i18n-key="pwa.online">Online · no network dependency</span>
-        ) : (
-          <span data-i18n-key="pwa.offline" className="text-foreground">
-            Offline mode — fully operational
-          </span>
-        )}
+        <span>{t('pwa.update.available')}</span>
+        <Button size="sm" onClick={applyUpdate}>
+          {t('pwa.update.reload')}
+        </Button>
+        <Button size="sm" variant="ghost" onClick={dismissUpdate}>
+          {t('pwa.update.later')}
+        </Button>
       </div>
     </div>
   )
