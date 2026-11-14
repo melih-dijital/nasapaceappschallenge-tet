@@ -249,9 +249,14 @@ describe('DecisionStage birim ve motor entegrasyonu', () => {
       true,
     )
 
-    // Earth Link kuyruk + pending reply sayacı aktif
+    // Earth Link kuyruk + pending reply sayacı ve yerel öneri aynı anda aktif
     expect(speSnap!.earth.outbox.length).toBeGreaterThan(0)
     expect(speSnap!.earth.pending.length).toBeGreaterThan(0)
+    expect(
+      speSnap!.earth.pending.some(
+        (p) => p.remainingMs > 0 && p.localAdviceActionIds.includes('ACT_SHELTER'),
+      ),
+    ).toBe(true)
 
     // Gidiş-dönüş süresi (2*14 + 15 = 43 dk) + aktarım sonrası yer cevabı inbox'a ulaşır
     const afterRoundTripT = speEvent.fromT + minToMs(180)
