@@ -1,7 +1,8 @@
 // Engine boru hattı tipleri ve aşamaları (FAZ_03 §3.3).
 // Nihai sıra: Ingest → Buffer → Baseline → Modules → Detection → Decision → Persist.
 // t < 0 backfill çerçeveleri yalnızca Ingest → Buffer → Baseline → Persist aşamalarından geçer.
-import type { EvidenceRegistry } from '../evidence/registry'
+import { BaselineEngine } from '../baseline'
+import { registry as defaultRegistry, type EvidenceRegistry } from '../evidence/registry'
 import {
   DataQualityTracker,
   IngestNormalizer,
@@ -9,13 +10,26 @@ import {
   type PlausibleRanges,
 } from '../ingest'
 import type { PersistPort } from '../storage'
-import type { AlertEvent, SimTimeMs, StateEstimate, TelemetryFrame, ZResult } from '../types'
-import type { EngineBuffers } from './buffer'
+import type {
+  AlertEvent,
+  CrewId,
+  MetricId,
+  SimTimeMs,
+  StateEstimate,
+  TelemetryFrame,
+  ZResult,
+} from '../types'
+import { extractFrameMetrics, metricSeriesKey, type EngineBuffers } from './buffer'
 
 export interface ZSnapshot {
-  crewId: string
+  crewId: CrewId
+  metric: MetricId
   t: SimTimeMs
-  results: Partial<Record<string, ZResult>>
+  value: number
+  z: number
+  confidence: number
+  baselineMedian: number | null
+  baselineSigma: number | null
 }
 
 /** Faz 6 modül raporları için genişletilebilir yer tutucu. */
@@ -119,13 +133,58 @@ export class BufferStage implements EngineStage {
   }
 }
 
-/** 3. Aşama (Faz 4 yer tutucusu): Kayan pencere medyan/MAD baseline + drift koruması. */
+/** 3. Aşama: Kayan pencere medyan/MAD baseline + drift koruması (FAZ_04 §3.4). */
 export class BaselineStage implements EngineStage {
   readonly name = 'BaselineStage'
   readonly runOnBackfill = true
 
+  private readonly baselineEngine: BaselineEngine
+
+  constructor(opts: { evidence?: EvidenceRegistry; baselineEngine?: BaselineEngine } = {}) {
+    this.baselineEngine =
+      opts.baselineEngine ?? new BaselineEngine({ registry: opts.evidence ?? defaultRegistry })
+  }
+
+  getEngine(): BaselineEngine {
+    return this.baselineEngine
+  }
+
   process(ctx: EngineContext): void {
-    ctx.output.baselines ??= []
+    const snapshots: ZSnapshot[] = []
+    const latestZ = new Map<string, ZResult>()
+
+    for (let i = 0; i < ctx.acceptedFrames.length; i++) {
+      const frame = ctx.acceptedFrames[i]!
+      const env = frame.kind === 'radiation' ? frame.environment : undefined
+      const metrics = extractFrameMetrics(frame)
+
+      // Önce mevcut baseline ile zscore hesapla ("kendi kendine kıyas" olmasın), sonra update et.
+      for (let m = 0; m < metrics.length; m++) {
+        const { metric, value } = metrics[m]!
+        const res = this.baselineEngine.zscore(frame.crewId, metric, value, frame.t, env)
+        latestZ.set(metricSeriesKey(frame.crewId, metric), res)
+        snapshots.push({
+          crewId: frame.crewId,
+          metric,
+          t: frame.t,
+          value,
+          z: res.z,
+          confidence: res.confidence,
+          baselineMedian: res.baseline ? res.baseline.median : null,
+          baselineSigma: res.baseline ? this.baselineEngine.effectiveSigma(res.baseline) : null,
+        })
+      }
+
+      this.baselineEngine.update(frame)
+    }
+
+    ctx.scratch['baselineEngine'] = this.baselineEngine
+    ctx.scratch['latestZResults'] = latestZ
+    ctx.output.baselines = snapshots
+  }
+
+  reset(): void {
+    this.baselineEngine.reset()
   }
 }
 

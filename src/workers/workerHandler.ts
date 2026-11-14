@@ -33,6 +33,7 @@ const DEFAULT_TICK_MS = 100
 function toOutputLite(output: EngineOutput, totalDataQualityCount: number, warning?: StorageWarning): EngineOutputLite {
   return {
     t: output.t,
+    ...(output.baselines && output.baselines.length > 0 ? { baselines: output.baselines } : {}),
     ...(output.alertEvents ? { alertEvents: output.alertEvents } : {}),
     ...(output.states ? { states: output.states } : {}),
     dataQualityCount: totalDataQualityCount,

@@ -2,7 +2,7 @@
 // Asgari tip şekilleri: Faz 3/7 alan EKLEYEBİLİR, mevcut alanı değiştiremez.
 // Faz 3 worker girişinde bu birleşimleri Zod ile doğrular.
 import type { DataQualityEvent } from '../core/ingest'
-import type { EngineFault } from '../core/pipeline'
+import type { EngineFault, ZSnapshot } from '../core/pipeline'
 import type { StorageWarning } from '../core/storage'
 import type {
   ActionCard,
@@ -27,6 +27,7 @@ export interface ChartFrame {
 
 export interface EngineOutputLite {
   t: SimTimeMs
+  baselines?: ZSnapshot[]
   alertEvents?: AlertEvent[]
   states?: StateEstimate[]
   cards?: ActionCard[]

@@ -29,8 +29,11 @@ export {
 export { useStateStore, type StateStoreState } from './stateStore'
 export {
   MAX_TELEMETRY_POINTS,
+  selectBaselineBand,
   selectLatest,
+  selectLatestBaseline,
   selectSeries,
   useTelemetryStore,
+  type BaselineBandPoint,
   type TelemetryState,
 } from './telemetryStore'

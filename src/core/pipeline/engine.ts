@@ -1,5 +1,6 @@
 // Engine boru hattı yürütücüsü (FAZ_03 §3.3). Saf TS; aşama hataları yalıtılır.
 import type { EngineSnapshot } from '../../workers/protocol'
+import type { BaselineEngine } from '../baseline'
 import { registry, type EvidenceRegistry } from '../evidence/registry'
 import type { PlausibleRanges } from '../ingest'
 import type { PersistPort } from '../storage'
@@ -25,6 +26,7 @@ export interface EngineOptions {
 
 export interface DefaultEngineOptions {
   evidence?: EvidenceRegistry
+  baselineEngine?: BaselineEngine
   persist?: PersistPort
   plausibleRanges?: PlausibleRanges
   onPersistError?: (err: unknown, simT: SimTimeMs) => void
@@ -135,7 +137,10 @@ export function createDefaultEngine(opts: DefaultEngineOptions = {}): Engine {
         ...(opts.plausibleRanges ? { plausibleRanges: opts.plausibleRanges } : {}),
       }),
       new BufferStage(),
-      new BaselineStage(),
+      new BaselineStage({
+        evidence,
+        ...(opts.baselineEngine ? { baselineEngine: opts.baselineEngine } : {}),
+      }),
       new ModulesStage(),
       new DetectionStage(),
       new DecisionStage(),
