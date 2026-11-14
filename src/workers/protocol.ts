@@ -1,6 +1,9 @@
 // UI ↔ Worker mesaj protokolü (FAZ_03 §3.4 listesiyle birebir). Faz 1: yalnızca tipler; çalışan worker Faz 3.
 // Asgari tip şekilleri: Faz 3/7 alan EKLEYEBİLİR, mevcut alanı değiştiremez.
 // Faz 3 worker girişinde bu birleşimleri Zod ile doğrular.
+import type { DataQualityEvent } from '../core/ingest'
+import type { EngineFault } from '../core/pipeline'
+import type { StorageWarning } from '../core/storage'
 import type {
   ActionCard,
   Alert,
@@ -28,6 +31,9 @@ export interface EngineOutputLite {
   states?: StateEstimate[]
   cards?: ActionCard[]
   dataQualityCount: number
+  dataQuality?: DataQualityEvent[]
+  faults?: EngineFault[]
+  storageWarning?: StorageWarning
 }
 
 export interface EngineSnapshot {
