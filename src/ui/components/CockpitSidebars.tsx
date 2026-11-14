@@ -1,7 +1,7 @@
 // FAZ 9 §3.4 — Kokpit Sol Sütun (Kişi Özeti: 7 durum çipi + baseline güveni + 6 son değer karosu)
 // ve Sağ Sütun (Son 5 uyarı + En öncelikli 2 eylem kartı + Earth Link sayacı mini kartı).
 import { memo } from 'react'
-import { Check, Clock, Radio, ShieldCheck, Sparkles, X } from 'lucide-react'
+import { Check, ShieldCheck, Sparkles, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
 import { getNumber } from '@/core/evidence/registry'
@@ -10,7 +10,6 @@ import {
   type ActionCard,
   type Alert,
   type CrewId,
-  type EarthLinkPreset,
   type MetricId,
   type Severity,
   type StateEstimate,
@@ -27,6 +26,7 @@ import {
   type SeriesPoint,
 } from '@/ui/store'
 import { latestKey } from '@/workers/protocol'
+import { EarthLinkPanel } from './EarthLinkPanel'
 import { EmptyState } from './EmptyState'
 import { MetricTile } from './MetricTile'
 import { ProvenanceTag } from './ProvenanceTag'
@@ -269,21 +269,11 @@ export interface SummaryFeedColumnProps {
   earthLink: EarthLinkStoreState
 }
 
-const EARTH_PRESETS: readonly EarthLinkPreset[] = ['MOON', 'MARS_MIN', 'MARS_MAX'] as const
-
-function formatCountdownSec(totalSec: number | null): string {
-  if (totalSec === null || !Number.isFinite(totalSec) || totalSec <= 0) return '00:00'
-  const mins = Math.floor(totalSec / 60)
-  const secs = Math.floor(totalSec % 60)
-  return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`
-}
-
 export const SummaryFeedColumn = memo(function SummaryFeedColumn({
   alerts,
   cards,
-  earthLink,
 }: SummaryFeedColumnProps) {
-  const { t, formatNumber } = useT()
+  const { t } = useT()
 
   return (
     <div className="space-y-3">
@@ -467,92 +457,7 @@ export const SummaryFeedColumn = memo(function SummaryFeedColumn({
       </SectionCard>
 
       {/* Earth Link Sayacı Mini Kartı */}
-      <SectionCard
-        title={t('earth.cardTitle')}
-        subtitle={t('earth.cardSubtitle')}
-        provenanceId="earth.groundProcessingMin"
-      >
-        <div className="space-y-2.5 text-xs">
-          {/* Gecikme Ön Ayarları */}
-          <div className="flex flex-wrap items-center gap-1">
-            {EARTH_PRESETS.map((preset) => (
-              <button
-                key={preset}
-                type="button"
-                onClick={() => actions.setEarthLinkPreset(preset)}
-                aria-pressed={earthLink.config.preset === preset}
-                data-testid={`earth-preset-${preset}`}
-                className={cn(
-                  'rounded border px-2 py-1 font-mono text-[11px] transition-colors',
-                  earthLink.config.preset === preset
-                    ? 'border-primary bg-primary/15 font-semibold text-primary'
-                    : 'border-border/70 bg-background/60 text-muted-foreground hover:text-foreground',
-                )}
-              >
-                {t(`earth.preset.${preset}`)}
-              </button>
-            ))}
-          </div>
-
-          <div className="grid grid-cols-2 gap-2">
-            <div className="rounded-lg border border-border/70 bg-background/60 p-2">
-              <div className="text-[10px] text-muted-foreground">{t('earth.oneWay')}</div>
-              <div className="mt-0.5 font-mono text-sm font-bold text-foreground tabular-nums">
-                {earthLink.config.oneWayDelaySec < 60
-                  ? `${earthLink.config.oneWayDelaySec} s`
-                  : `${formatNumber(earthLink.config.oneWayDelaySec / 60, 1)} min`}
-              </div>
-            </div>
-            <div className="rounded-lg border border-border/70 bg-background/60 p-2">
-              <div className="text-[10px] text-muted-foreground">{t('earth.roundTrip')}</div>
-              <div className="mt-0.5 font-mono text-sm font-bold text-primary tabular-nums">
-                {Number.isFinite(earthLink.roundTripMin)
-                  ? `${formatNumber(earthLink.roundTripMin, 1)} min`
-                  : '∞ (Blackout)'}
-              </div>
-            </div>
-          </div>
-
-          {/* Bekleyen Cevap Sayacı */}
-          <div
-            data-testid="earth-link-counter-box"
-            className={cn(
-              'flex items-center justify-between rounded-lg border p-2.5 font-mono text-xs tabular-nums',
-              earthLink.pendingReplyCount > 0
-                ? 'border-status-warning/50 bg-status-warning/15 text-status-warning'
-                : 'border-border/70 bg-background/60 text-muted-foreground',
-            )}
-          >
-            <div className="flex items-center gap-2">
-              {earthLink.pendingReplyCount > 0 ? (
-                <Clock aria-hidden="true" className="size-4 shrink-0" />
-              ) : (
-                <Radio aria-hidden="true" className="size-4 shrink-0 text-primary" />
-              )}
-              <span>
-                {earthLink.pendingReplyCount > 0
-                  ? t('earth.replyEta', {
-                      eta: formatCountdownSec(earthLink.nextReplyEtaSec),
-                    })
-                  : t('earth.noPendingReply')}
-              </span>
-            </div>
-            {earthLink.pendingReplyCount > 0 && (
-              <span className="rounded bg-status-warning/20 px-1.5 py-0.5 text-[10px] font-bold">
-                {earthLink.pendingReplyCount}
-              </span>
-            )}
-          </div>
-
-          <p className="text-[11px] text-muted-foreground">
-            {t('earth.triageRule', {
-              rt: Number.isFinite(earthLink.roundTripMin)
-                ? formatNumber(earthLink.roundTripMin, 0)
-                : '∞',
-            })}
-          </p>
-        </div>
-      </SectionCard>
+      <EarthLinkPanel compact />
     </div>
   )
 })
