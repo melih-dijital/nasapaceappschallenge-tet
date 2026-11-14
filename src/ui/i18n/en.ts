@@ -1,0 +1,299 @@
+// FAZ 9 §3.2 — İngilizce (varsayılan) i18n sözlüğü.
+// Tüm anahtarlar tr.ts ile birebir aynı kümede olmalıdır (CI testiyle doğrulanır).
+
+export const en = {
+  // Uygulama & Kabuk
+  'app.title': 'ASTRO HEALTH COCKPIT',
+  'app.subtitle': 'Autonomous Crew Health Decision Support',
+  'app.disclaimer': 'Decision support prototype · synthetic data · not a medical device',
+  'app.placeholderHint': 'Faz 9–10’da doldurulacak · Module route ready for Phase 10 integration',
+
+  // Navigasyon
+  'nav.mainLabel': 'Main',
+  'nav.modulesLabel': 'Crew Modules',
+  'nav.cockpit': 'Cockpit',
+  'nav.alerts': 'Alerts & Actions',
+  'nav.behavioral': 'Behavioral',
+  'nav.evidence': 'Evidence',
+  'nav.validation': 'Validation',
+  'nav.ground': 'Ground',
+  'nav.comingSoon': 'Phase 10',
+
+  // Üst çubuk & Sim kontrolleri
+  'controls.missionClock': 'Mission Elapsed Time',
+  'controls.day': 'Day {day}',
+  'controls.scenario': 'Scenario',
+  'controls.speed': 'Sim Speed',
+  'controls.speedScale': '1× = 20s / sim-day',
+  'controls.play': 'Start simulation',
+  'controls.pause': 'Pause simulation',
+  'controls.reset': 'Reset simulation',
+  'controls.bookmarks': 'Jump to bookmark',
+  'controls.bookmarkSelect': 'Bookmark…',
+  'controls.language': 'Language',
+  'controls.timeCompressed': 'time compressed',
+  'controls.running': 'LIVE',
+  'controls.paused': 'PAUSED',
+
+  // Senaryolar (Faz 2 & Mock)
+  'scenario.demo_main.title': 'Demo Main (Curated 3-Day Mission)',
+  'scenario.nominal.title': 'Nominal (30-Day Baseline)',
+  'scenario.solar_particle_event.title': 'Solar Particle Event (SPE)',
+  'scenario.sleep_debt.title': 'Cumulative Sleep Debt',
+  'scenario.isolation_low_mood.title': 'Isolation & Mood Decline',
+  'scenario.dehydration_co2.title': 'Dehydration & Cabin CO₂ Rise',
+  'scenario.comm_blackout.title': 'Comm Blackout & Cardio Strain',
+  'scenario.new_crew_member.title': 'New Crew Member (Cold Baseline)',
+
+  // Bookmarklar (demo_main)
+  'bookmark.demo_main.0': '1 · D+000 Sleep Deficit Onset',
+  'bookmark.demo_main.1': '2 · D+001 SCI Mood Decline',
+  'bookmark.demo_main.2': '3 · D+002 Morning Pre-SPE',
+  'bookmark.demo_main.3': '4 · D+002 Solar Particle Event',
+
+  // Mürettebat seçici
+  'crew.selectorLabel': 'Crew Member Selection',
+  'crew.role.CDR': 'Commander',
+  'crew.role.MD': 'Crew Medical Officer',
+  'crew.role.ENG': 'Flight Engineer',
+  'crew.role.SCI': 'Mission Scientist',
+  'crew.activeAlerts': '{count} active',
+  'crew.noAlerts': 'Nominal',
+
+  // Durum seviyeleri (Severity)
+  'severity.NOMINAL': 'Nominal',
+  'severity.INFO': 'Info',
+  'severity.ADVISORY': 'Advisory',
+  'severity.WARNING': 'Warning',
+  'severity.CRITICAL': 'Critical',
+
+  // Gecikme-bilinçli triyaj sınıfları (EarthDelayClass)
+  'earthDelay.ACT_NOW': 'Act now',
+  'earthDelay.ACT_THEN_REPORT': 'Act, then report',
+  'earthDelay.CAN_WAIT_FOR_EARTH': 'Can wait for Earth',
+  'earthDelay.ACT_NOW.desc': 'Time-to-harm is shorter than Earth round-trip telemetry delay.',
+  'earthDelay.ACT_THEN_REPORT.desc': 'Initiate onboard protocol now and queue telemetry report for Earth.',
+  'earthDelay.CAN_WAIT_FOR_EARTH.desc': 'Safe to wait for Earth Flight Surgeon review.',
+
+  // Metrikler (METRIC_META.labelKey ile birebir)
+  'metric.hr': 'Heart Rate',
+  'metric.spo2': 'Blood Oxygen (SpO₂)',
+  'metric.hrv': 'Heart Rate Variability',
+  'metric.sleep.durationH': 'Sleep Duration',
+  'metric.sleep.efficiency': 'Sleep Efficiency',
+  'metric.sleep.midpointShiftMin': 'Circadian Midpoint Shift',
+  'metric.activity.exerciseMin': 'Aerobic Exercise',
+  'metric.activity.resistiveMin': 'Resistive Exercise',
+  'metric.hydrationL': 'Hydration Intake',
+  'metric.cabinCo2ppm': 'Cabin CO₂',
+  'metric.mood.stress': 'Perceived Stress',
+  'metric.mood.mood': 'Mood Score',
+  'metric.mood.motivation': 'Motivation',
+  'metric.pvt.medianMs': 'Reaction Time (PVT-like)',
+  'metric.pvt.lapses': 'Attention Lapses',
+  'metric.rad.doseRateMsvDay': 'Radiation Dose Rate',
+
+  // Bileşik durumlar (7 StateId)
+  'state.fatigue': 'Fatigue',
+  'state.stress': 'Stress Load',
+  'state.dehydration': 'Dehydration Risk',
+  'state.sleep_debt': 'Sleep Debt',
+  'state.radiation_event': 'Radiation Exposure',
+  'state.cardio_strain': 'Cardio Strain',
+  'state.mood_decline': 'Mood Decline Pattern',
+
+  // Kokpit — Sol sütun (kişi özeti)
+  'cockpit.crewSummaryTitle': 'Crew Physiological & State Summary',
+  'cockpit.baselineConfidence': 'Personal Baseline Confidence',
+  'cockpit.baselineReady': 'Baseline locked (14d median/MAD)',
+  'cockpit.learningBaseline': 'Learning baseline…',
+  'cockpit.learningBaselineDay': 'Learning baseline (day {day}/{target})',
+  'cockpit.stateChipsTitle': 'Composite State Estimates (L4)',
+  'cockpit.stateConfidence': 'Conf {pct}%',
+  'cockpit.latestTilesTitle': 'Latest Biometrics & Daily Inputs',
+  'cockpit.zScore': 'z = {z}',
+  'cockpit.baselineMedian': 'base {median} {unit}',
+  'cockpit.sensorFaultStale': 'sensor fault/stale',
+  'cockpit.simulateSensorFault': 'Toggle sensor fault test',
+
+  // Kokpit — Orta sütun (telemetri grafikleri)
+  'cockpit.hrChartTitle': 'Heart Rate (24h Sim Window)',
+  'cockpit.hrChartSubtitle': '15-min cadence · Personal 6h-block median ± warning z-band & sleep window',
+  'cockpit.hrChartAria': 'Heart rate chart over the last 24 simulated hours with personal baseline band and sleep shading',
+  'cockpit.spo2ChartTitle': 'SpO₂ Saturation (24h Sim Window)',
+  'cockpit.spo2ChartSubtitle': '15-min cadence · Absolute clinical threshold reference',
+  'cockpit.spo2ChartAria': 'Blood oxygen saturation chart over the last 24 simulated hours with critical threshold line',
+  'cockpit.sleepChartTitle': 'Sleep & Exercise History (14 Sim Days)',
+  'cockpit.sleepChartSubtitle': 'Daily sleep duration bars, personal baseline median, and cumulative sleep debt',
+  'cockpit.sleepChartAria': '14-day bar and area chart showing daily sleep duration, baseline median, and cumulative sleep debt',
+  'cockpit.nightSleepBlock': 'Sleep window',
+  'cockpit.baselineBandLabel': 'Baseline band (±{z}σ)',
+  'cockpit.criticalThresholdLabel': 'Critical threshold ({value}{unit})',
+  'cockpit.sleepDebtLabel': 'Sleep debt (h)',
+
+  // Kokpit — Radyasyon paneli
+  'radiation.panelTitle': 'Radiation & Solar Particle Event Monitor',
+  'radiation.panelSubtitle': 'Cumulative career effective dose, live flux rate & SPE state machine',
+  'radiation.careerGaugeLabel': 'NASA-STD-3001 career limit (verified)',
+  'radiation.careerDoseTitle': 'Cumulative Career Effective Dose',
+  'radiation.priorDose': 'Prior career: {value} mSv',
+  'radiation.missionDose': 'Mission: +{value} mSv',
+  'radiation.rateChartTitle': 'Radiation Dose Rate (mSv/day)',
+  'radiation.rateChartAria': 'Radiation dose rate chart showing nominal GCR/ISS band and solar particle event spikes',
+  'radiation.expectedBand': 'Expected reference band',
+  'radiation.speStateLabel': 'SPE Status',
+  'radiation.speState.IDLE': 'IDLE',
+  'radiation.speState.SUSPECTED': 'SUSPECTED',
+  'radiation.speState.CONFIRMED': 'CONFIRMED',
+  'radiation.speState.DECAYING': 'DECAYING',
+  'radiation.speTargetLabel': 'design reference SPE protection target',
+  'radiation.speTargetNote': 'Crew protection target for design reference SPE (Oct 1989 sum, 250 mSv); not a personal per-event limit.',
+  'radiation.speEventDose': 'Event dose: {dose} / {target} mSv',
+
+  // Kokpit — Kemik tahmini kartı
+  'bone.cardTitle': 'Bone Mineral Density Loss Projection',
+  'bone.indicativeBadge': 'Indicative estimate',
+  'bone.estimate.disclaimer': 'Indicative estimate — bone density is measured by scans before/after flight',
+  'bone.monthlyLoss': 'Est. Monthly Loss',
+  'bone.cumulativeLoss': 'Est. Mission Cumulative',
+  'bone.resistiveAdherence': '7d Resistive Adherence',
+
+  // Kokpit — Sağ sütun (uyarılar, eylem kartları, Earth Link)
+  'cockpit.recentAlertsTitle': 'Recent Alerts (Top 5)',
+  'cockpit.noActiveAlerts': 'No active anomalies detected',
+  'cockpit.noActiveAlertsDesc': 'All monitored metrics remain within personal baseline and L1 bounds.',
+  'cockpit.ackAlert': 'Acknowledge',
+  'cockpit.acked': 'Acked',
+  'cockpit.priorityActionsTitle': 'Priority Decision Cards (Top 2)',
+  'cockpit.noActionCards': 'No pending onboard actions',
+  'cockpit.noActionCardsDesc': 'Decision planner has no schedule interventions queued.',
+  'cockpit.acceptAction': 'Accept',
+  'cockpit.dismissAction': 'Dismiss',
+  'cockpit.completeAction': 'Done',
+  'cockpit.cardState.SUGGESTED': 'Suggested',
+  'cockpit.cardState.ACCEPTED': 'Accepted',
+  'cockpit.cardState.DISMISSED': 'Dismissed',
+  'cockpit.cardState.DONE': 'Completed',
+
+  // Earth Link
+  'earth.badgeLabel': 'Earth Link',
+  'earth.cardTitle': 'Earth Link & Delay-Aware Triage',
+  'earth.cardSubtitle': 'Store-and-forward telemetry & round-trip decision horizon',
+  'earth.oneWay': 'One-way delay',
+  'earth.roundTrip': 'Round-trip + ground',
+  'earth.preset.MOON': 'Moon (1.3s)',
+  'earth.preset.MARS_MIN': 'Mars min (3m)',
+  'earth.preset.MARS_MAX': 'Mars max (22m)',
+  'earth.preset.CUSTOM': 'Custom',
+  'earth.status.connected': 'LINK NOMINAL',
+  'earth.status.blackout': 'COMM BLACKOUT',
+  'earth.pendingReplies': '{count} pending reply',
+  'earth.replyEta': 'Earth reply ETA: {eta}',
+  'earth.noPendingReply': 'No pending ground queries · Outbox synced',
+  'earth.triageRule': 'If time-to-harm ≤ round-trip ({rt} min), crew must act autonomously onboard.',
+
+  // Kanıt & ProvenanceTag
+  'provenance.source.NASA_STD': 'NASA_STD',
+  'provenance.source.NASA_HRP': 'NASA_HRP',
+  'provenance.source.PEER_REVIEWED': 'PEER',
+  'provenance.source.CLINICAL_CONVENTION': 'CLINICAL',
+  'provenance.source.DEMO_PARAMETER': 'DEMO',
+  'provenance.status.VERIFIED': 'Verified source',
+  'provenance.status.PARTIAL': 'Partial / design ref',
+  'provenance.status.CONFLICTING': 'Conflicting sources',
+  'provenance.status.UNVERIFIED': 'Unverified / demo parameter',
+  'provenance.sheetTitle': 'Evidence & Parameter Provenance',
+  'provenance.sheetDescription': 'Every threshold and model parameter is tracked in the Evidence Registry.',
+  'provenance.parameterId': 'Parameter ID',
+  'provenance.valueUnit': 'Value & Unit',
+  'provenance.sourceType': 'Source Category',
+  'provenance.verification': 'Verification Status',
+  'provenance.sourceTitle': 'Reference Title',
+  'provenance.scope': 'Scope',
+  'provenance.note': 'Notes & Limitations',
+  'provenance.openSourceUrl': 'Open primary reference',
+  'provenance.viewAllEvidence': 'Open full Evidence Registry page',
+
+  // Motor / Worker hata ve durumlar
+  'worker.errorTitle': 'Telemetry Engine Error',
+  'worker.restartButton': 'Restart engine',
+  'worker.loading': 'Initializing mission telemetry engine…',
+  'cockpit.criticalLiveAnnouncement': 'Critical alert for {crew}: {title}. {triage}.',
+
+  // Uyarı başlıkları ve nedenleri (Mock + Faz 5–6)
+  'alert.sleep_debt.title': 'Cumulative Sleep Debt Below Personal Baseline',
+  'alert.radiation_event.title': 'Solar Particle Event — Elevated Radiation Dose Rate',
+  'alert.fatigue.title': 'Elevated Crew Fatigue Score',
+  'alert.stress.title': 'Sustained Physiological Stress Pattern',
+  'alert.dehydration.title': 'Low Hydration & Cardiovascular Drift',
+  'alert.cardio_strain.title': 'Elevated Resting Heart Rate & Cardio Strain',
+  'alert.mood_decline.title': 'Multi-Day Mood Decline Trend',
+  'alert.spo2_low.title': 'Critical SpO₂ Desaturation Below Threshold',
+  'alert.co2_high.title': 'Elevated Cabin CO₂ Concentration',
+  'alert.career_dose.title': 'Approaching Career Radiation Dose Limit',
+
+  'why.sleep.belowBaseline': 'Sleep duration {valueH} h vs personal baseline {baselineH} h (z = {z})',
+  'why.radiation.rateRatio': 'Dose rate is {ratio}× above personal baseline rate',
+  'why.l1.threshold': 'Metric crossed absolute L1 threshold ({value} vs {limit})',
+  'why.l2.deviation': 'Sustained personal baseline deviation (z = {z})',
+  'why.l3.consecutive': 'Consecutive multi-day threshold violation ({days} days)',
+  'why.l3.cusum': 'Cumulative sum (CUSUM) drift exceeded decision interval',
+  'why.l3.theilSen': 'Significant multi-day Theil-Sen trend slope detected',
+  'why.l4.stateScore': 'Composite state score reached {score}',
+
+  // Eylem Kataloğu (Faz 7 §3.1 — 13 ActionId + Mock)
+  'action.ACT_REST_BLOCK.title': 'Insert Recovery Rest Block',
+  'action.ACT_REST_BLOCK.step1': 'Consider scheduling a 45-minute low-stimulation rest block before next work task.',
+  'action.ACT_REST_BLOCK.step2': 'Postpone non-critical maintenance activities per mission timeline rules.',
+
+  'action.ACT_REDUCE_WORKLOAD.title': 'Reduce High-Intensity Workload',
+  'action.ACT_REDUCE_WORKLOAD.step1': 'Shift high-cognitive tasks to secondary window and keep resistive exercise at low intensity.',
+  'action.ACT_REDUCE_WORKLOAD.step2': 'Log workload adjustment in onboard schedule diff for Flight Surgeon review.',
+
+  'action.ACT_BREATHING.title': 'Guided Autonomic Paced Breathing',
+  'action.ACT_BREATHING.step1': 'Consider a 10-minute paced breathing and recovery session in crew quarters.',
+  'action.ACT_BREATHING.step2': 'Re-check resting heart rate and HRV in the next 6-hour baseline block.',
+
+  'action.ACT_COMMS_FAMILY.title': 'Schedule Private Family / Support Comms',
+  'action.ACT_COMMS_FAMILY.step1': 'Prioritize store-and-forward private family video message in Earth Link outbox.',
+  'action.ACT_COMMS_FAMILY.step2': 'Protect unscheduled personal downtime window.',
+
+  'action.ACT_HYDRATE.title': 'Structured Hydration Protocol',
+  'action.ACT_HYDRATE.step1': 'Add two scheduled fluid intake blocks across the next 6 hours.',
+  'action.ACT_HYDRATE.step2': 'Monitor daily hydration total against personal baseline.',
+
+  'action.ACT_SLEEP_SHIFT.title': 'Advance Sleep Window & Protect Recovery',
+  'action.ACT_SLEEP_SHIFT.step1': 'Advance sleep block start by 30 minutes and protect full 8-hour sleep window.',
+  'action.ACT_SLEEP_SHIFT.step2': 'Avoid high-intensity work during the 90 minutes preceding sleep.',
+
+  'action.ACT_LIGHT_CONTROL.title': 'Circadian Cabin Lighting Adjustment',
+  'action.ACT_LIGHT_CONTROL.step1': 'Dim blue-enriched cabin lighting 2 hours prior to scheduled sleep window.',
+  'action.ACT_LIGHT_CONTROL.step2': 'Apply high-melanopic light exposure upon wake to stabilize midpoint shift.',
+
+  'action.ACT_SHELTER.title': 'Move to Storm Shelter Per Mission Protocol',
+  'action.ACT_SHELTER.step1': 'Move to the most shielded area of the vehicle per mission radiation protocol.',
+  'action.ACT_SHELTER.step2': 'Suspend EVA and unshielded exercise blocks until dose rate decays below threshold.',
+
+  'action.ACT_DOSE_CHECK.title': 'Verify Personal Dosimeter & Shielding',
+  'action.ACT_DOSE_CHECK.step1': 'Cross-check active personal dosimeter reading with vehicle area radiation monitor.',
+  'action.ACT_DOSE_CHECK.step2': 'Transmit high-priority radiation telemetry packet via Earth Link.',
+
+  'action.ACT_CARDIO_CHECK.title': 'Cardiovascular & Exercise Load Check',
+  'action.ACT_CARDIO_CHECK.step1': 'Review resting heart rate trend and cabin environmental parameters.',
+  'action.ACT_CARDIO_CHECK.step2': 'Maintain low-intensity resistive countermeasure without exceeding strain limits.',
+
+  'action.ACT_JOURNAL.title': 'Private Onboard Reflective Journal',
+  'action.ACT_JOURNAL.step1': 'Consider recording a brief private reflection entry (remains strictly on this device).',
+  'action.ACT_JOURNAL.step2': 'Review sleep regularity and daily check-in trends.',
+
+  'action.ACT_PSYCH_CHECKIN.title': 'Behavioral & Readiness Check-In',
+  'action.ACT_PSYCH_CHECKIN.step1': 'Complete the 30-second daily mood/stress check-in and 60-second reaction test.',
+  'action.ACT_PSYCH_CHECKIN.step2': 'Share summary metrics with ground only if behavioral consent category is enabled.',
+
+  'action.ACT_PRELANDING_FLUIDS.title': 'Pre-Landing Orthostatic Fluid Loading',
+  'action.ACT_PRELANDING_FLUIDS.step1': 'Follow mission fluid-loading countermeasure schedule prior to gravity transition.',
+  'action.ACT_PRELANDING_FLUIDS.step2': 'Verify cardiovascular tolerance during upright posture checks.',
+} as const
+
+export type I18nKey = keyof typeof en
+export type I18nDictionary = Record<I18nKey, string>
