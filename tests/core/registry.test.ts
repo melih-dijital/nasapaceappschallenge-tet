@@ -16,7 +16,7 @@ import {
 /** PROJECT_MEMORY §7 tablosundaki id'ler ve status'ları. */
 const SEED_STATUS = {
   'rad.career.limit.msv': 'VERIFIED',
-  'rad.spe.limit.msv': 'VERIFIED',
+  'rad.spe.limit.msv': 'PARTIAL',
   'rad.iss.rate.msv_day': 'VERIFIED',
   'bone.loss.pct_month': 'VERIFIED',
   'rad.gcr.design.free_space': 'PARTIAL',

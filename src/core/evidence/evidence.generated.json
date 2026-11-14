@@ -1078,10 +1078,11 @@
     "sourceType": "NASA_STD",
     "sourceTitle": "NASA-STD-3001 Vol.1 — radyasyon koruma teknik özeti (OCHMO)",
     "sourceUrl": "https://www.nasa.gov/wp-content/uploads/2023/03/radiation-protection-technical-brief-ochmo.pdf",
-    "verificationStatus": "VERIFIED",
-    "verified": true,
+    "note": "tasarım referansı SPE (Ekim 1989 toplamı) için koruma hedefi; kişisel olay-başı limit değil; 30 günlük kan yapıcı organ limiti (mGy-Eq) doğrulanmadı",
+    "verificationStatus": "PARTIAL",
+    "verified": false,
     "owner": "Ekip (PROJECT_MEMORY §7 tablosu)",
-    "scope": "güneş partikül olayı (SPE) başına"
+    "scope": "NASA tasarım referansı güneş parçacığı olayı (Ekim 1989 olaylarının toplamı) için mürettebat koruma hedefi, etkin doz mSv; kişisel olay-başı limit DEĞİL; 30 günlük kan yapıcı organ mGy-Eq limiti ayrı bir gereksinimdir ve burada doğrulanmadı"
   },
   {
     "id": "rad.spe.warn.fraction",

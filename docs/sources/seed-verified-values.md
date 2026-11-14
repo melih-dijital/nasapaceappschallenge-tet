@@ -15,7 +15,7 @@ PROJECT_MEMORY.md §7'deki "doğrulanmış başlangıç değerleri" tablosunun �
 | evidenceId | metric | value | unit | status | scope | note | sourceType | sourceTitle | sourceUrl |
 |---|---|---|---|---|---|---|---|---|---|
 | rad.career.limit.msv | career_effective_dose | 600 | mSv | VERIFIED | kariyer boyu, astronot başına | kariyer boyu etkin doz üst sınırı | NASA_STD | NASA-STD-3001 Vol.1 — radyasyon koruma teknik özeti (OCHMO) | https://www.nasa.gov/wp-content/uploads/2023/03/radiation-protection-technical-brief-ochmo.pdf |
-| rad.spe.limit.msv | spe_effective_dose | 250 | mSv | VERIFIED | güneş partikül olayı (SPE) başına | | NASA_STD | NASA-STD-3001 Vol.1 — radyasyon koruma teknik özeti (OCHMO) | https://www.nasa.gov/wp-content/uploads/2023/03/radiation-protection-technical-brief-ochmo.pdf |
+| rad.spe.limit.msv | spe_effective_dose | 250 | mSv | PARTIAL | NASA tasarım referansı güneş parçacığı olayı (Ekim 1989 olaylarının toplamı) için mürettebat koruma hedefi, etkin doz mSv; kişisel olay-başı limit DEĞİL; 30 günlük kan yapıcı organ mGy-Eq limiti ayrı bir gereksinimdir ve burada doğrulanmadı | tasarım referansı SPE (Ekim 1989 toplamı) için koruma hedefi; kişisel olay-başı limit değil; 30 günlük kan yapıcı organ limiti (mGy-Eq) doğrulanmadı | NASA_STD | NASA-STD-3001 Vol.1 — radyasyon koruma teknik özeti (OCHMO) | https://www.nasa.gov/wp-content/uploads/2023/03/radiation-protection-technical-brief-ochmo.pdf |
 | rad.iss.rate.msv_day | iss_dose_rate | 0.2–0.5 | mSv/gün | VERIFIED | ISS (LEO) | | PEER_REVIEWED | NTRS — ASCEND (Simonsen, taslak) | https://ntrs.nasa.gov/api/citations/20250006168/downloads/ASCEND%20Simonsen%20draft%201.pdf |
 | bone.loss.pct_month | bone_loss_rate | 1–1.5 | %/ay | VERIFIED | uzay uçuşu | | NASA_HRP | NASA HRP — Risk of Spaceflight-Induced Bone Changes | https://www.nasa.gov/reference/risk-of-spaceflight-induced-bone-changes/ |
 | rad.gcr.design.free_space | gcr_dose_rate | 1.3 | mSv/gün | PARTIAL | serbest uzay | tasarım referansı; bireysel limit değil | NASA_STD | NASA-STD-3001 (tasarım referansı) | — |
@@ -26,6 +26,7 @@ PROJECT_MEMORY.md §7'deki "doğrulanmış başlangıç değerleri" tablosunun �
 
 ## Sınırlamalar / dikkat
 - GCR değerleri tasarım referansıdır, bireysel limit değildir; yüzey değeri çelişkilidir (PROJECT_MEMORY §14).
+- `rad.spe.limit.msv` kişisel olay-başı limit değildir: tasarım referansı SPE (Ekim 1989 olaylarının toplamı) için mürettebat koruma hedefidir. Uyarı ve UI metinlerinde etiketi **"design reference SPE protection target"**; "limit" denmez. 30 günlük kan yapıcı organ (mGy-Eq) limiti ayrı bir gereksinimdir ve doğrulanmadı.
 - `spo2.critical` uzay kaynağı değil, genel klinik uygulamadır.
 - NASA HRP risk sayfaları nitelikseldir; HR/SpO2/uyku için sayısal eşik vermez.
 

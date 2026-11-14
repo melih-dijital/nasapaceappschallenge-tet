@@ -131,7 +131,7 @@ Zaman ölçeği: vitals çerçevesi her **15 simüle dakikada** bir; radyasyon �
 | id | değer | tür | status |
 |---|---|---|---|
 | `rad.career.limit.msv` | 600 mSv | NASA_STD (NASA-STD-3001 Vol.1) | VERIFIED |
-| `rad.spe.limit.msv` | 250 mSv / olay | NASA_STD | VERIFIED |
+| `rad.spe.limit.msv` | 250 mSv (etkin doz; tasarım referansı SPE: Ekim 1989 olaylarının toplamı) | NASA_STD | PARTIAL (mürettebat koruma hedefi; kişisel olay-başı limit DEĞİL; 30 günlük kan yapıcı organ mGy-Eq limiti ayrı gereksinim, doğrulanmadı; UI etiketi "design reference SPE protection target") |
 | `rad.iss.rate.msv_day` | 0.2–0.5 mSv/gün (ISS) | PEER_REVIEWED (NTRS) | VERIFIED |
 | `bone.loss.pct_month` | 1–1.5 %/ay | NASA_HRP | VERIFIED |
 | `rad.gcr.design.free_space` | 1.3 mSv/gün | NASA_STD (tasarım referansı) | PARTIAL (bireysel limit değil) |
@@ -183,7 +183,7 @@ NASA HRP risk sayfaları nitelikseldir; HR/SpO2/uyku için sayısal eşik **verm
 | Faz | Başlık | Durum | Not |
 |---|---|---|---|
 | 0 | Proje iskeleti + hafıza | ☑ | Vite 8 + React 19 + TS 6.0; `npm run check` yeşil (2 test dosyası, 7 test); 4 rota + DisclaimerBar |
-| 1 | Sözleşmeler, şemalar, kanıt kayıt defteri | ☑ | 130 evidence kaydı (4 VERIFIED, 2 PARTIAL, 1 CONFLICTING, 123 UNVERIFIED); tipler donduruldu; protocol + EngineClient + mockEngine hazır; 10 test dosyası / 78 test |
+| 1 | Sözleşmeler, şemalar, kanıt kayıt defteri | ☑ | 130 evidence kaydı (SPE düzeltmesi sonrası: 3 VERIFIED, 3 PARTIAL, 1 CONFLICTING, 123 UNVERIFIED); tipler donduruldu; protocol + EngineClient + mockEngine hazır; 10 test dosyası / 78 test |
 | 2 | Simülatör ve senaryolar | ☐ | |
 | 3 | Giriş, depolama, pipeline, worker | ☐ | |
 | 4 | Baseline motoru | ☐ | |
@@ -231,6 +231,7 @@ Durum işaretleri: ☐ başlamadı · ◐ sürüyor · ☑ bitti.
 | 2026-11-14 | Protokol (`src/workers/protocol.ts`): FAZ_01 §3.5 asgari tipleri; FAZ_03'te `{...}` bırakılan payload'lar tanımlandı: `SET_EARTH_LINK {config: Partial<EarthLinkConfig>}`, `SET_CONSENT {categories: ConsentCategory[]}` (`VITALS_SUMMARY/ALERTS/RADIATION/BEHAVIOR_SUMMARY`), `GROUND_REPLY {templateId, relatedAlertId?}`, `REQUEST_VALIDATION {scenarios?, seeds?, quick?}`; ayrımcı alan `type`; `latestKey(crewId, metric)` = `"crewId\|metric"` | Faz 7/8 alan ekleyebilir, mevcut alanı değiştiremez |
 | 2026-11-14 | Mock motor (`src/ui/mock/mockEngine.ts`): `Math.random` yok, oransız sinüslerin toplamıyla deterministik gürültü; zamanlayıcı `MockScheduler.every()` ile enjekte; hız ve sim zamanı Evidence'tan (`sim.speed.*`, `sim.secondsPerSimDay`); sahte uyarılar: gün 1'de CDR `sleep_debt` ADVISORY, gün 2'de SCI `radiation_event` CRITICAL/ACT_NOW ve kartları. Sahte değerler yalnızca gösterim, eşik değil | §10 rastgelelik kuralı; Kişi A için tekrarlanabilir akış |
 | 2026-11-14 | Commit mesajı yalnızca `faz-N: kısa açıklama`; yapay zekâ imzası veya `Co-Authored-By` satırı eklenmez | Kullanıcı kararı (Faz 1) |
+| 2026-11-14 | `rad.spe.limit.msv` kapsamı düzeltildi: VERIFIED → **PARTIAL**. Değer, tasarım referansı SPE (Ekim 1989 olaylarının toplamı) için mürettebat koruma hedefi (etkin doz, mSv); kişisel olay-başı limit değil. Radyasyon uyarı ve UI metinlerinde etiket **"design reference SPE protection target"** olur. FAZ_06 `speFractionOfLimit`, FAZ_09 "olay dozu / 250 mSv çubuğu", FAZ_10 "250 mSv (SPE)" kartı bu etiketle gösterilir, "limit" denmez. Evidence id'si (`rad.spe.limit.msv`) bağımlılıklar kırılmasın diye değişmedi | Dürüstlük §3.7, §7: kaynağı olmayan kesinlik iddia edilmez |
 
 ## 14. AÇIK SORULAR / BİLİNEN SORUNLAR
 - [ ] Resmi challenge "Resources" sekmesindeki ek kaynaklar okunamadı (ekip kontrol edecek).
@@ -245,7 +246,7 @@ Durum işaretleri: ☐ başlamadı · ◐ sürüyor · ☑ bitti.
 - [ ] Faz 0'da `npm run dev` HTTP ile (4 rota 200) ve jsdom testleriyle doğrulandı; gerçek tarayıcıda göz kontrolü yapılmadı. Faz 9 başında bir kez açıp bakılmalı.
 - [ ] Git kimliği yalnızca bu depo için ayarlandı (`user.name`=16tryesilyurt61, e-posta hesap e-postası). Kişi kendi adını `git config user.name "…"` ile verebilir.
 - [ ] `README.md` hâlâ Vite şablon metni (Faz 12'de yeniden yazılacak).
-- [ ] **Doğrulanmalı:** `rad.spe.limit.msv` = 250 mSv/olay (§7'de VERIFIED). Bildiğim kadarıyla NASA-STD-3001'deki kısa süreli limit, kan yapıcı organlar için 30 günlük **250 mGy-Eq** olarak tanımlı (olay başına etkin doz mSv değil). Birim ve kapsam ekipçe birincil kaynaktan yeniden kontrol edilmeli. Faz 1'de değer ve status değiştirilmedi (md'de olmayan değer uydurulmaz).
+- [ ] `rad.spe.limit.msv` (PARTIAL): birincil standart (NASA-STD-3001 Vol.1) açılıp 30 günlük limitle karşılaştırılacak.
 - [ ] i18n anahtarları: `METRIC_META.labelKey` (`metric.*`) ve mock'taki `alert.*.title`, `why.*`, `action.*.step*` henüz `docs/i18n-keys.md`'de yok (dosya Faz 5'te başlar). Faz 9 bunları sözlüğe alırken mock anahtarlarının yer tutucu olduğunu bilmeli.
 - [ ] Mock motorun sahte değerleri ve uyarıları yalnızca `src/ui/mock/` altında; Faz 3'te UI gerçek `engineClient`'a geçince kullanılmayacak.
 
@@ -254,6 +255,7 @@ Durum işaretleri: ☐ başlamadı · ◐ sürüyor · ☑ bitti.
 |---|---|---|---|---|
 | 2026-11-14 12:31 | 0 | Claude (Kişi B oturumu) | Vite+React+TS iskeleti (`_scaffold` üzerinden), TS 6.0 sabitleme, ESLint/Prettier/Vitest (node+jsdom projeleri), Tailwind 4 + shadcn (14 bileşen), §5 klasör ağacı + `.gitkeep`, npm script'leri + `scripts/check.ts`, koyu tema, 4 rota + DisclaimerBar, smoke/App testleri, `.gitignore` birleştirme | `package.json`, `package-lock.json`, `tsconfig*.json`, `vite.config.ts`, `eslint.config.js`, `.prettierrc.json`, `.prettierignore`, `.gitignore`, `components.json`, `index.html`, `public/favicon.svg`, `src/**`, `tests/**`, `scripts/**`, `server/.gitkeep`, `docs/calibration/.gitkeep`, `docs/demo/.gitkeep`, `PROJECT_MEMORY.md` §12–15 |
 | 2026-11-14 13:00 | 1 | Claude (Kişi B oturumu) | 13 tip dosyası + `units.ts`, Zod şemaları (+ tip eşitliği), saf md ayrıştırıcı + `evidence:build` (130 kayıt), registry, seed ve demo-parameters md'leri, `calibration:check`, protokol + EngineClient + mock motor, 8 yeni test dosyası | `src/core/units.ts`, `src/core/types/*` (14), `src/core/schema/*` (6), `src/core/evidence/{markdown,sourceMd,registry}.ts` + `*.generated.*`, `src/sim/calibrationMd.ts`, `src/workers/protocol.ts`, `src/store/engineClient.ts`, `src/ui/mock/mockEngine.ts`, `scripts/{build-evidence,check-calibration,placeholder}.ts`, `docs/sources/{seed-verified-values,demo-parameters}.md`, `tests/core/*` (7 yeni), `tests/ui/mockEngine.test.ts`, `package.json`, `tsconfig.app.json`, `tsconfig.node.json`, `.prettierignore`, `PROJECT_MEMORY.md` §6, §12–15 |
+| 2026-11-14 | 1 (düzeltme) | Claude (kullanıcı isteği) | `rad.spe.limit.msv` VERIFIED → PARTIAL; scope/note: tasarım referansı SPE (Ekim 1989 toplamı) koruma hedefi, kişisel limit değil; UI etiketi "design reference SPE protection target"; registry testindeki §7 status'u güncellendi | `docs/sources/seed-verified-values.md`, `src/core/evidence/evidence.generated.json`, `tests/core/registry.test.ts`, `PROJECT_MEMORY.md` §7, §12–15 |
 
 ---
 
