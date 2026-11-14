@@ -28,6 +28,7 @@ import {
 import { latestKey } from '@/workers/protocol'
 import { EarthLinkPanel } from './EarthLinkPanel'
 import { EmptyState } from './EmptyState'
+import { GroundStationPanel } from './GroundStationPanel'
 import { MetricTile } from './MetricTile'
 import { ProvenanceTag } from './ProvenanceTag'
 import { SectionCard } from './SectionCard'
@@ -458,6 +459,9 @@ export const SummaryFeedColumn = memo(function SummaryFeedColumn({
 
       {/* Earth Link Sayacı Mini Kartı */}
       <EarthLinkPanel compact />
+
+      {/* İsteğe Bağlı Yer İstasyonu (WS) Bağlantı Paneli (varsayılan kapalı) */}
+      <GroundStationPanel compact />
     </div>
   )
 })

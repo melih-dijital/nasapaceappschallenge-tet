@@ -38,6 +38,7 @@ import {
   latestKey,
   type ChartFrame,
   type ConsentCategory,
+  type TelemetrySourceChoice,
   type WorkerToUiMessage,
 } from '@/workers/protocol'
 import {
@@ -82,6 +83,10 @@ export interface SessionState {
   language: Language
   workerStatus: WorkerLifecycleStatus
   workerError: WorkerErrorInfo | null
+  telemetrySource: TelemetrySourceChoice
+  wsUrl: string
+  wsConnected: boolean | null
+  demoMode: boolean
 }
 
 export interface CrewConfidenceInfo {
@@ -399,6 +404,21 @@ const initialEarthConfig: EarthLinkConfig = {
   blackout: false,
 }
 
+export const DEFAULT_GROUND_STATION_WS_URL = 'ws://localhost:8787'
+
+export function isDemoModeQuery(search?: string): boolean {
+  const rawSearch =
+    search !== undefined
+      ? search
+      : typeof window !== 'undefined' && typeof window.location?.search === 'string'
+        ? window.location.search
+        : ''
+  if (!rawSearch) return false
+  const params = new URLSearchParams(rawSearch.startsWith('?') ? rawSearch.slice(1) : rawSearch)
+  const v = params.get('demo')
+  return v === '1' || v === 'true'
+}
+
 export const useSessionStore = create<SessionState>(() => ({
   scenarioId: initialScenarioId,
   speed: 1,
@@ -409,6 +429,10 @@ export const useSessionStore = create<SessionState>(() => ({
   language: getLanguage(),
   workerStatus: 'READY',
   workerError: null,
+  telemetrySource: 'local',
+  wsUrl: DEFAULT_GROUND_STATION_WS_URL,
+  wsConnected: null,
+  demoMode: isDemoModeQuery(),
 }))
 
 export const useTelemetryStore = create<TelemetryState>(() => ({
@@ -904,6 +928,7 @@ function handleWorkerMessage(msg: WorkerToUiMessage): void {
         speed: msg.status.speed,
         scenarioId: nextScenario,
         workerStatus: msg.status.running ? 'RUNNING' : 'PAUSED',
+        wsConnected: msg.status.connected ?? null,
       })
 
       if (nextDay !== prevDay || nextScenario !== prevScenario) {
@@ -1135,6 +1160,12 @@ export function bindEngineClient(
     ...buildInitialTelemetryState(scenarioId, 0),
     dataQuality: {},
     dataQualityCount: 0,
+  })
+
+  useSessionStore.setState({
+    telemetrySource: 'local',
+    wsConnected: null,
+    demoMode: isDemoModeQuery(),
   })
 
   client.send({ type: 'INIT', scenarioId, speed })
@@ -1515,6 +1546,39 @@ export const actions = {
   cancelValidation(): void {
     useValidationStore.setState({ running: false, progress: null })
     getActiveEngineClient().send({ type: 'CANCEL_VALIDATION' })
+  },
+
+  /** FAZ 11 §3.4: İsteğe bağlı yerel WebSocket yer istasyonuna bağlanır (`INIT {source:'ws', wsUrl}`). */
+  connectGroundStation(wsUrl: string): void {
+    const cleanUrl = wsUrl.trim() || DEFAULT_GROUND_STATION_WS_URL
+    const { scenarioId, speed } = useSessionStore.getState()
+    useSessionStore.setState({
+      telemetrySource: 'ws',
+      wsUrl: cleanUrl,
+      wsConnected: false,
+    })
+    getActiveEngineClient().send({
+      type: 'INIT',
+      scenarioId,
+      speed,
+      source: 'ws',
+      wsUrl: cleanUrl,
+    })
+  },
+
+  /** FAZ 11 §3.4: İsteğe bağlı yer istasyonundan çıkıp yerel simülatöre döner (`INIT {source:'local'}`). */
+  disconnectGroundStation(): void {
+    const { scenarioId, speed } = useSessionStore.getState()
+    useSessionStore.setState({
+      telemetrySource: 'local',
+      wsConnected: null,
+    })
+    getActiveEngineClient().send({
+      type: 'INIT',
+      scenarioId,
+      speed,
+      source: 'local',
+    })
   },
 }
 

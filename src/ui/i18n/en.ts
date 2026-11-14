@@ -472,6 +472,27 @@ export const en = {
   'errorBoundary.title': 'Module Render Error',
   'errorBoundary.desc': 'An isolated rendering issue occurred in this view. Telemetry worker remains active.',
   'errorBoundary.retry': 'Reload Module',
+
+  // FAZ 11: PWA Çevrimdışı Rozeti, Demo Modu & İsteğe Bağlı Yer İstasyonu
+  'pwa.online': 'Online · no network dependency',
+  'pwa.offline': 'Offline mode — fully operational',
+  'pwa.update.available': 'A new version is available.',
+  'pwa.update.reload': 'Reload',
+  'pwa.update.later': 'Later',
+  'network.badge.online': 'Network: Online · Local Engine',
+  'network.badge.offline': 'Offline (Onboard Standalone)',
+  'network.badge.title': 'Zero external network dependency; detection and worker run locally in browser.',
+  'demo.modeBadge': 'Demo mode · SW update prompt suppressed',
+  'groundStation.toggleTitle': 'Ground station (optional)',
+  'groundStation.hint': 'Optional local WebSocket stream for dev/demo only (default off). Falls back to local simulator if unavailable.',
+  'groundStation.urlLabel': 'WebSocket Server URL',
+  'groundStation.urlPlaceholder': 'ws://localhost:8787',
+  'groundStation.connect': 'Connect WS',
+  'groundStation.disconnect': 'Use Local Sim',
+  'groundStation.status.local': 'Local simulator',
+  'groundStation.status.connecting': 'WS Connecting / Fallback',
+  'groundStation.status.connected': 'WS Connected',
+  'groundStation.invalidUrl': 'Enter a valid ws:// or wss:// URL.',
 } as const
 
 export type I18nKey = keyof typeof en
