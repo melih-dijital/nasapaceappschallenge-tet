@@ -164,6 +164,7 @@ NASA HRP risk sayfaları nitelikseldir; HR/SpO2/uyku için sayısal eşik **verm
 - Her modül için birim test (Vitest). Motor kodu %80+ satır kapsamı hedefi (zorlama yok, ama test yaz).
 - İsimler İngilizce; yorumlar ve kullanıcıya dönük metinler i18n sözlüğünde.
 - Küçük, anlamlı commit'ler: `faz-N: kısa açıklama`.
+- **Git ve paralel çalışma kuralı (KESİN):** GitHub'a commit atarken kodlar diğer ekip üyelerinin attığı kod ile `main` üzerinde güvenle birleştirilir (merge). Başka birinin çalıştığı/sahip olduğu dosyalara ASLA dokunulmaz, üzerine yazılmaz veya silinmez. Çakışma durumunda diğer ekip üyesinin kodu korunur.
 - **Windows uyumu:** bash'e özgü komut yok; betikler `tsx`/Node ile. Tek komut: `npm run check` (= typecheck + lint + test + build). PowerShell'de `&&` zinciri yazma, `npm run check` kullan.
 - Rastgelelik yalnızca `sim/rng.ts` üzerinden. `Math.random()` yasak; **istisnalar yalnızca UI'da**: süs animasyonları ve PVT uyaran aralığı (yorumla işaretle).
 - Performans: grafikte en fazla ~600 nokta (decimate). Worker→UI mesajlarını toplu (batch) gönder (≤ 10 Hz).
@@ -189,7 +190,7 @@ NASA HRP risk sayfaları nitelikseldir; HR/SpO2/uyku için sayısal eşik **verm
 | 4 | Baseline motoru | ☐ | |
 | 5 | Algılama motoru L1–L4 | ☐ | |
 | 6 | Alan modülleri (radyasyon, uyku, kardiyo/kemik, davranış) | ☐ | |
-| 7 | Karar destek, planlayıcı, Earth Link | ☐ | |
+| 7 | Karar destek, planlayıcı, Earth Link | ◐ | §3.1–§3.4 tamamlandı (eylem kataloğu, kural tabanlı planlayıcı, gecikme-bilinçli triyaj, EarthLink + paketler/cevaplar; `docs/i18n-keys.md`; 5 yeni birim test dosyası); §3.5 DecisionStage + uçtan uca senaryo testi Faz 5 sonrasına ertelendi |
 | 8 | Doğrulama koşucusu | ☐ | |
 | 9 | UI-1: Kabuk + Kokpit | ☐ | |
 | 10 | UI-2: Uyarılar, karar kartları, davranış, kanıt/doğrulama sayfaları | ☐ | |
@@ -232,6 +233,9 @@ Durum işaretleri: ☐ başlamadı · ◐ sürüyor · ☑ bitti.
 | 2026-11-14 | Mock motor (`src/ui/mock/mockEngine.ts`): `Math.random` yok, oransız sinüslerin toplamıyla deterministik gürültü; zamanlayıcı `MockScheduler.every()` ile enjekte; hız ve sim zamanı Evidence'tan (`sim.speed.*`, `sim.secondsPerSimDay`); sahte uyarılar: gün 1'de CDR `sleep_debt` ADVISORY, gün 2'de SCI `radiation_event` CRITICAL/ACT_NOW ve kartları. Sahte değerler yalnızca gösterim, eşik değil | §10 rastgelelik kuralı; Kişi A için tekrarlanabilir akış |
 | 2026-11-14 | Commit mesajı yalnızca `faz-N: kısa açıklama`; yapay zekâ imzası veya `Co-Authored-By` satırı eklenmez | Kullanıcı kararı (Faz 1) |
 | 2026-11-14 | `rad.spe.limit.msv` kapsamı düzeltildi: VERIFIED → **PARTIAL**. Değer, tasarım referansı SPE (Ekim 1989 olaylarının toplamı) için mürettebat koruma hedefi (etkin doz, mSv); kişisel olay-başı limit değil. Radyasyon uyarı ve UI metinlerinde etiket **"design reference SPE protection target"** olur. FAZ_06 `speFractionOfLimit`, FAZ_09 "olay dozu / 250 mSv çubuğu", FAZ_10 "250 mSv (SPE)" kartı bu etiketle gösterilir, "limit" denmez. Evidence id'si (`rad.spe.limit.msv`) bağımlılıklar kırılmasın diye değişmedi | Dürüstlük §3.7, §7: kaynağı olmayan kesinlik iddia edilmez |
+| 2026-11-14 | `sourceMd.ts` içinde niteliksel kaynaklar için boş `## Değerler` tablosuna izin verildi; `docs/sources/_nasa-hrp-kaynak-analizi.md` şablon biçiminde `docs/sources/nasa-hrp-kaynak-analizi.md` olarak sisteme alındı | HRP risk/tehlike sayfaları nitelikseldir, sayısal sensör eşikleri içermez (§7, §3.7). Değer uydurmamak ve derleyiciyi kırmamak için boş tablo kabul edilir, ilişkili eşikler doğrulanacak olarak listelenir |
+| 2026-11-14 | **Paralel çalışma ve Git kuralı donduruldu:** GitHub'a commit atarken kodlar diğer ekip üyelerinin attığı kod ile `main` üzerinde güvenle birleştirilir; diğer kişilerin dosyalarına ASLA dokunulmaz, üzerine yazılmaz veya silinmez | Kullanıcı talimatı; ekip dosyalarının üzerine yazılmasını ve çakışma kayıplarını önleme |
+| 2026-11-14 | Faz 7 (§3.1–§3.4) kararları: `ACTION_CATALOG` 13 eylemi ve prosedürel `ACTION_NOTES` notlarını taşır; planlayıcı saf fonksiyondur (`locked` blokları korur, uyku alt sınırı `plan.sleep.minFractionOfBaseline`, direnç tabanı, `hydration.max.L` tavanı ve baş/kuyruk çakışma budaması uygular); triyaj `earth.timeToHarmMin.*` + `earth.groundProcessingMin` parametrelerini Evidence'tan okur (`CRITICAL` radyasyon her zaman `ACT_NOW`); `EarthLink` sim-zamanlıdır (`64 kbps` paket serileştirme gecikmesi + tek yön gecikme; kullanıcı override'ı senaryoya üstündür; uçuştaki mesajın `arriveT`'si kilitlidir; teslim edilmeyen yer yanıtları `pending`'de bekleyip `arriveT`'de `inbox`'a düşer); `packets.ts` ve `EarthLink.send` gizlilik anahtarlarını (`journal`, `rawcheckin`, `diary`) reddeder/temizler; `DecisionStage` (§3.5) Faz 5 sonrasına ertelenmiştir | FAZ_07 §3.1–§3.4 ve §5 kuralları; diğer faz motorlarına bağımlı katmanı (L1–L4) bekletip çekirdek karar destek + EarthLink bileşenlerini bağımsız doğrulamak için |
 
 ## 14. AÇIK SORULAR / BİLİNEN SORUNLAR
 - [ ] Resmi challenge "Resources" sekmesindeki ek kaynaklar okunamadı (ekip kontrol edecek).
@@ -239,7 +243,7 @@ Durum işaretleri: ☐ başlamadı · ◐ sürüyor · ☑ bitti.
 - [ ] GCR yüzey değeri 0.8 mi 0.9 mu — doğrulanacak.
 - [ ] Teslim saatinin saat dilimi netleştirilecek.
 - [ ] `Astronot_Saglik_Kokpiti_Dokumantasyon.pdf` ESKİ mimariyi anlatıyor (Node/Python ws backend, Railway/Render, /backend-/frontend) ve "NASA HRP eşik değerleriyle kalibre" diyor; teslim dokümanı olarak kullanılacaksa bu kit (§3, §7) ile uyumlu olacak şekilde yeniden yazılmalı (Faz 12).
-- [x] **ÇÖZÜLDÜ (commit 349b071):** iki dosya `_nasa-hrp-kaynak-analizi.md` / `_csa-radiation-data.md` olarak yeniden adlandırıldı; derleyici atlıyor. Şablona çevrilirlerse `_` kaldırılır. Eski kayıt: **(Faz 1'i kırar)** `docs/sources/NASA_HRP_Kaynak_Analizi.md` ve `docs/sources/csa_radiation_data.md` şablon biçiminde değil (front matter ve `## Değerler` tablosu yok; dosya adı `<id>` kuralına uymuyor). Faz 1 derleyicisi `_` ile başlamayan her dosyayı okuyup `exit 1` verecek. **Yeniden biçimlendirme önerisi:** şablona çevrilene kadar `_nasa-hrp-kaynak-analizi.md` / `_csa-radiation-data.md` olarak yeniden adlandır (sahip: Kişi C). HRP dosyasındaki "thresholds.ts eşikleri" önerisi §7 ile çelişir (HRP sayfaları sayısal eşik vermez). Faz 0'da `docs/`'a dokunulmadı.
+- [x] **ÇÖZÜLDÜ (commit 349b071 & güncel):** `_nasa-hrp-kaynak-analizi.md` şablon biçiminde `docs/sources/nasa-hrp-kaynak-analizi.md` olarak yeniden yazıldı ve derleyiciye dahil edildi (boş `## Değerler` tablosu, uydurma değer yok, doğrulanacaklar listelendi). Geriye kalan `_csa-radiation-data.md` şablona çevrilene kadar derleyici tarafından atlanmaya devam ediyor.
 - [ ] `clsx` ve `tailwind-merge` FAZ_00 listesi gereği kurulu, ama şu an kodda kullanılmıyor (shadcn 4 bileşenleri `cn` paketini kullanıyor). Kaldırma kararı ekipte.
 - [ ] `cn@0.5.2` `engines.node >=22` bildiriyor; §4 "Node 20+" diyor. Paket tarayıcıya paketlendiği için çalışma zamanını etkilemez; Node 20'de npm yalnızca uyarı verir.
 - [ ] npm 11 `allow-scripts`: esbuild'in postinstall betiği onaylanmadığı için çalışmadı; tsx/vite/vitest yine sorunsuz. Gerekirse `npm approve-scripts esbuild`.
@@ -247,8 +251,9 @@ Durum işaretleri: ☐ başlamadı · ◐ sürüyor · ☑ bitti.
 - [x] Git kimliği: depo kimliği kullanıcı tarafından `Melih Yeşilyurt <imyesilyurt1677@hotmail.com>` yapıldı (349b071 ve sonrası). Yalnızca Faz 0 commit'i (074ae91) eski `16tryesilyurt61` kimliğini ve bir `Co-Authored-By: Claude` satırını taşıyor.
 - [ ] `README.md` hâlâ Vite şablon metni (Faz 12'de yeniden yazılacak).
 - [ ] `rad.spe.limit.msv` (PARTIAL): birincil standart (NASA-STD-3001 Vol.1) açılıp 30 günlük limitle karşılaştırılacak.
-- [ ] i18n anahtarları: `METRIC_META.labelKey` (`metric.*`) ve mock'taki `alert.*.title`, `why.*`, `action.*.step*` henüz `docs/i18n-keys.md`'de yok (dosya Faz 5'te başlar). Faz 9 bunları sözlüğe alırken mock anahtarlarının yer tutucu olduğunu bilmeli.
+- [ ] i18n anahtarları: `METRIC_META.labelKey` (`metric.*`) ve mock'taki `alert.*.title`, `why.*` henüz tam sözlükte yok; `docs/i18n-keys.md` Faz 7 anahtarlarıyla (`action.*`, `plan.diff.*`, `triage.reason.*`, `ground.reply.*`) başlatıldı. Faz 9 kalan anahtarları sözlüğe alırken mock anahtarlarının yer tutucu olduğunu bilmeli.
 - [ ] Mock motorun sahte değerleri ve uyarıları yalnızca `src/ui/mock/` altında; Faz 3'te UI gerçek `engineClient`'a geçince kullanılmayacak.
+- [ ] Faz 7 §3.5 `DecisionStage` ve uçtan uca senaryo testi: **Faz 5 sonrası** (Faz 3 worker/pipeline ve Faz 5 L1–L4 algılama motoru tamamlanınca entegre edilecek).
 
 ## 15. DEĞİŞİKLİK GÜNLÜĞÜ
 | Tarih/Saat | Faz | Yapan | Ne yapıldı | Dokunulan dosyalar |
@@ -258,6 +263,9 @@ Durum işaretleri: ☐ başlamadı · ◐ sürüyor · ☑ bitti.
 | 2026-11-14 | 1 (düzeltme) | Claude (kullanıcı isteği) | `rad.spe.limit.msv` VERIFIED → PARTIAL; scope/note: tasarım referansı SPE (Ekim 1989 toplamı) koruma hedefi, kişisel limit değil; UI etiketi "design reference SPE protection target"; registry testindeki §7 status'u güncellendi | `docs/sources/seed-verified-values.md`, `src/core/evidence/evidence.generated.json`, `tests/core/registry.test.ts`, `PROJECT_MEMORY.md` §7, §12–15 |
 | 2026-11-14 | 1 (düzeltme) | Claude (kullanıcı isteği) | SPE etiketi şablon ve prompt'lara taşındı: şablon örnek satırı PARTIAL; FAZ_06/09/10'da 250 mSv için "design reference SPE protection target" (alan adları `speFractionOfLimit`/`fractionOfSpeLimit` ve evidence id `rad.spe.limit.msv` değişmedi) | `templates/SOURCE_TEMPLATE.md`, `prompts/FAZ_06_Alan_Modulleri.md`, `prompts/FAZ_09_UI1_Kabuk_ve_Kokpit.md`, `prompts/FAZ_10_UI2_Uyarilar_Karar_Davranis_Kanit.md`, `PROJECT_MEMORY.md` §15 |
 | 2026-11-14 | 1 (düzeltme) | Melih Yeşilyurt (Claude ile) | FAZ_05 L17: SPE yaklaşımı "design reference SPE protection target" ifadesiyle (evidence id değişmedi) | `prompts/FAZ_05_Algilama_Motoru.md`, `PROJECT_MEMORY.md` §14–15 |
+| 2026-11-14 | Kaynak entegrasyonu | Takım TET (Kişi C / Claude) | `_nasa-hrp-kaynak-analizi.md` şablon biçiminde `docs/sources/nasa-hrp-kaynak-analizi.md` olarak yeniden biçimlendirildi; HRP niteliksel olduğu için değer uydurulmadı, `sourceMd.ts`'de boş tablo desteği sağlandı, `npm run check` yeşil | `docs/sources/nasa-hrp-kaynak-analizi.md`, `src/core/evidence/sourceMd.ts`, `PROJECT_MEMORY.md` |
+| 2026-11-14 | Kural güncellemesi | Melih Yeşilyurt (Claude ile) | Git ve paralel çalışma kuralı eklendi: commit atarken diğer ekip üyelerinin kodlarıyla main'de birleştir, başkalarının dosyalarına kesinlikle dokunma | `AGENTS.md`, `CLAUDE.md`, `PROJECT_MEMORY.md` §10, §13, §15, §16 |
+| 2026-11-14 | 7 (§3.1–§3.4) | Melih Yeşilyurt | Eylem kataloğu (`actions.ts`), kural tabanlı planlayıcı (`planner.ts`), gecikme-bilinçli triyaj (`triage.ts`), Earth Link simülatörü + paketler + yer cevapları (`link.ts`, `packets.ts`, `groundReplies.ts`), `docs/i18n-keys.md` ve 5 birim test dosyası tamamlandı (§3.5 Faz 5 sonrasına bırakıldı); `npm run check` yeşil (15 dosya, 111 test) | `src/core/decision/{actions,planner,triage}.ts`, `src/core/earthlink/{packets,groundReplies,link}.ts`, `docs/i18n-keys.md`, `tests/core/decision/{actions,planner,triage}.test.ts`, `tests/core/earthlink/{packets,link}.test.ts`, `PROJECT_MEMORY.md` §12–15 |
 
 ---
 
@@ -265,4 +273,4 @@ Durum işaretleri: ☐ başlamadı · ◐ sürüyor · ☑ bitti.
 **Başlarken:** (1) Bu dosyayı oku. (2) §12'den sıradaki fazı belirle. (3) İlgili `docs/sources` ve `docs/calibration` dosyalarına bak. (4) `git status` / son commit'leri oku. (5) Planını 5–10 maddede yaz, sonra kodla.
 **Çalışırken:** Kapsam dışına çıkma. Belirsizlik varsa varsayım yap, §14'e yaz, devam et. Kullanıcıya kısa soru ancak ilerlemeyi gerçekten engelliyorsa.
 **Bitirirken:** (1) `npm run check` çalıştır; sonuçları raporla. (2) §12, §13, §14, §15'i güncelle. (3) Commit. (4) Sonda "Sonraki faz için devir notu" yaz (5 madde).
-**Yapma:** Değer uydurma · kaynağı olmayanı NASA diye etiketleme · mimari ilkeleri (§3) bozma · `core`/`sim` içine DOM sokma · yeni bağımlılığı sessizce ekleme · bu dosyayı silme/kısaltma (yalnızca güncelle).
+**Yapma:** Değer uydurma · kaynağı olmayanı NASA diye etiketleme · mimari ilkeleri (§3) bozma · `core`/`sim` içine DOM sokma · yeni bağımlılığı sessizce ekleme · bu dosyayı silme/kısaltma (yalnızca güncelle) · **başkalarının dosyalarına dokunma/ezme/silme; GitHub commit'lerinde kodları main'de güvenle birleştir**.
