@@ -35,6 +35,7 @@ import {
   CREW_PROFILES,
   DEMO_MAIN_BOOKMARKS,
   selectActiveAlerts,
+  selectCriticalActNowAlerts,
   selectHighestSeverity,
   UI_SCENARIOS,
   useAlertStore,
@@ -42,7 +43,9 @@ import {
   useSessionStore,
 } from '@/ui/store'
 import '@/ui/theme/tokens.css'
+import { AlertAudioToggle } from './AlertAudioMonitor'
 import { DisclaimerBar } from './DisclaimerBar'
+import { ErrorBoundary } from './ErrorBoundary'
 import { SeverityIcon, type DisplaySeverity } from './SeverityIcon'
 
 const SPEED_PRESETS = [0.5, 1, 5, 20, 50] as const
@@ -84,15 +87,19 @@ export function AppShell({ children }: { children: ReactNode }) {
   const pendingReplyCount = useEarthLinkStore((s) => s.pendingReplyCount)
 
   const totalActiveAlerts = selectActiveAlerts({ alerts }).length
+  const criticalActNowAlerts = selectCriticalActNowAlerts({ alerts })
 
-  const routedContent =
-    location.pathname === '/alerts' ? (
-      <AlertsPage />
-    ) : location.pathname === '/behavioral' ? (
-      <BehavioralPage />
-    ) : (
-      children
-    )
+  const routedContent = (
+    <ErrorBoundary resetKey={location.pathname}>
+      {location.pathname === '/alerts' ? (
+        <AlertsPage />
+      ) : location.pathname === '/behavioral' ? (
+        <BehavioralPage />
+      ) : (
+        children
+      )}
+    </ErrorBoundary>
+  )
 
   const oneWayText =
     earthConfig.oneWayDelaySec < 60
@@ -102,6 +109,34 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground">
       <DisclaimerBar />
+
+      {/* Kalıcı CRITICAL + ACT_NOW Bandı (ACK ile iner, kapatılamaz) */}
+      {criticalActNowAlerts.length > 0 && (
+        <div
+          role="alert"
+          data-testid="critical-act-now-banner"
+          className="flex flex-wrap items-center justify-between gap-2 border-b border-status-critical bg-status-critical px-4 py-2 text-xs font-semibold text-white"
+        >
+          <div className="flex items-center gap-2">
+            <SeverityIcon severity="CRITICAL" />
+            <span>{t('alerts.criticalBanner')}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            {criticalActNowAlerts.slice(0, 2).map((al) => (
+              <Button
+                key={al.id}
+                type="button"
+                size="xs"
+                variant="secondary"
+                onClick={() => actions.ackAlert(al.id)}
+                data-testid={`banner-ack-${al.id}`}
+              >
+                {t('alerts.ackButton')} ({al.crewId.toUpperCase()})
+              </Button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Üst Görev Kontrol Çubuğu */}
       <header className="border-b border-border/80 bg-card/95 px-3 py-2 backdrop-blur-xs">
@@ -315,6 +350,9 @@ export function AppShell({ children }: { children: ReactNode }) {
               )}
             </div>
 
+            {/* Sesli Uyarı Anahtarı (Web Audio Sentez) */}
+            <AlertAudioToggle />
+
             {/* Dil Değiştirici (EN / TR) */}
             <div
               role="group"
@@ -468,13 +506,9 @@ export function AppShell({ children }: { children: ReactNode }) {
                       <Icon aria-hidden="true" className="size-4 shrink-0" />
                       <span>{t(item.labelKey)}</span>
                     </span>
-                    {item.to === '/alerts' && totalActiveAlerts > 0 ? (
+                    {item.to === '/alerts' && totalActiveAlerts > 0 && (
                       <span className="rounded-full bg-status-critical/20 px-1.5 py-0.5 font-mono text-[10px] font-bold text-status-critical tabular-nums">
                         {totalActiveAlerts}
-                      </span>
-                    ) : (
-                      <span className="rounded bg-muted px-1 py-0.5 font-mono text-[9px] text-muted-foreground">
-                        {t('nav.comingSoon')}
                       </span>
                     )}
                   </NavLink>

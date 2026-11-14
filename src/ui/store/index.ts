@@ -1,3 +1,4 @@
 export * from './cockpitStore'
 export * from './crewProfiles'
 export * from './decimate'
+export * from './phase10Data'

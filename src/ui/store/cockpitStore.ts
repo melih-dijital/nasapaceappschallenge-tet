@@ -4,6 +4,7 @@
 import { create } from 'zustand'
 import { getNumber } from '@/core/evidence/registry'
 import {
+  EARTH_DELAY_CLASSES,
   METRIC_META,
   SEVERITIES,
   STATE_IDS,
@@ -14,6 +15,8 @@ import {
   type EarthDelayClass,
   type EarthLinkConfig,
   type EarthLinkPreset,
+  type JournalEntry,
+  type Message,
   type MetricId,
   type ScenarioId,
   type Severity,
@@ -21,7 +24,7 @@ import {
   type StateEstimate,
   type StateId,
 } from '@/core/types'
-import { MIN_PER_DAY, msToDays, VITALS_INTERVAL_MIN } from '@/core/units'
+import { MIN_PER_DAY, MS_PER_HOUR, msToDays, VITALS_INTERVAL_MIN } from '@/core/units'
 import { createEngineClient, type EngineClient } from '@/store/engineClient'
 import {
   getLanguage,
@@ -30,7 +33,13 @@ import {
   type Language,
 } from '@/ui/i18n'
 import { MockEngine } from '@/ui/mock/mockEngine'
-import { latestKey, type ChartFrame, type WorkerToUiMessage } from '@/workers/protocol'
+import {
+  CONSENT_CATEGORIES,
+  latestKey,
+  type ChartFrame,
+  type ConsentCategory,
+  type WorkerToUiMessage,
+} from '@/workers/protocol'
 import {
   buildInitialVitalsSeries,
   buildSleepHistory,
@@ -44,6 +53,17 @@ import {
   type DailySleepEntry,
 } from './crewProfiles'
 import { decimate, MAX_CHART_POINTS, type SeriesPoint } from './decimate'
+import {
+  buildMockBehavioralTrends,
+  buildMockValidationReport,
+  loadLocalJournals,
+  saveLocalJournalEntry,
+  type CheckInRecord,
+  type GroundReplyTemplateId,
+  type PassiveProxySummary,
+  type PvtRecord,
+  type UiValidationReport,
+} from './phase10Data'
 
 export type WorkerLifecycleStatus = 'IDLE' | 'READY' | 'RUNNING' | 'PAUSED' | 'ERROR'
 
@@ -108,6 +128,27 @@ export interface EarthLinkStoreState {
   roundTripMin: number
   pendingReplyCount: number
   nextReplyEtaSec: number | null
+  consents: ConsentCategory[]
+  outbox: Message[]
+  inbox: Message[]
+  groundDeliveredStates: Record<CrewId, Record<StateId, StateEstimate>>
+  groundDeliveredAlerts: Alert[]
+  groundDeliveredAt: SimTimeMs | null
+  lastReplyReceivedToast: { id: string; templateId: string; arrivedAt: SimTimeMs } | null
+}
+
+export interface BehavioralStoreState {
+  checkInsByCrew: Record<CrewId, CheckInRecord[]>
+  pvtByCrew: Record<CrewId, PvtRecord[]>
+  proxiesByCrew: Record<CrewId, PassiveProxySummary>
+  journalsByCrew: Record<CrewId, JournalEntry[]>
+}
+
+export interface ValidationStoreState {
+  running: boolean
+  mode: 'quick' | 'full'
+  progress: { done: number; total: number } | null
+  report: UiValidationReport | null
 }
 
 function computeRoundTripMin(config: EarthLinkConfig): number {
@@ -329,8 +370,29 @@ function buildInitialStates(
   return result
 }
 
+function buildInitialBehavioralState(
+  scenarioId: ScenarioId,
+  simDay = 0,
+): BehavioralStoreState {
+  const checkInsByCrew: Record<CrewId, CheckInRecord[]> = {}
+  const pvtByCrew: Record<CrewId, PvtRecord[]> = {}
+  const proxiesByCrew: Record<CrewId, PassiveProxySummary> = {}
+  const journalsByCrew: Record<CrewId, JournalEntry[]> = {}
+
+  for (const crew of CREW_PROFILES) {
+    const trends = buildMockBehavioralTrends(crew.id, simDay, scenarioId)
+    checkInsByCrew[crew.id] = trends.checkIns
+    pvtByCrew[crew.id] = trends.pvtHistory
+    proxiesByCrew[crew.id] = trends.proxies
+    journalsByCrew[crew.id] = loadLocalJournals(crew.id)
+  }
+
+  return { checkInsByCrew, pvtByCrew, proxiesByCrew, journalsByCrew }
+}
+
 const initialScenarioId: ScenarioId = 'demo_main'
 const initialTelemetry = buildInitialTelemetryState(initialScenarioId, 0)
+const initialStates = buildInitialStates(initialScenarioId, 0)
 const initialEarthConfig: EarthLinkConfig = {
   oneWayDelaySec: getScenarioMeta(initialScenarioId).defaultOneWayDelaySec,
   preset: 'MARS_MIN',
@@ -360,7 +422,7 @@ export const useAlertStore = create<AlertState>(() => ({
 }))
 
 export const useStateStore = create<StateStoreState>(() => ({
-  byCrew: buildInitialStates(initialScenarioId, 0),
+  byCrew: initialStates,
 }))
 
 export const useDecisionStore = create<DecisionState>(() => ({
@@ -372,6 +434,24 @@ export const useEarthLinkStore = create<EarthLinkStoreState>(() => ({
   roundTripMin: computeRoundTripMin(initialEarthConfig),
   pendingReplyCount: 0,
   nextReplyEtaSec: null,
+  consents: [...CONSENT_CATEGORIES],
+  outbox: [],
+  inbox: [],
+  groundDeliveredStates: initialStates,
+  groundDeliveredAlerts: [],
+  groundDeliveredAt: null,
+  lastReplyReceivedToast: null,
+}))
+
+export const useBehavioralStore = create<BehavioralStoreState>(() =>
+  buildInitialBehavioralState(initialScenarioId, 0),
+)
+
+export const useValidationStore = create<ValidationStoreState>(() => ({
+  running: false,
+  mode: 'quick',
+  progress: null,
+  report: null,
 }))
 
 // Dil değişikliklerini sessionStore ile senkron tut
@@ -445,11 +525,45 @@ export function selectRecentAlerts(state: AlertState, crewId?: CrewId, limit = 5
   const sorted = [...filtered].sort((a, b) => {
     const sevDiff = SEVERITIES.indexOf(b.severity) - SEVERITIES.indexOf(a.severity)
     if (sevDiff !== 0) return sevDiff
-    if (a.earthDelayClass === 'ACT_NOW' && b.earthDelayClass !== 'ACT_NOW') return -1
-    if (b.earthDelayClass === 'ACT_NOW' && a.earthDelayClass !== 'ACT_NOW') return 1
+    const delayDiff =
+      EARTH_DELAY_CLASSES.indexOf(a.earthDelayClass) -
+      EARTH_DELAY_CLASSES.indexOf(b.earthDelayClass)
+    if (delayDiff !== 0) return delayDiff
     return b.lastSeenT - a.lastSeenT
   })
   return sorted.slice(0, limit)
+}
+
+/**
+ * FAZ 10 §3.1: Aktif + son 24 sim-saat içinde çözülmüş uyarılar;
+ * sıralama: severity (CRITICAL önce) -> earthDelayClass (ACT_NOW önce) -> zaman (yeni önce).
+ */
+export function selectAlertsSorted(
+  state: AlertState,
+  simT: SimTimeMs,
+  crewId?: CrewId,
+): Alert[] {
+  const cutoffT = simT - 24 * MS_PER_HOUR
+  const filtered = state.alerts.filter((a) => {
+    if (crewId !== undefined && a.crewId !== crewId) return false
+    if (a.status !== 'RESOLVED') return true
+    return (a.resolvedT ?? a.lastSeenT) >= cutoffT
+  })
+  return [...filtered].sort((a, b) => {
+    const sevDiff = SEVERITIES.indexOf(b.severity) - SEVERITIES.indexOf(a.severity)
+    if (sevDiff !== 0) return sevDiff
+    const delayDiff =
+      EARTH_DELAY_CLASSES.indexOf(a.earthDelayClass) -
+      EARTH_DELAY_CLASSES.indexOf(b.earthDelayClass)
+    if (delayDiff !== 0) return delayDiff
+    return b.lastSeenT - a.lastSeenT
+  })
+}
+
+export function selectCriticalActNowAlerts(state: AlertState): Alert[] {
+  return state.alerts.filter(
+    (a) => a.status === 'ACTIVE' && a.severity === 'CRITICAL' && a.earthDelayClass === 'ACT_NOW',
+  )
 }
 
 export function selectHighestSeverity(state: AlertState, crewId: CrewId): Severity | null {
@@ -605,20 +719,171 @@ function applyAlertEvents(events: AlertEvent[]): void {
     })
   }
 
-  // WARNING+ uyarı varsa Earth Link bekleyen yanıt sayacını güncelle
+  // WARNING+ uyarı varsa Earth Link giden kutusuna paket ekle ve bekleyen yanıt sayacını güncelle
+  const earthState = useEarthLinkStore.getState()
   const activeWarnOrCrit = useAlertStore
     .getState()
     .alerts.filter(
       (a) => a.status === 'ACTIVE' && (a.severity === 'WARNING' || a.severity === 'CRITICAL'),
     )
+
+  const newOutboxMessages: Message[] = []
+  const newInboxReplies: Message[] = []
+  const delayMs = earthState.config.oneWayDelaySec * 1000
+  const groundMs = getNumber('earth.groundProcessingMin') * 60 * 1000
+
+  for (const ev of events) {
+    if (
+      ev.type === 'OPENED' &&
+      (ev.alert.severity === 'WARNING' || ev.alert.severity === 'CRITICAL')
+    ) {
+      const category: ConsentCategory =
+        ev.alert.state === 'radiation_event' ? 'RADIATION' : 'ALERTS'
+      if (!earthState.consents.includes(category)) continue
+      const msgId = `up-${ev.alert.id}`
+      if (earthState.outbox.some((m) => m.id === msgId)) continue
+
+      const status = earthState.config.blackout ? 'QUEUED' : 'IN_FLIGHT'
+      const sendT = earthState.config.blackout ? undefined : ev.t
+      const arriveT = earthState.config.blackout ? undefined : ev.t + delayMs
+
+      newOutboxMessages.push({
+        id: msgId,
+        direction: 'UP',
+        priority: ev.alert.severity === 'CRITICAL' ? 0 : 1,
+        category,
+        createdT: ev.t,
+        ...(sendT !== undefined ? { sendT } : {}),
+        ...(arriveT !== undefined ? { arriveT } : {}),
+        payload: {
+          alertId: ev.alert.id,
+          crewId: ev.alert.crewId,
+          severity: ev.alert.severity,
+          state: ev.alert.state ?? null,
+          earthDelayClass: ev.alert.earthDelayClass,
+        },
+        status,
+      })
+
+      if (!earthState.config.blackout) {
+        const replyTemplate =
+          ev.alert.state === 'radiation_event'
+            ? 'REPLY_SPE_ACK'
+            : ev.alert.state === 'sleep_debt'
+              ? 'REPLY_SLEEP_ACK'
+              : ev.alert.state === 'dehydration'
+                ? 'REPLY_DEHYDRATION_ACK'
+                : 'REPLY_GENERIC_ACK'
+        newInboxReplies.push({
+          id: `down-${ev.alert.id}`,
+          direction: 'DOWN',
+          priority: ev.alert.severity === 'CRITICAL' ? 0 : 1,
+          category: 'ALERTS',
+          createdT: ev.t + delayMs + groundMs,
+          sendT: ev.t + delayMs + groundMs,
+          arriveT: ev.t + delayMs * 2 + groundMs,
+          payload: { templateId: replyTemplate, relatedAlertId: ev.alert.id },
+          status: 'IN_FLIGHT',
+        })
+      }
+    }
+  }
+
   useEarthLinkStore.setState((prev) => ({
     ...prev,
+    outbox: newOutboxMessages.length > 0 ? [...newOutboxMessages, ...prev.outbox].slice(0, 30) : prev.outbox,
+    inbox: newInboxReplies.length > 0 ? [...newInboxReplies, ...prev.inbox].slice(0, 30) : prev.inbox,
     pendingReplyCount: activeWarnOrCrit.length,
     nextReplyEtaSec:
       activeWarnOrCrit.length > 0
-        ? Math.round(computeRoundTripMin(prev.config) * 60)
+        ? Number.isFinite(computeRoundTripMin(prev.config))
+          ? Math.round(computeRoundTripMin(prev.config) * 60)
+          : null
         : null,
   }))
+}
+
+function tickEarthLinkPackets(simT: SimTimeMs): void {
+  const earth = useEarthLinkStore.getState()
+  if (earth.outbox.length === 0 && earth.inbox.length === 0) return
+
+  const delayMs = earth.config.oneWayDelaySec * 1000
+  let outboxChanged = false
+  let newlyDeliveredToGround = false
+
+  const nextOutbox = earth.outbox.map((m) => {
+    if (m.status === 'QUEUED' && !earth.config.blackout) {
+      outboxChanged = true
+      return {
+        ...m,
+        status: 'IN_FLIGHT' as const,
+        sendT: simT,
+        arriveT: simT + delayMs,
+      }
+    }
+    if (m.status === 'IN_FLIGHT' && m.arriveT !== undefined && simT >= m.arriveT) {
+      outboxChanged = true
+      newlyDeliveredToGround = true
+      return { ...m, status: 'DELIVERED' as const }
+    }
+    return m
+  })
+
+  let inboxChanged = false
+  let receivedReplyToast = earth.lastReplyReceivedToast
+  const nextInbox = earth.inbox.map((m) => {
+    if (m.status === 'IN_FLIGHT' && m.arriveT !== undefined && simT >= m.arriveT) {
+      inboxChanged = true
+      const payload = m.payload as { templateId?: string } | null
+      receivedReplyToast = {
+        id: m.id,
+        templateId: payload?.templateId ?? 'REPLY_GENERIC_ACK',
+        arrivedAt: simT,
+      }
+      return { ...m, status: 'DELIVERED' as const }
+    }
+    return m
+  })
+
+  // Bekleyen en yakın yanıt geri sayımını güncelle
+  const inFlightReplies = nextInbox.filter(
+    (m) => m.status === 'IN_FLIGHT' && m.arriveT !== undefined,
+  )
+  const earliestArrive =
+    inFlightReplies.length > 0
+      ? Math.min(...inFlightReplies.map((m) => m.arriveT ?? Infinity))
+      : null
+  const nextEtaSec =
+    earliestArrive !== null && Number.isFinite(earliestArrive)
+      ? Math.max(0, Math.round((earliestArrive - simT) / 1000))
+      : earth.pendingReplyCount > 0 && !earth.config.blackout
+        ? earth.nextReplyEtaSec
+        : null
+
+  if (outboxChanged || inboxChanged || newlyDeliveredToGround || nextEtaSec !== earth.nextReplyEtaSec) {
+    const currentStates = useStateStore.getState().byCrew
+    const currentAlerts = useAlertStore.getState().alerts
+    const consents = earth.consents
+
+    useEarthLinkStore.setState((prev) => ({
+      ...prev,
+      outbox: nextOutbox,
+      inbox: nextInbox,
+      nextReplyEtaSec: nextEtaSec,
+      lastReplyReceivedToast: receivedReplyToast,
+      ...(newlyDeliveredToGround
+        ? {
+            groundDeliveredAt: simT,
+            groundDeliveredStates: consents.includes('VITALS_SUMMARY')
+              ? currentStates
+              : prev.groundDeliveredStates,
+            groundDeliveredAlerts: consents.includes('ALERTS')
+              ? currentAlerts.filter((a) => a.status !== 'RESOLVED')
+              : prev.groundDeliveredAlerts,
+          }
+        : {}),
+    }))
+  }
 }
 
 function handleWorkerMessage(msg: WorkerToUiMessage): void {
@@ -698,6 +963,7 @@ function handleWorkerMessage(msg: WorkerToUiMessage): void {
           }
         })
       }
+      tickEarthLinkPackets(msg.status.simT)
       return
     }
     case 'FRAMES_BATCH':
@@ -762,7 +1028,21 @@ function handleWorkerMessage(msg: WorkerToUiMessage): void {
       })
       return
     case 'VALIDATION_PROGRESS':
+      useValidationStore.setState({
+        running: true,
+        progress: { done: msg.done, total: msg.total },
+      })
+      return
     case 'VALIDATION_RESULT':
+      useValidationStore.setState((prev) => ({
+        ...prev,
+        running: false,
+        progress: null,
+        report:
+          typeof msg.report === 'object' && msg.report !== null && 'scenarios' in msg.report
+            ? (msg.report as UiValidationReport)
+            : buildMockValidationReport(prev.mode === 'quick'),
+      }))
       return
   }
 }
@@ -1055,6 +1335,186 @@ export const actions = {
         dataQualityCount: Object.keys(nextMap).length,
       }
     })
+  },
+
+  /** FAZ 10 §3.2: Özel Earth Link gecikmesi (1 sn – 1800 sn). */
+  setEarthLinkCustomDelay(seconds: number): void {
+    const clamped = Math.max(1, Math.min(1800, Math.round(seconds)))
+    actions.setEarthLinkPreset('CUSTOM', clamped)
+  },
+
+  /** FAZ 10 §3.2: Onay (consent) kategorilerini günceller. */
+  setConsentCategories(categories: ConsentCategory[]): void {
+    useEarthLinkStore.setState({ consents: [...categories] })
+    getActiveEngineClient().send({ type: 'SET_CONSENT', categories })
+  },
+
+  /** FAZ 10 §3.6: Yer istasyonu şablon cevabı gönderir (gecikmeyle gelen kutusuna düşer). */
+  sendGroundReply(templateId: GroundReplyTemplateId, relatedAlertId?: string): void {
+    const simT = useSessionStore.getState().simT
+    const earth = useEarthLinkStore.getState()
+    const delayMs = earth.config.oneWayDelaySec * 1000
+    const replyMsg: Message = {
+      id: `ground-${Date.now()}-${templateId}`,
+      direction: 'DOWN',
+      priority: 1,
+      category: 'ALERTS',
+      createdT: simT,
+      sendT: simT,
+      arriveT: simT + delayMs,
+      payload: { templateId, ...(relatedAlertId ? { relatedAlertId } : {}) },
+      status: earth.config.blackout ? 'QUEUED' : 'IN_FLIGHT',
+    }
+    useEarthLinkStore.setState((prev) => ({
+      ...prev,
+      inbox: [replyMsg, ...prev.inbox].slice(0, 30),
+    }))
+    getActiveEngineClient().send({
+      type: 'GROUND_REPLY',
+      templateId,
+      ...(relatedAlertId ? { relatedAlertId } : {}),
+    })
+  },
+
+  dismissReplyToast(): void {
+    useEarthLinkStore.setState({ lastReplyReceivedToast: null })
+  },
+
+  /** FAZ 10 §3.3: Günlük check-in (stress/mood/motivation 1–10) + yalnızca cihazda kalan günlük. */
+  submitCheckIn(
+    crewId: CrewId,
+    mood: { stress: number; mood: number; motivation: number },
+    journalText?: string,
+  ): void {
+    const { day, simT } = useSessionStore.getState()
+    const trimmedJournal = journalText?.trim() ?? ''
+    if (trimmedJournal.length > 0) {
+      const entry: JournalEntry = {
+        id: `journal-${crewId}-${day}-${simT}`,
+        crewId,
+        t: simT,
+        text: trimmedJournal,
+      }
+      const nextJournals = saveLocalJournalEntry(crewId, entry)
+      useBehavioralStore.setState((prev) => ({
+        ...prev,
+        journalsByCrew: {
+          ...prev.journalsByCrew,
+          [crewId]: nextJournals,
+        },
+      }))
+    }
+
+    useBehavioralStore.setState((prev) => {
+      const existing = prev.checkInsByCrew[crewId] ?? []
+      const withoutToday = existing.filter((c) => c.day !== day)
+      const nextCheckIns: CheckInRecord[] = [
+        ...withoutToday,
+        {
+          day,
+          t: simT,
+          stress: mood.stress,
+          mood: mood.mood,
+          motivation: mood.motivation,
+          hasJournalNote: trimmedJournal.length > 0,
+        },
+      ].sort((a, b) => a.day - b.day)
+
+      const curProxy = prev.proxiesByCrew[crewId] ?? {
+        sleepRegularityIndex: 0.85,
+        missedExerciseCount: 0,
+        checkInCompliancePct: 95,
+        passiveProxyScore: 0.88,
+        moodTrendSlope: 0,
+      }
+      const firstMood = nextCheckIns[0]?.mood ?? mood.mood
+      const slope = Number(((mood.mood - firstMood) / Math.max(1, nextCheckIns.length - 1)).toFixed(2))
+
+      return {
+        ...prev,
+        checkInsByCrew: { ...prev.checkInsByCrew, [crewId]: nextCheckIns },
+        proxiesByCrew: {
+          ...prev.proxiesByCrew,
+          [crewId]: {
+            ...curProxy,
+            moodTrendSlope: slope,
+            checkInCompliancePct: Math.min(100, Math.max(curProxy.checkInCompliancePct, 96)),
+          },
+        },
+      }
+    })
+
+    useTelemetryStore.setState((prev) => ({
+      ...prev,
+      latestValues: {
+        ...prev.latestValues,
+        [latestKey(crewId, 'mood.stress')]: mood.stress,
+        [latestKey(crewId, 'mood.mood')]: mood.mood,
+        [latestKey(crewId, 'mood.motivation')]: mood.motivation,
+      },
+    }))
+
+    getActiveEngineClient().send({
+      type: 'SUBMIT_CHECKIN',
+      crewId,
+      mood,
+      ...(trimmedJournal.length > 0 ? { journalText: trimmedJournal } : {}),
+    })
+  },
+
+  /** FAZ 10 §3.3: 60 sn PVT-benzeri reaksiyon testi sonucu gönderir. */
+  submitPvt(crewId: CrewId, medianMs: number, lapses: number, falseStarts = 0): void {
+    const { day, simT } = useSessionStore.getState()
+    useBehavioralStore.setState((prev) => {
+      const existing = prev.pvtByCrew[crewId] ?? []
+      const nextPvt: PvtRecord[] = [
+        ...existing,
+        { day, t: simT, medianMs: Math.round(medianMs), lapses, falseStarts },
+      ].slice(-14)
+      return {
+        ...prev,
+        pvtByCrew: { ...prev.pvtByCrew, [crewId]: nextPvt },
+      }
+    })
+    useTelemetryStore.setState((prev) => ({
+      ...prev,
+      latestValues: {
+        ...prev.latestValues,
+        [latestKey(crewId, 'pvt.medianMs')]: Math.round(medianMs),
+        [latestKey(crewId, 'pvt.lapses')]: lapses,
+      },
+    }))
+    getActiveEngineClient().send({
+      type: 'SUBMIT_PVT',
+      crewId,
+      medianMs: Math.round(medianMs),
+      lapses,
+    })
+  },
+
+  /** FAZ 10 §3.5: Doğrulama koşucusunu başlatır (quick/full). */
+  requestValidation(quick = true): void {
+    useValidationStore.setState({
+      running: true,
+      mode: quick ? 'quick' : 'full',
+      progress: { done: 0, total: quick ? 24 : 160 },
+    })
+    getActiveEngineClient().send({ type: 'REQUEST_VALIDATION', quick })
+    // MockEngine validation yanıtı üretmediğinde UI için deterministik fallback raporu üret
+    if (isMockEngineRequested() || !realEngineClientFactory) {
+      const report = buildMockValidationReport(quick)
+      useValidationStore.setState({
+        running: false,
+        mode: quick ? 'quick' : 'full',
+        progress: null,
+        report,
+      })
+    }
+  },
+
+  cancelValidation(): void {
+    useValidationStore.setState({ running: false, progress: null })
+    getActiveEngineClient().send({ type: 'CANCEL_VALIDATION' })
   },
 }
 
