@@ -1,0 +1,11 @@
+# Hafıza, kit ve takım dokümanları elle yazılır; biçimlendirici dokunmaz.
+*.md
+prompts/
+templates/
+docs/
+# shadcn/ui tarafından üretilen bileşenler kendi biçiminde kalır.
+src/components/ui/
+dist/
+coverage/
+node_modules/
+package-lock.json
