@@ -30,7 +30,7 @@ export function generateRadiationFrame(
   const personalRatio = (crew.baselines['rad.doseRateMsvDay']?.mean ?? radCal.mean) / Math.max(1e-6, radCal.mean)
   const relWithinSd = radCal.withinSd / Math.max(1e-6, radCal.mean)
 
-  const phi = 0.4
+  const phi = 0.4 // DEMO_PARAMETER (simülatör)
   const nextRadNoise = rng.ar1(state.radNoise, 0, phi, relWithinSd * Math.sqrt(1 - phi * phi))
 
   const baselineDoseRate = envCal.doseRateMsvDayMean * personalRatio * Math.max(0.2, 1 + nextRadNoise)

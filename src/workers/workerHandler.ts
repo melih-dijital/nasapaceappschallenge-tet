@@ -10,7 +10,8 @@ import {
   type TimeoutScheduler,
   type WebSocketConstructor,
 } from '../core/telemetry'
-import type { SourceStatus } from '../core/types'
+import type { DailyFrame, SourceStatus } from '../core/types'
+import { dayOf } from '../sim/clock'
 import { getScenario } from '../sim/scenarios'
 import { Simulator } from '../sim/simulator'
 import type { EngineOutputLite, UiToWorkerMessage, WorkerToUiMessage } from './protocol'
@@ -50,12 +51,15 @@ export interface WorkerHandler {
 const DEFAULT_TICK_MS = 100
 
 function toOutputLite(output: EngineOutput, totalDataQualityCount: number, warning?: StorageWarning): EngineOutputLite {
+  const lastDecision = output.decisions?.at(-1)
   return {
     t: output.t,
     ...(output.baselines && output.baselines.length > 0 ? { baselines: output.baselines } : {}),
     ...(output.alertEvents ? { alertEvents: output.alertEvents } : {}),
     ...(output.states ? { states: output.states } : {}),
     ...(output.moduleReports && output.moduleReports.length > 0 ? { moduleReports: output.moduleReports } : {}),
+    ...(output.decisions && output.decisions.length > 0 ? { decisions: output.decisions } : {}),
+    ...(lastDecision ? { cards: lastDecision.cards } : {}),
     dataQualityCount: totalDataQualityCount,
     ...(output.dataQuality.length > 0 ? { dataQuality: output.dataQuality } : {}),
     ...(output.faults.length > 0 ? { faults: output.faults } : {}),
@@ -72,10 +76,27 @@ export function createWorkerHandler<THandle = unknown>(
   let source: ActiveSource | null = null
   // ws modunda mürettebat profili/görev süresi yerelde aynı senaryo+seed'den türetilir (radyasyon modülü için).
   let metaRef: { sim: Simulator } | null = null
+  let getCrewSim: (() => Simulator) | null = null
   let engine: Engine | null = null
   let unsubFrames: (() => void) | null = null
   let unsubStatus: (() => void) | null = null
   let pendingStorageWarning: StorageWarning | undefined
+  const dailyByCrewDay = new Map<string, DailyFrame>()
+  const latestDailyByCrew = new Map<string, DailyFrame>()
+
+  const clearDailyCache = (): void => {
+    dailyByCrewDay.clear()
+    latestDailyByCrew.clear()
+  }
+
+  const recordAcceptedDailyFrames = (frames: readonly import('../core/types').TelemetryFrame[]): void => {
+    for (const f of frames) {
+      if (f.kind === 'daily') {
+        dailyByCrewDay.set(`${f.crewId}|${f.day}`, f)
+        latestDailyByCrew.set(f.crewId, f)
+      }
+    }
+  }
 
   const detachSource = (): void => {
     source?.pause()
@@ -131,10 +152,12 @@ export function createWorkerHandler<THandle = unknown>(
 
   const initPipeline = (scenarioId: string, seed: number | undefined, speed: number, choice: SourceChoice = {}): void => {
     detachSource()
+    clearDailyCache()
     // Senaryo varlığını doğrula (yoksa açık hata)
-    getScenario(scenarioId)
+    const scenario = getScenario(scenarioId)
 
     const { src: currentSource, crewSim } = createSource(scenarioId, seed, speed, choice)
+    getCrewSim = crewSim
     const currentEngine = createDefaultEngine({
       persist: store,
       onPersistError: (err) => {
@@ -143,6 +166,8 @@ export function createWorkerHandler<THandle = unknown>(
           message: err instanceof Error ? err.message : String(err),
         }
       },
+      scenario,
+      crewProfiles: crewSim().getCrew(),
       // Radyasyon modülü: o anki senaryonun mürettebat kariyer dozu ve görev süresi (SET_SCENARIO sonrası da güncel).
       priorCareerDoseMsv: (crewId) =>
         crewSim()
@@ -173,6 +198,7 @@ export function createWorkerHandler<THandle = unknown>(
 
     unsubFrames = currentSource.onFrames((frames, simT) => {
       const output = currentEngine.ingest(frames, simT)
+      recordAcceptedDailyFrames(output.acceptedFrames)
       const chartFrames = extractChartFrames(output.acceptedFrames)
       if (chartFrames.length > 0) {
         deps.postMessage({ type: 'FRAMES_BATCH', frames: chartFrames })
@@ -223,6 +249,7 @@ export function createWorkerHandler<THandle = unknown>(
       }
       case 'RESET': {
         if (!source || !engine) return
+        clearDailyCache()
         source.reset()
         engine.reset()
         void store.clear().catch(() => undefined)
@@ -237,9 +264,11 @@ export function createWorkerHandler<THandle = unknown>(
         if (!source || !engine) {
           initPipeline(msg.id, msg.seed, 1)
         } else {
+          clearDailyCache()
           const scenario = getScenario(msg.id)
           if (metaRef) metaRef.sim = new Simulator(scenario, msg.seed !== undefined ? { seed: msg.seed } : {})
           source.setScenario(msg.id, msg.seed)
+          engine.setScenario(scenario, getCrewSim ? getCrewSim().getCrew() : undefined)
           engine.reset()
           void store.clear().catch(() => undefined)
         }
@@ -250,6 +279,12 @@ export function createWorkerHandler<THandle = unknown>(
       }
       case 'SEEK_BOOKMARK': {
         if (!source || !engine) return
+        const targetBookmark = getCrewSim?.().scenario.bookmarks?.[msg.index]
+        if (targetBookmark && targetBookmark.t < source.getStatus().simT) {
+          clearDailyCache()
+          engine.reset()
+          void store.clear().catch(() => undefined)
+        }
         source.seekToBookmark?.(msg.index)
         deps.postMessage({ type: 'SNAPSHOT', snapshot: engine.snapshot() })
         return
@@ -258,24 +293,195 @@ export function createWorkerHandler<THandle = unknown>(
         if (!engine) return
         const event = engine.ackAlert(msg.alertId)
         if (event) {
+          const snap = engine.snapshot()
           deps.postMessage({
             type: 'ENGINE_OUTPUT',
-            output: { t: event.t, alertEvents: [event], dataQualityCount: engine.snapshot().dataQualityCount },
+            output: {
+              t: event.t,
+              alertEvents: [event],
+              cards: snap.cards,
+              ...(snap.decision ? { decisions: [snap.decision] } : {}),
+              dataQualityCount: snap.dataQualityCount,
+            },
           })
         }
         return
       }
       case 'SUBMIT_CHECKIN':
-      case 'SUBMIT_PVT':
-      case 'ACCEPT_ACTION':
-      case 'DISMISS_ACTION':
-      case 'COMPLETE_ACTION':
-      case 'SET_EARTH_LINK':
-      case 'SET_CONSENT':
-      case 'GROUND_REPLY':
+      case 'SUBMIT_PVT': {
+        if (!engine) return
+        // Gizlilik kuralı: SUBMIT_CHECKIN.journalText cihazda kalır; motora, DailyFrame'e ve Earth Link'e girmez.
+        const currentSimT = source?.getStatus().simT ?? engine.getSimT()
+        const day = dayOf(currentSimT)
+        const key = `${msg.crewId}|${day}`
+        const existingDayFrame = dailyByCrewDay.get(key)
+        const prevFrame = existingDayFrame ?? latestDailyByCrew.get(msg.crewId)
+        const frameT = Math.max(currentSimT, prevFrame?.t ?? currentSimT)
+
+        getCrewSim?.().recordUserSubmission(
+          msg.crewId,
+          day,
+          msg.type === 'SUBMIT_CHECKIN'
+            ? { mood: { stress: msg.mood.stress, mood: msg.mood.mood, motivation: msg.mood.motivation } }
+            : { pvt: { medianMs: msg.medianMs, lapses: msg.lapses } },
+        )
+
+        const mergedDaily: DailyFrame = {
+          kind: 'daily',
+          t: frameT,
+          crewId: msg.crewId,
+          day,
+          sleep: prevFrame
+            ? { ...prevFrame.sleep }
+            : { durationH: 7.5, efficiency: 0.88, midpointShiftMin: 0 },
+          activity: prevFrame
+            ? { ...prevFrame.activity }
+            : { exerciseMin: 45, resistiveMin: 30 },
+          hydrationL: prevFrame?.hydrationL ?? 2.5,
+          ...(prevFrame?.cabinCo2ppm !== undefined ? { cabinCo2ppm: prevFrame.cabinCo2ppm } : {}),
+          ...(existingDayFrame?.mood
+            ? { mood: { ...existingDayFrame.mood } }
+            : prevFrame?.mood
+              ? { mood: { ...prevFrame.mood } }
+              : {}),
+          ...(existingDayFrame?.pvt
+            ? { pvt: { ...existingDayFrame.pvt } }
+            : prevFrame?.pvt
+              ? { pvt: { ...prevFrame.pvt } }
+              : {}),
+          ...(msg.type === 'SUBMIT_CHECKIN'
+            ? {
+                mood: {
+                  stress: msg.mood.stress,
+                  mood: msg.mood.mood,
+                  motivation: msg.mood.motivation,
+                },
+              }
+            : {
+                pvt: {
+                  medianMs: msg.medianMs,
+                  lapses: msg.lapses,
+                },
+              }),
+          userSubmitted: true,
+          source: existingDayFrame?.source ?? 'SYNTHETIC',
+        }
+
+        const output = engine.ingest([mergedDaily], Math.max(engine.getSimT(), frameT))
+        recordAcceptedDailyFrames(output.acceptedFrames)
+        const chartFrames = extractChartFrames(output.acceptedFrames)
+        if (chartFrames.length > 0) {
+          deps.postMessage({ type: 'FRAMES_BATCH', frames: chartFrames })
+        }
+        const warning = pendingStorageWarning
+        pendingStorageWarning = undefined
+        const snap = engine.snapshot()
+        deps.postMessage({
+          type: 'ENGINE_OUTPUT',
+          output: toOutputLite(output, snap.dataQualityCount, warning),
+        })
+        deps.postMessage({ type: 'SNAPSHOT', snapshot: snap })
+        return
+      }
+      case 'ACCEPT_ACTION': {
+        if (!engine) return
+        engine.acceptAction(msg.cardId)
+        const snap = engine.snapshot()
+        deps.postMessage({
+          type: 'ENGINE_OUTPUT',
+          output: {
+            t: snap.t,
+            cards: snap.cards,
+            ...(snap.decision ? { decisions: [snap.decision] } : {}),
+            dataQualityCount: snap.dataQualityCount,
+          },
+        })
+        deps.postMessage({ type: 'SNAPSHOT', snapshot: snap })
+        return
+      }
+      case 'DISMISS_ACTION': {
+        if (!engine) return
+        engine.dismissAction(msg.cardId)
+        const snap = engine.snapshot()
+        deps.postMessage({
+          type: 'ENGINE_OUTPUT',
+          output: {
+            t: snap.t,
+            cards: snap.cards,
+            ...(snap.decision ? { decisions: [snap.decision] } : {}),
+            dataQualityCount: snap.dataQualityCount,
+          },
+        })
+        deps.postMessage({ type: 'SNAPSHOT', snapshot: snap })
+        return
+      }
+      case 'COMPLETE_ACTION': {
+        if (!engine) return
+        engine.completeAction(msg.cardId)
+        const snap = engine.snapshot()
+        deps.postMessage({
+          type: 'ENGINE_OUTPUT',
+          output: {
+            t: snap.t,
+            cards: snap.cards,
+            ...(snap.decision ? { decisions: [snap.decision] } : {}),
+            dataQualityCount: snap.dataQualityCount,
+          },
+        })
+        deps.postMessage({ type: 'SNAPSHOT', snapshot: snap })
+        return
+      }
+      case 'SET_EARTH_LINK': {
+        if (!engine) return
+        engine.setEarthLinkConfig(msg.config)
+        const snap = engine.snapshot()
+        deps.postMessage({
+          type: 'ENGINE_OUTPUT',
+          output: {
+            t: snap.t,
+            cards: snap.cards,
+            ...(snap.decision ? { decisions: [snap.decision] } : {}),
+            dataQualityCount: snap.dataQualityCount,
+          },
+        })
+        deps.postMessage({ type: 'SNAPSHOT', snapshot: snap })
+        return
+      }
+      case 'SET_CONSENT': {
+        if (!engine) return
+        engine.setConsentCategories(msg.categories)
+        const snap = engine.snapshot()
+        deps.postMessage({
+          type: 'ENGINE_OUTPUT',
+          output: {
+            t: snap.t,
+            cards: snap.cards,
+            ...(snap.decision ? { decisions: [snap.decision] } : {}),
+            dataQualityCount: snap.dataQualityCount,
+          },
+        })
+        deps.postMessage({ type: 'SNAPSHOT', snapshot: snap })
+        return
+      }
+      case 'GROUND_REPLY': {
+        if (!engine) return
+        engine.triggerGroundReply(msg.templateId, msg.relatedAlertId)
+        const snap = engine.snapshot()
+        deps.postMessage({
+          type: 'ENGINE_OUTPUT',
+          output: {
+            t: snap.t,
+            cards: snap.cards,
+            ...(snap.decision ? { decisions: [snap.decision] } : {}),
+            dataQualityCount: snap.dataQualityCount,
+          },
+        })
+        deps.postMessage({ type: 'SNAPSHOT', snapshot: snap })
+        return
+      }
       case 'REQUEST_VALIDATION':
       case 'CANCEL_VALIDATION':
-        // Faz 5–8 aşamaları eklendikçe ilgili motor bileşenlerine yönlendirilecek.
+        // Faz 8 doğrulama CLI ve sekme yükleyicisi üzerinden çalışır.
         return
     }
   }

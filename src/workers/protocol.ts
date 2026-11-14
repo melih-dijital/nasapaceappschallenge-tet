@@ -3,7 +3,7 @@
 // Faz 3 worker girişinde bu birleşimleri Zod ile doğrular.
 import type { DataQualityEvent } from '../core/ingest'
 import type { ModuleReport } from '../core/modules/types'
-import type { EngineFault, ZSnapshot } from '../core/pipeline'
+import type { DecisionSnapshot, EngineFault, ZSnapshot } from '../core/pipeline'
 import type { StorageWarning } from '../core/storage'
 import type {
   ActionCard,
@@ -38,6 +38,8 @@ export interface EngineOutputLite {
   storageWarning?: StorageWarning
   /** Faz 6: bu batch'in son modül raporları (kişi başına). */
   moduleReports?: ModuleReport[]
+  /** Faz 7: bu batch'in karar, plan farkı ve Earth Link anlık görüntüleri. */
+  decisions?: DecisionSnapshot[]
 }
 
 export interface EngineSnapshot {
@@ -50,6 +52,8 @@ export interface EngineSnapshot {
   dataQualityCount: number
   /** Faz 6: kişi başına son alan modülü raporları (radyasyon paneli vb.). */
   modules?: Record<CrewId, ModuleReport[]>
+  /** Faz 7: son karar, plan farkı ve Earth Link durumu. */
+  decision?: DecisionSnapshot
 }
 
 export const latestKey = (crewId: CrewId, metric: MetricId): string => `${crewId}|${metric}`

@@ -2,17 +2,8 @@
 import type { CalibrationData } from '../../sim/calibration'
 import { getScenario } from '../../sim/scenarios'
 import { Simulator } from '../../sim/simulator'
-import { DecisionStage } from '../decision/decisionStage'
-import { DetectionStage } from '../detection/detectionStage'
 import { registry as defaultRegistry, type EvidenceRegistry } from '../evidence/registry'
-import {
-  BaselineStage,
-  BufferStage,
-  Engine,
-  IngestStage,
-  ModulesStage,
-  PersistStage,
-} from '../pipeline'
+import { createDefaultEngine } from '../pipeline'
 import type { AlertEvent, ScenarioId, SimTimeMs } from '../types'
 import { MS_PER_DAY, MS_PER_HOUR } from '../units'
 import {
@@ -56,27 +47,12 @@ export function runScenario(
   const crew = sim.getCrew()
   const priorDoseByCrew = new Map(crew.map((c) => [c.id, c.priorCareerDoseMsv]))
 
-  const decisionStage = new DecisionStage({
+  const engine = createDefaultEngine({
     evidence,
     scenario,
     crewProfiles: crew,
-  })
-
-  const engine = new Engine({
-    evidence,
-    stages: [
-      new IngestStage({ evidence }),
-      new BufferStage(),
-      new BaselineStage({ evidence }),
-      new ModulesStage({
-        evidence,
-        priorCareerDoseMsv: (crewId) => priorDoseByCrew.get(crewId),
-        missionDays: scenario.durationDays,
-      }),
-      new DetectionStage({ evidence }),
-      decisionStage,
-      new PersistStage(),
-    ],
+    priorCareerDoseMsv: (crewId) => priorDoseByCrew.get(crewId),
+    missionDays: scenario.durationDays,
   })
 
   engine.ingest(sim.backfill(), 0)

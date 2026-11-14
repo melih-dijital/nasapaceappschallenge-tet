@@ -1,6 +1,6 @@
 # i18n Anahtar Kataloğu (Faz 7: Karar Destek, Planlayıcı, Triyaj ve Earth Link)
 
-Bu belge, Faz 7 (§3.1–§3.4) kapsamında `src/core/decision/` ve `src/core/earthlink/` modülleri tarafından üretilen tüm i18n anahtarlarını listeler. UI ekibi (Faz 9–10) çeviri dosyalarına bu anahtarları ve önerilen metinleri ekleyebilir.
+Bu belge, Faz 5–7 kapsamında `src/core/detection/`, `src/core/modules/`, `src/core/decision/` ve `src/core/earthlink/` modülleri tarafından üretilen tüm i18n anahtarlarını listeler. Tüm anahtarlar `src/ui/i18n/en.ts` ve `src/ui/i18n/tr.ts` sözlüklerine `{param}` tek-süslü-parantez interpolasyonu ile eklenmiştir.
 
 > **Dil Kuralı:** Tüm metinler öneri ve görev prosedürü dilindedir; tıbbi tanı, ilaç adı veya dozaj talimatı içermez.
 
@@ -90,11 +90,11 @@ Tüm `triage.reason.*` anahtarları `{ severity, oneWayDelaySec, roundTripMin, t
 
 | Anahtar | İngilizce (`en`) | Türkçe (`tr`) |
 |---|---|---|
-| `triage.reason.criticalRadiation` | Critical radiation event requires immediate onboard shelter action regardless of Earth delay (RTT {{roundTripMin}} min). | Kritik radyasyon olayı, Dünya gecikmesinden bağımsız olarak derhal araç içi sığınma aksiyonu gerektirir (Gidiş-dönüş {{roundTripMin}} dk). |
-| `triage.reason.lowSeverity` | Informational alert ({{severity}}); safe to await Earth Flight Control review (RTT {{roundTripMin}} min). | Bilgi düzeyinde uyarı ({{severity}}); Dünya Uçuş Kontrolü yanıtını beklemek güvenlidir (Gidiş-dönüş {{roundTripMin}} dk). |
+| `triage.reason.criticalRadiation` | Critical radiation event requires immediate onboard shelter action regardless of Earth delay (RTT {roundTripMin} min). | Kritik radyasyon olayı, Dünya gecikmesinden bağımsız olarak derhal araç içi sığınma aksiyonu gerektirir (Gidiş-dönüş {roundTripMin} dk). |
+| `triage.reason.lowSeverity` | Informational alert ({severity}); safe to await Earth Flight Control review (RTT {roundTripMin} min). | Bilgi düzeyinde uyarı ({severity}); Dünya Uçuş Kontrolü yanıtını beklemek güvenlidir (Gidiş-dönüş {roundTripMin} dk). |
 | `triage.reason.blackout` | Communications blackout active; act autonomously now and queue report for reconnection. | İletişim kesintisi (blackout) etkin; şimdi özerk aksiyon alın ve raporu bağlantı geri gelince gönderilmek üzere kuyruğa ekleyin. |
-| `triage.reason.delayExceedsTimeToHarm` | Earth round-trip ({{roundTripMin}} min) meets or exceeds time-to-harm window ({{timeToHarmMin}} min); act immediately onboard. | Dünya gidiş-dönüş süresi ({{roundTripMin}} dk), müdahale penceresine ({{timeToHarmMin}} dk) eşit veya büyük; derhal araç içi aksiyon alın. |
-| `triage.reason.withinSafeDelayWindow` | Intervention window ({{timeToHarmMin}} min) exceeds Earth round-trip ({{roundTripMin}} min); apply local precautions and await Earth reply. | Müdahale penceresi ({{timeToHarmMin}} dk), Dünya gidiş-dönüş süresinden ({{roundTripMin}} dk) uzun; yerel önlemi uygulayıp Dünya yanıtını bekleyin. |
+| `triage.reason.delayExceedsTimeToHarm` | Earth round-trip ({roundTripMin} min) meets or exceeds time-to-harm window ({timeToHarmMin} min); act immediately onboard. | Dünya gidiş-dönüş süresi ({roundTripMin} dk), müdahale penceresine ({timeToHarmMin} dk) eşit veya büyük; derhal araç içi aksiyon alın. |
+| `triage.reason.withinSafeDelayWindow` | Intervention window ({timeToHarmMin} min) exceeds Earth round-trip ({roundTripMin} min); apply local precautions and await Earth reply. | Müdahale penceresi ({timeToHarmMin} dk), Dünya gidiş-dönüş süresinden ({roundTripMin} dk) uzun; yerel önlemi uygulayıp Dünya yanıtını bekleyin. |
 
 ---
 
@@ -159,17 +159,18 @@ Bu bölüm, `src/core/detection/i18nKeys.ts` içindeki `DETECTION_I18N_KEYS` lis
 
 | Anahtar | Parametreler | İngilizce (`en`) | Türkçe (`tr`) | Not |
 |---|---|---|---|---|
-| `why.l1.SPO2_LOW` | `value`, `threshold`, `verified` | SpO2 reading ({{value}}%) fell below reference threshold ({{threshold}}%). | SpO2 ölçümü ({{value}}%) referans eşiğin ({{threshold}}%) altına indi. | `verified=0` ise doğrulanmadı etiketi |
-| `why.l1.CO2_HIGH` | `value`, `threshold`, `verified` | Cabin CO2 ({{value}} ppm) reached advisory threshold ({{threshold}} ppm). | Kabin CO2 düzeyi ({{value}} ppm) uyarı eşiğine ({{threshold}} ppm) ulaştı. | `verified=0` ise doğrulanmadı etiketi (DEMO parametre) |
-| `why.l1.CAREER_DOSE` | `value`, `threshold`, `verified` | Cumulative career dose ({{value}} mSv) reached threshold ({{threshold}} mSv). | Kümülatif kariyer dozu ({{value}} mSv) eşik değere ({{threshold}} mSv) ulaştı. | `verified=0` ise doğrulanmadı etiketi |
-| `why.l1.SPE_DOSE` | `value`, `threshold`, `verified` | Event dose ({{value}} mSv) approached design reference SPE protection target ({{threshold}} mSv). | Olay dozu ({{value}} mSv) tasarım referansı SPE koruma hedefine ({{threshold}} mSv) yaklaştı. | limit değil, **design reference SPE protection target** |
-| `why.l2.deviation` | `metric`, `z`, `persistFrames` | {{metric}} deviated from personal baseline (z={{z}}) across {{persistFrames}} consecutive frames. | {{metric}} kişisel referanstan {{persistFrames}} ardışık kare boyunca saptı (z={{z}}). | L2 kalıcılık gerekçesi |
-| `why.l3.consecutive` | `metric`, `days`, `value`, `below` | {{metric}} stayed outside target for {{days}} consecutive days (latest {{value}}, threshold {{below}}). | {{metric}} {{days}} ardışık gün boyunca hedefin dışında kaldı (son {{value}}, eşik {{below}}). | L3 çok günlü kural |
-| `why.l3.cusum` | `metric`, `s`, `h` | {{metric}} cumulative shift statistic (S={{s}}) exceeded threshold (h={{h}}). | {{metric}} birikimli kayma istatistiği (S={{s}}) eşiği (h={{h}}) aştı. | L3 günlük CUSUM |
-| `why.l3.theil_sen` | `metric`, `slopePerDay`, `sameSign`, `windowDays`, `rise` | {{metric}} trend slope ({{slopePerDay}}/day, {{sameSign}} consistent days over {{windowDays}}d, rise {{rise}}). | {{metric}} eğim trendi ({{slopePerDay}}/gün, {{windowDays}} günde {{sameSign}} tutarlı gün, artış {{rise}}). | L3 Theil-Sen eğimi |
-| `why.baseline.lowConfidence` | `confidence` | Personal baseline confidence is low ({{confidence}}); alert severity capped at ADVISORY. | Kişisel baseline güveni düşük ({{confidence}}); uyarı seviyesi en fazla ADVISORY olarak sınırlandı. | güven kapısı |
-| `why.state.score` | `state`, `score`, `confidence` | Composite {{state}} score reached {{score}} (baseline confidence {{confidence}}). | Bileşik {{state}} skoru {{score}} değerine ulaştı (baseline güveni {{confidence}}). | L4 durum skoru |
-| `why.state.contributor` | `metric`, `z`, `weightPct`, `contribution` | {{metric}} contributed {{contribution}} (z={{z}}, weight {{weightPct}}%). | {{metric}} metriği {{contribution}} katkı sağladı (z={{z}}, ağırlık %{{weightPct}}). | L4 katkı çubuğu |
+| `why.l1.SPO2_LOW` | `value`, `threshold`, `verified` | SpO2 reading ({value}%) fell below reference threshold ({threshold}%). | SpO2 ölçümü ({value}%) referans eşiğin ({threshold}%) altına indi. | `verified=0` ise doğrulanmadı etiketi |
+| `why.l1.CO2_HIGH` | `value`, `threshold`, `verified` | Cabin CO2 ({value} ppm) reached advisory threshold ({threshold} ppm). | Kabin CO2 düzeyi ({value} ppm) uyarı eşiğine ({threshold} ppm) ulaştı. | `verified=0` ise doğrulanmadı etiketi (DEMO parametre) |
+| `why.l1.CAREER_DOSE` | `value`, `threshold`, `verified` | Cumulative career dose ({value} mSv) reached threshold ({threshold} mSv). | Kümülatif kariyer dozu ({value} mSv) eşik değere ({threshold} mSv) ulaştı. | `verified=0` ise doğrulanmadı etiketi |
+| `why.l1.SPE_DOSE` | `value`, `threshold`, `verified` | Event dose ({value} mSv) approached design reference SPE protection target ({threshold} mSv). | Olay dozu ({value} mSv) tasarım referansı SPE koruma hedefine ({threshold} mSv) yaklaştı. | limit değil, **design reference SPE protection target** |
+| `why.l2.deviation` | `metric`, `z`, `persistFrames` | {metric} deviated from personal baseline (z={z}) across {persistFrames} consecutive frames. | {metric} kişisel referanstan {persistFrames} ardışık kare boyunca saptı (z={z}). | L2 kalıcılık gerekçesi |
+| `why.l3.consecutive` | `metric`, `days`, `value`, `below` | {metric} stayed outside target for {days} consecutive days (latest {value}, threshold {below}). | {metric} {days} ardışık gün boyunca hedefin dışında kaldı (son {value}, eşik {below}). | L3 çok günlü kural |
+| `why.l3.cusum` | `metric`, `s`, `h` | {metric} cumulative shift statistic (S={s}) exceeded threshold (h={h}). | {metric} birikimli kayma istatistiği (S={s}) eşiği (h={h}) aştı. | L3 günlük CUSUM |
+| `why.l3.theil_sen` | `metric`, `slopePerDay`, `sameSign`, `windowDays`, `rise` | {metric} trend slope ({slopePerDay}/day, {sameSign} consistent days over {windowDays}d, rise {rise}). | {metric} eğim trendi ({slopePerDay}/gün, {windowDays} günde {sameSign} tutarlı gün, artış {rise}). | L3 Theil-Sen eğimi |
+| `why.baseline.lowConfidence` | `confidence` | Personal baseline confidence is low ({confidence}); alert severity capped at ADVISORY. | Kişisel baseline güveni düşük ({confidence}); uyarı seviyesi en fazla ADVISORY olarak sınırlandı. | güven kapısı |
+| `why.state.score` | `state`, `score`, `confidence` | Composite {state} score reached {score} (baseline confidence {confidence}). | Bileşik {state} skoru {score} değerine ulaştı (baseline güveni {confidence}). | L4 durum skoru |
+| `why.state.contributor` | `metric`, `z`, `weightPct`, `contribution` | {metric} contributed {contribution} (z={z}, weight {weightPct}%). | {metric} metriği {contribution} katkı sağladı (z={z}, ağırlık %{weightPct}). | L4 katkı çubuğu |
+| `advice.radiation.shelter` | `—` | Solar particle event condition active — move to shielded shelter area and monitor dosimetry. | Güneş parçacık olayı koşulu etkin — korumalı sığınma alanına geçin ve dozimetriyi izleyin. | SPE koruma tavsiyesi |
 
 ### 5.3 Metrik Etiketleri (`METRIC_META.labelKey`)
 

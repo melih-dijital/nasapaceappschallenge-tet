@@ -41,6 +41,11 @@ export interface GroundTruth {
   expected: readonly ExpectedDetection[]
 }
 
+export interface UserDailySubmission {
+  mood?: { stress: number; mood: number; motivation: number }
+  pvt?: { medianMs: number; lapses: number }
+}
+
 const VITALS_STEP_MS = minToMs(VITALS_INTERVAL_MIN)
 const RAD_STEP_MS = minToMs(RADIATION_INTERVAL_MIN)
 
@@ -70,6 +75,7 @@ export class Simulator {
   private nextRadT: SimTimeMs = 0
   private nextDailyDay = 0
   private backfilled = false
+  private userSubmissions = new Map<string, UserDailySubmission>()
 
   constructor(scenario: Scenario, options: SimulatorOptions = {}) {
     this.scenario = scenario
@@ -101,6 +107,18 @@ export class Simulator {
     this.nextRadT = 0
     this.nextDailyDay = 0
     this.backfilled = false
+    this.userSubmissions.clear()
+  }
+
+  recordUserSubmission(crewId: CrewId, day: number, sub: UserDailySubmission): void {
+    const key = `${crewId}|${day}`
+    const prev = this.userSubmissions.get(key)
+    this.userSubmissions.set(key, {
+      ...(prev?.mood ? { mood: prev.mood } : {}),
+      ...(prev?.pvt ? { pvt: prev.pvt } : {}),
+      ...(sub.mood ? { mood: { ...sub.mood } } : {}),
+      ...(sub.pvt ? { pvt: { ...sub.pvt } } : {}),
+    })
   }
 
   reset(seed?: number): void {
@@ -283,7 +301,17 @@ export class Simulator {
         this.calibration,
       )
       this.crewStates.set(member.id, result.nextState)
-      out.push(result.frame)
+      const userSub = !eventFree ? this.userSubmissions.get(`${member.id}|${day}`) : undefined
+      if (userSub) {
+        out.push({
+          ...result.frame,
+          ...(userSub.mood ? { mood: { ...userSub.mood } } : {}),
+          ...(userSub.pvt ? { pvt: { ...userSub.pvt } } : {}),
+          userSubmitted: true,
+        })
+      } else {
+        out.push(result.frame)
+      }
     }
     return out
   }

@@ -36,11 +36,9 @@ export interface ZSnapshot {
 /** Faz 6 modül raporları: sözleşme `core/modules/types.ts`'de. */
 export type { ModuleReport } from '../modules/types'
 
-/** Faz 7 karar/planlama çıktısı için genişletilebilir yer tutucu. */
-export interface DecisionSnapshot {
-  t: SimTimeMs
-  cardsCount: number
-}
+/** Faz 7 karar/planlama/Earth Link çıktısı: sözleşme `core/decision/decisionStage.ts`'de. */
+import type { DecisionStageSnapshot as DecisionSnapshot } from '../decision/decisionStage'
+export type { DecisionSnapshot }
 
 export interface EngineFault {
   stage: string
@@ -89,6 +87,10 @@ export interface EngineStage {
   ackAlert?(alertId: string, t: SimTimeMs): AlertEvent | null
   /** Modül aşaması: kişi başına son modül raporları (Engine.snapshot().modules). */
   snapshotModules?(): Record<CrewId, import('../modules/types').ModuleReport[]>
+  /** Karar aşaması: karar/plan/EarthLink anlık görüntüsü (Engine.snapshot().decision ve cards için). */
+  snapshotDecision?(t: SimTimeMs): import('../decision/decisionStage').DecisionStageSnapshot
+  /** Karar aşaması: uyarı listesine triyaj sınıfı ve zarar süresini uygular. */
+  applyTriageToAlerts?(alerts: readonly Alert[]): Alert[]
 }
 
 /** 1. Aşama: Biçim (Zod), SpO2 0–100 normalize, makullük, monoton zaman, kopya bastırma ve stale izleme. */
@@ -196,16 +198,14 @@ export { ModulesStage } from '../modules/modulesStage'
 /** 5. Aşama: L1–L4 algılama + AlertManager (backfill atlanır) — uygulama `core/detection`'da (Faz 5). */
 export { DetectionStage } from '../detection/detectionStage'
 
-/** 6. Aşama (Faz 7 yer tutucusu): Karar destek, planlayıcı ve Earth Link triyajı (backfill atlanır). */
-export class DecisionStage implements EngineStage {
-  readonly name = 'DecisionStage'
-  readonly runOnBackfill = false
-
-  process(ctx: EngineContext): void {
-    if (ctx.liveFrames.length === 0) return
-    ctx.output.decisions ??= []
-  }
-}
+/** 6. Aşama: Karar destek, planlayıcı ve Earth Link triyajı (backfill atlanır) — uygulama `core/decision`'da (Faz 7). */
+export {
+  DecisionStage,
+  type CrewScheduleOutput,
+  type DecisionStageOptions,
+  type DecisionStageSnapshot,
+  type ScenarioDecisionContext,
+} from '../decision/decisionStage'
 
 /** 7. Aşama: PersistPort üzerinden depolamaya yazar (uygulama dışarıdan enjekte edilir). */
 export class PersistStage implements EngineStage {

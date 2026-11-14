@@ -41,6 +41,7 @@ export interface EarthLinkState {
   inbox: Message[]
   pending: PendingReply[]
   stats: EarthLinkStats
+  consentCategories?: EarthConsentCategory[]
 }
 
 export interface SendMessageInput {
@@ -112,7 +113,7 @@ export class EarthLink {
     string,
     { relatedAlertId: string; localAdviceActionIds: string[] }
   >()
-  private readonly reportedAlertIds = new Set<string>()
+  private readonly reportedAlertSeverities = new Map<string, Alert['severity']>()
 
   constructor(options: EarthLinkOptions = {}) {
     this.evidence = options.evidence ?? registry
@@ -272,12 +273,26 @@ export class EarthLink {
   reportAlert(alert: Alert): Message | null {
     if (!this.autoReport) return null
     if (alert.severity !== 'WARNING' && alert.severity !== 'CRITICAL') return null
-    if (this.reportedAlertIds.has(alert.id)) return null
+    const prevSeverity = this.reportedAlertSeverities.get(alert.id)
+    if (prevSeverity !== undefined) {
+      if (prevSeverity === 'CRITICAL' || alert.severity !== 'CRITICAL') {
+        return null
+      }
+      for (let i = this.inbox.length - 1; i >= 0; i -= 1) {
+        const reply = this.inbox[i]
+        if (!reply || reply.status === 'DELIVERED') continue
+        const meta = this.inboxReplyMeta.get(reply.id)
+        if (meta?.relatedAlertId === alert.id) {
+          this.inbox.splice(i, 1)
+          this.inboxReplyMeta.delete(reply.id)
+        }
+      }
+    }
 
     const packet = buildAlertPacket(alert, this.consentCategories)
     if (!packet) return null
 
-    this.reportedAlertIds.add(alert.id)
+    this.reportedAlertSeverities.set(alert.id, alert.severity)
     const priority: MessagePriority = alert.severity === 'CRITICAL' ? 3 : 2
     const template = selectGroundReplyTemplate(alert)
 
@@ -406,6 +421,7 @@ export class EarthLink {
         delivered: deliveredMessages.length,
         avgLatencyMin: Number(avgLatencyMin.toFixed(2)),
       },
+      consentCategories: this.getConsentCategories(),
     }
   }
 

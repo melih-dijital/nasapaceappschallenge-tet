@@ -149,6 +149,7 @@ export function AlertsPage() {
   const selectedCrewId = useSessionStore((s) => s.selectedCrewId)
   const alerts = useAlertStore((s) => s.alerts)
   const cards = useDecisionStore((s) => s.cards)
+  const schedulesByCrew = useDecisionStore((s) => s.schedulesByCrew)
   const byCrewStates = useStateStore((s) => s.byCrew)
   const telemetry = useTelemetryStore()
   const earthLink = useEarthLinkStore()
@@ -176,10 +177,24 @@ export function AlertsPage() {
     [cards, scope, selectedCrewId],
   )
 
-  const scheduleViews = useMemo(
-    () => buildCrewScheduleViews(selectedCrewId, day, cards, alerts),
-    [selectedCrewId, day, cards, alerts],
-  )
+  const scheduleViews = useMemo(() => {
+    const fromEngine = schedulesByCrew?.[selectedCrewId]
+    if (fromEngine) {
+      const base = fromEngine.baseSchedule ?? fromEngine.schedule
+      return {
+        base,
+        suggested: fromEngine.schedule,
+        accepted: fromEngine.acceptedSchedule ?? fromEngine.schedule,
+        diffs:
+          scheduleTab === 'accepted' &&
+          fromEngine.acceptedDiff &&
+          fromEngine.acceptedDiff.length > 0
+            ? fromEngine.acceptedDiff
+            : fromEngine.diff,
+      }
+    }
+    return buildCrewScheduleViews(selectedCrewId, day, cards, alerts)
+  }, [schedulesByCrew, selectedCrewId, day, cards, alerts, scheduleTab])
 
   const activeSchedule =
     scheduleTab === 'suggested' ? scheduleViews.suggested : scheduleViews.accepted

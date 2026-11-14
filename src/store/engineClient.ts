@@ -6,6 +6,7 @@ import type { UiToWorkerMessage, WorkerToUiMessage } from '../workers/protocol'
 import { createWorkerHandler, type WorkerHandler } from '../workers/workerHandler'
 import { useAlertStore } from './alertStore'
 import { useDecisionStore } from './decisionStore'
+import { useEarthLinkStore } from './earthLinkStore'
 import { useSessionStore } from './sessionStore'
 import { useStateStore } from './stateStore'
 import { useTelemetryStore } from './telemetryStore'
@@ -51,12 +52,18 @@ export function applyWorkerMessageToStores(message: WorkerToUiMessage): void {
     case 'FRAMES_BATCH':
       telemetry.applyFramesBatch(message.frames)
       return
-    case 'ENGINE_OUTPUT':
+    case 'ENGINE_OUTPUT': {
       telemetry.applyOutput(message.output)
       if (message.output.alertEvents) alerts.applyAlertEvents(message.output.alertEvents)
       if (message.output.states) states.setStates(message.output.states)
       if (message.output.cards) decisions.setCards(message.output.cards)
+      const lastDecision = message.output.decisions?.at(-1)
+      if (lastDecision) {
+        decisions.setDecision(lastDecision)
+        useEarthLinkStore.getState().applyEarthState(lastDecision.earth)
+      }
       return
+    }
     case 'SNAPSHOT':
       if (message.snapshot.t === 0 && Object.keys(message.snapshot.latest).length === 0) {
         telemetry.reset()
@@ -65,6 +72,10 @@ export function applyWorkerMessageToStores(message: WorkerToUiMessage): void {
       alerts.setAlerts(message.snapshot.activeAlerts)
       states.setStates(message.snapshot.states)
       decisions.setCards(message.snapshot.cards)
+      if (message.snapshot.decision) {
+        decisions.setDecision(message.snapshot.decision)
+        useEarthLinkStore.getState().applyEarthState(message.snapshot.decision.earth)
+      }
       return
     case 'ERROR':
       if (message.code === 'DEXIE_ERROR') {

@@ -126,6 +126,7 @@ export interface StateStoreState {
 
 export interface DecisionState {
   cards: ActionCard[]
+  schedulesByCrew?: Record<CrewId, import('@/core/decision/decisionStage').CrewScheduleOutput>
 }
 
 export interface EarthLinkStoreState {
@@ -623,6 +624,7 @@ export function selectPriorityCards(
 
 let activeClient: EngineClient | null = null
 let unsubscribeClient: (() => void) | null = null
+let hasEngineDecisionState = false
 
 function applyFramesBatch(frames: ChartFrame[]): void {
   if (frames.length === 0) return
@@ -699,17 +701,20 @@ function applyFramesBatch(frames: ChartFrame[]): void {
   })
 }
 
-function applyAlertEvents(events: AlertEvent[]): void {
+function applyAlertEvents(events: AlertEvent[], fromEngineDecision = false): void {
   if (events.length === 0) return
+  const useEngineTriage = fromEngineDecision || hasEngineDecisionState
   const earthConfig = useEarthLinkStore.getState().config
 
   useAlertStore.setState((prev) => {
     const nextAlerts = [...prev.alerts]
     for (const ev of events) {
-      const classified: Alert = {
-        ...ev.alert,
-        earthDelayClass: classifyEarthDelay(ev.alert, earthConfig),
-      }
+      const classified: Alert = useEngineTriage
+        ? { ...ev.alert }
+        : {
+            ...ev.alert,
+            earthDelayClass: classifyEarthDelay(ev.alert, earthConfig),
+          }
       const idx = nextAlerts.findIndex((a) => a.id === classified.id)
       if (idx >= 0) {
         nextAlerts[idx] = classified
@@ -743,7 +748,11 @@ function applyAlertEvents(events: AlertEvent[]): void {
     })
   }
 
-  // WARNING+ uyarı varsa Earth Link giden kutusuna paket ekle ve bekleyen yanıt sayacını güncelle
+  if (useEngineTriage) {
+    return
+  }
+
+  // MockEngine yedeği: WARNING+ uyarı varsa Earth Link giden kutusuna paket ekle ve bekleyen yanıt sayacını güncelle
   const earthState = useEarthLinkStore.getState()
   const activeWarnOrCrit = useAlertStore
     .getState()
@@ -910,6 +919,100 @@ function tickEarthLinkPackets(simT: SimTimeMs): void {
   }
 }
 
+function applyDecisionSnapshot(
+  decision: import('@/core/pipeline').DecisionSnapshot,
+  simT: SimTimeMs,
+): void {
+  hasEngineDecisionState = true
+  useDecisionStore.setState({
+    cards: [...decision.cards],
+    schedulesByCrew: decision.schedulesByCrew,
+  })
+
+  if (decision.triagedAlerts.length > 0) {
+    const triagedMap = new Map(decision.triagedAlerts.map((a) => [a.id, a]))
+    useAlertStore.setState((prev) => {
+      const nextAlerts = prev.alerts.map((a) => {
+        const triaged = triagedMap.get(a.id)
+        return triaged
+          ? {
+              ...a,
+              earthDelayClass: triaged.earthDelayClass,
+              timeToHarmMin: triaged.timeToHarmMin,
+              status: triaged.status,
+              ...(triaged.ackT !== undefined ? { ackT: triaged.ackT } : {}),
+            }
+          : a
+      })
+      for (const triaged of decision.triagedAlerts) {
+        if (!nextAlerts.some((a) => a.id === triaged.id)) {
+          nextAlerts.unshift(triaged)
+        }
+      }
+      return { alerts: nextAlerts }
+    })
+  }
+
+  const earth = decision.earth
+  const config = earth.config
+  const roundTripMin = computeRoundTripMin(config)
+  const pendingReplyCount = earth.pending.length
+  const finiteEtas = earth.pending
+    .map((p) => p.remainingMs)
+    .filter((ms) => Number.isFinite(ms))
+  const earliestRemainingMs = finiteEtas.length > 0 ? Math.min(...finiteEtas) : null
+  const nextReplyEtaSec =
+    earliestRemainingMs !== null
+      ? Math.max(0, Math.round(earliestRemainingMs / 1000))
+      : null
+
+  const currentStates = useStateStore.getState().byCrew
+  const currentAlerts = useAlertStore.getState().alerts
+
+  useEarthLinkStore.setState((prev) => {
+    const prevInboxIds = new Set(prev.inbox.filter((m) => m.status === 'DELIVERED').map((m) => m.id))
+    const newlyDeliveredReply = earth.inbox.find((m) => !prevInboxIds.has(m.id))
+    const lastReplyReceivedToast = newlyDeliveredReply
+      ? {
+          id: newlyDeliveredReply.id,
+          templateId:
+            (newlyDeliveredReply.payload as { templateId?: string } | null)?.templateId ??
+            'REPLY_GENERIC_ACK',
+          arrivedAt: simT,
+        }
+      : prev.lastReplyReceivedToast
+
+    const prevDeliveredUpCount = prev.outbox.filter((m) => m.status === 'DELIVERED').length
+    const nextDeliveredUpCount = earth.outbox.filter((m) => m.status === 'DELIVERED').length
+    const newlyDeliveredToGround = nextDeliveredUpCount > prevDeliveredUpCount
+    const consents = (earth.consentCategories as ConsentCategory[] | undefined) ?? prev.consents
+
+    return {
+      ...prev,
+      config,
+      roundTripMin,
+      pendingReplyCount,
+      nextReplyEtaSec,
+      consents,
+      outbox: [...earth.outbox].reverse(),
+      inbox: [...earth.inbox].reverse(),
+      lastReplyReceivedToast,
+      ...(newlyDeliveredToGround
+        ? {
+            groundDeliveredAt: simT,
+            groundDeliveredStates: consents.includes('VITALS_SUMMARY')
+              ? currentStates
+              : prev.groundDeliveredStates,
+            groundDeliveredAlerts:
+              consents.includes('ALERTS') || consents.includes('RADIATION')
+                ? currentAlerts.filter((a) => a.status !== 'RESOLVED')
+                : prev.groundDeliveredAlerts,
+          }
+        : {}),
+    }
+  })
+}
+
 function handleWorkerMessage(msg: WorkerToUiMessage): void {
   switch (msg.type) {
     case 'READY':
@@ -988,16 +1091,19 @@ function handleWorkerMessage(msg: WorkerToUiMessage): void {
           }
         })
       }
-      tickEarthLinkPackets(msg.status.simT)
+      if (!hasEngineDecisionState) {
+        tickEarthLinkPackets(msg.status.simT)
+      }
       return
     }
     case 'FRAMES_BATCH':
       applyFramesBatch(msg.frames)
       return
     case 'ENGINE_OUTPUT': {
-      const { alertEvents, states, cards, dataQualityCount, t } = msg.output
+      const { alertEvents, states, cards, decisions, dataQualityCount, t } = msg.output
+      const lastDecision = decisions?.at(-1)
       if (alertEvents && alertEvents.length > 0) {
-        applyAlertEvents(alertEvents)
+        applyAlertEvents(alertEvents, Boolean(lastDecision))
       }
       if (states) {
         const scenarioId = useSessionStore.getState().scenarioId
@@ -1005,17 +1111,13 @@ function handleWorkerMessage(msg: WorkerToUiMessage): void {
           byCrew: buildInitialStates(scenarioId, t, states),
         })
       }
-      if (cards) {
-        const earthConfig = useEarthLinkStore.getState().config
-        const alerts = useAlertStore.getState().alerts
-        useDecisionStore.setState({
-          cards: cards.map((c) => {
-            const srcAlert = alerts.find((a) => c.sourceAlertIds.includes(a.id))
-            return srcAlert
-              ? { ...c, earthDelayClass: classifyEarthDelay(srcAlert, earthConfig) }
-              : c
-          }),
-        })
+      if (lastDecision) {
+        applyDecisionSnapshot(lastDecision, t)
+      } else if (cards) {
+        useDecisionStore.setState((prev) => ({
+          ...prev,
+          cards: [...cards],
+        }))
       }
       useTelemetryStore.setState((prev) => ({
         ...prev,
@@ -1042,7 +1144,11 @@ function handleWorkerMessage(msg: WorkerToUiMessage): void {
       useStateStore.setState({
         byCrew: buildInitialStates(scenarioId, msg.snapshot.t, msg.snapshot.states),
       })
-      useDecisionStore.setState({ cards: msg.snapshot.cards })
+      if (msg.snapshot.decision) {
+        applyDecisionSnapshot(msg.snapshot.decision, msg.snapshot.t)
+      } else {
+        useDecisionStore.setState({ cards: msg.snapshot.cards, schedulesByCrew: {} })
+      }
       return
     }
     case 'ERROR':
@@ -1130,6 +1236,7 @@ export function bindEngineClient(
 ): EngineClient {
   unsubscribeClient?.()
   activeClient?.dispose()
+  hasEngineDecisionState = false
 
   activeClient = client
   unsubscribeClient = client.subscribe(handleWorkerMessage)
@@ -1160,6 +1267,11 @@ export function bindEngineClient(
     ...buildInitialTelemetryState(scenarioId, 0),
     dataQuality: {},
     dataQualityCount: 0,
+  })
+
+  useDecisionStore.setState({
+    cards: [],
+    schedulesByCrew: {},
   })
 
   useSessionStore.setState({
@@ -1292,24 +1404,27 @@ export const actions = {
       nextReplyEtaSec: prev.pendingReplyCount > 0 ? Math.round(roundTripMin * 60) : null,
     }))
 
-    // Aktif uyarıların ve kartların EarthDelayClass sınıflarını yeniden hesapla
-    useAlertStore.setState((prev) => ({
-      alerts: prev.alerts.map((a) => ({
-        ...a,
-        earthDelayClass: classifyEarthDelay(a, nextConfig),
-      })),
-    }))
-    useDecisionStore.setState((prev) => {
-      const alerts = useAlertStore.getState().alerts
-      return {
-        cards: prev.cards.map((c) => {
-          const srcAlert = alerts.find((a) => c.sourceAlertIds.includes(a.id))
-          return srcAlert
-            ? { ...c, earthDelayClass: classifyEarthDelay(srcAlert, nextConfig) }
-            : c
-        }),
-      }
-    })
+    if (!hasEngineDecisionState) {
+      // MockEngine yedeği: aktif uyarıların ve kartların EarthDelayClass sınıflarını yeniden hesapla
+      useAlertStore.setState((prev) => ({
+        alerts: prev.alerts.map((a) => ({
+          ...a,
+          earthDelayClass: classifyEarthDelay(a, nextConfig),
+        })),
+      }))
+      useDecisionStore.setState((prev) => {
+        const alerts = useAlertStore.getState().alerts
+        return {
+          ...prev,
+          cards: prev.cards.map((c) => {
+            const srcAlert = alerts.find((a) => c.sourceAlertIds.includes(a.id))
+            return srcAlert
+              ? { ...c, earthDelayClass: classifyEarthDelay(srcAlert, nextConfig) }
+              : c
+          }),
+        }
+      })
+    }
 
     getActiveEngineClient().send({ type: 'SET_EARTH_LINK', config: nextConfig })
   },
@@ -1323,12 +1438,14 @@ export const actions = {
       config: nextConfig,
       roundTripMin,
     }))
-    useAlertStore.setState((prev) => ({
-      alerts: prev.alerts.map((a) => ({
-        ...a,
-        earthDelayClass: classifyEarthDelay(a, nextConfig),
-      })),
-    }))
+    if (!hasEngineDecisionState) {
+      useAlertStore.setState((prev) => ({
+        alerts: prev.alerts.map((a) => ({
+          ...a,
+          earthDelayClass: classifyEarthDelay(a, nextConfig),
+        })),
+      }))
+    }
     getActiveEngineClient().send({ type: 'SET_EARTH_LINK', config: { blackout } })
   },
 

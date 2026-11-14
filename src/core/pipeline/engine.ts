@@ -1,10 +1,20 @@
 // Engine boru hattı yürütücüsü (FAZ_03 §3.3). Saf TS; aşama hataları yalıtılır.
 import type { EngineSnapshot } from '../../workers/protocol'
 import type { BaselineEngine } from '../baseline'
+import type { EarthConsentCategory } from '../earthlink/packets'
+import type { EarthLinkOptions } from '../earthlink/link'
 import { registry, type EvidenceRegistry } from '../evidence/registry'
 import type { PlausibleRanges } from '../ingest'
 import type { PersistPort } from '../storage'
-import type { AlertEvent, CrewId, SimTimeMs } from '../types'
+import type {
+  ActionCard,
+  AlertEvent,
+  CrewId,
+  CrewProfile,
+  EarthLinkConfig,
+  Message,
+  SimTimeMs,
+} from '../types'
 import { EngineBuffers } from './buffer'
 import {
   BaselineStage,
@@ -14,9 +24,11 @@ import {
   IngestStage,
   ModulesStage,
   PersistStage,
+  type DecisionSnapshot,
   type EngineContext,
   type EngineOutput,
   type EngineStage,
+  type ScenarioDecisionContext,
 } from './stages'
 
 export interface EngineOptions {
@@ -34,6 +46,12 @@ export interface DefaultEngineOptions {
   priorCareerDoseMsv?: (crewId: CrewId) => number | undefined
   /** Radyasyon projeksiyonu için senaryo görev süresi (gün) veya onu veren fonksiyon; yoksa Evidence varsayımı. */
   missionDays?: number | (() => number | undefined)
+  /** Faz 7 karar katmanı için senaryo bağlamı (earthLinkPreset, EARTH_DELAY, COMM_BLACKOUT). */
+  scenario?: ScenarioDecisionContext
+  /** Faz 7 planlayıcı için mürettebat profilleri. */
+  crewProfiles?: readonly CrewProfile[]
+  /** Faz 7 Earth Link ek yapılandırması. */
+  earthLinkOptions?: EarthLinkOptions
 }
 
 export class Engine {
@@ -106,11 +124,48 @@ export class Engine {
 
   /** ACK_ALERT: uyarıyı ACTIVE → ACKED yapar; olay yoksa null. */
   ackAlert(alertId: string): AlertEvent | null {
+    let acked: AlertEvent | null = null
     for (const stage of this.stages) {
       const event = stage.ackAlert?.(alertId, this.simT)
-      if (event) return event
+      if (event) acked = event
     }
-    return null
+    return acked
+  }
+
+  private getDecisionStage(): DecisionStage | undefined {
+    return this.stages.find((stage): stage is DecisionStage => stage instanceof DecisionStage)
+  }
+
+  acceptAction(cardId: string): ActionCard | null {
+    return this.getDecisionStage()?.acceptCard(cardId, this.simT) ?? null
+  }
+
+  dismissAction(cardId: string): ActionCard | null {
+    return this.getDecisionStage()?.dismissCard(cardId, this.simT) ?? null
+  }
+
+  completeAction(cardId: string): ActionCard | null {
+    return this.getDecisionStage()?.completeCard(cardId, this.simT) ?? null
+  }
+
+  setEarthLinkConfig(config: Partial<EarthLinkConfig>): void {
+    this.getDecisionStage()?.setEarthLinkConfig(config)
+  }
+
+  setConsentCategories(categories: readonly EarthConsentCategory[]): void {
+    this.getDecisionStage()?.setConsentCategories(categories)
+  }
+
+  triggerGroundReply(templateId: string, relatedAlertId?: string): Message | null {
+    return this.getDecisionStage()?.triggerGroundReply(templateId, relatedAlertId) ?? null
+  }
+
+  setScenario(scenario: ScenarioDecisionContext, crewProfiles?: readonly CrewProfile[]): void {
+    this.getDecisionStage()?.setScenario(scenario, crewProfiles)
+  }
+
+  getSimT(): SimTimeMs {
+    return this.simT
   }
 
   /**
@@ -121,14 +176,27 @@ export class Engine {
     const modules = Object.assign({}, ...this.stages.map((stage) => stage.snapshotModules?.() ?? {})) as NonNullable<
       EngineSnapshot['modules']
     >
+    let activeAlerts = this.stages.flatMap((stage) => stage.listAlerts?.(this.simT) ?? [])
+    for (const stage of this.stages) {
+      if (stage.applyTriageToAlerts) {
+        activeAlerts = stage.applyTriageToAlerts(activeAlerts)
+      }
+    }
+    let decision: DecisionSnapshot | undefined
+    for (const stage of this.stages) {
+      if (stage.snapshotDecision) {
+        decision = stage.snapshotDecision(this.simT)
+      }
+    }
     return {
       t: this.simT,
       latest: this.buffers.getLatestSnapshot(),
-      activeAlerts: this.stages.flatMap((stage) => stage.listAlerts?.(this.simT) ?? []),
+      activeAlerts,
       states: this.previousOutput?.states ?? [],
-      cards: [],
+      cards: decision ? decision.cards : [],
       dataQualityCount: this.dataQualityCount,
       modules,
+      ...(decision ? { decision } : {}),
     }
   }
 
@@ -150,6 +218,11 @@ export class Engine {
 /** Nihai sıra: Ingest → Buffer → Baseline → Modules → Detection → Decision → Persist */
 export function createDefaultEngine(opts: DefaultEngineOptions = {}): Engine {
   const evidence = opts.evidence ?? registry
+  const priorCareerDoseMsv =
+    opts.priorCareerDoseMsv ??
+    (opts.crewProfiles
+      ? (crewId: CrewId) => opts.crewProfiles?.find((c) => c.id === crewId)?.priorCareerDoseMsv
+      : undefined)
   return new Engine({
     evidence,
     stages: [
@@ -164,11 +237,16 @@ export function createDefaultEngine(opts: DefaultEngineOptions = {}): Engine {
       }),
       new ModulesStage({
         evidence,
-        ...(opts.priorCareerDoseMsv ? { priorCareerDoseMsv: opts.priorCareerDoseMsv } : {}),
+        ...(priorCareerDoseMsv ? { priorCareerDoseMsv } : {}),
         ...(opts.missionDays !== undefined ? { missionDays: opts.missionDays } : {}),
       }),
-      new DetectionStage(),
-      new DecisionStage(),
+      new DetectionStage({ evidence }),
+      new DecisionStage({
+        evidence,
+        ...(opts.scenario ? { scenario: opts.scenario } : {}),
+        ...(opts.crewProfiles ? { crewProfiles: opts.crewProfiles } : {}),
+        ...(opts.earthLinkOptions ? { earthLinkOptions: opts.earthLinkOptions } : {}),
+      }),
       new PersistStage(opts.persist, opts.onPersistError),
     ],
   })

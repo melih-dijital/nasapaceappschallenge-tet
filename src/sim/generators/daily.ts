@@ -85,7 +85,7 @@ export function generateDailyFrame(
       sleepEffP.mean +
         nextSleepEffDev -
         nextSleepDebtH * SIM_DEMO_DEFAULTS.sleepDebtToEfficiencyPerH -
-        Math.max(0, activeEffects.stressDelta) * 0.015,
+        Math.max(0, activeEffects.stressDelta) * 0.015, // DEMO_PARAMETER (simülatör)
       sleepEffP.min,
       sleepEffP.max,
     ),

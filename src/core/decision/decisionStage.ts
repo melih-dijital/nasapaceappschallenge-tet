@@ -7,7 +7,7 @@ import {
 } from '../earthlink/link'
 import type { EarthConsentCategory } from '../earthlink/packets'
 import { registry as defaultRegistry, type EvidenceRegistry } from '../evidence/registry'
-import type { DecisionSnapshot as PipelineDecisionSnapshot, EngineContext, EngineStage } from '../pipeline/stages'
+import type { EngineContext, EngineStage } from '../pipeline/stages'
 import type { ActionCard, ActionCardState, ActionId, ActionKind } from '../types/action'
 import type { Alert, EarthDelayClass, Severity, WhyKey } from '../types/alert'
 import type { CrewProfile, CrewRole } from '../types/crew'
@@ -46,12 +46,17 @@ export interface DecisionAuditEntry {
 }
 
 export interface CrewScheduleOutput {
+  baseSchedule?: DaySchedule
   schedule: DaySchedule
   diff: ScheduleDiffItem[]
+  acceptedSchedule?: DaySchedule
+  acceptedDiff?: ScheduleDiffItem[]
   hydrationTargetL: number
 }
 
-export interface DecisionStageSnapshot extends PipelineDecisionSnapshot {
+export interface DecisionStageSnapshot {
+  t: SimTimeMs
+  cardsCount: number
   cards: ActionCard[]
   schedule: DaySchedule
   diff: ScheduleDiffItem[]
@@ -169,10 +174,14 @@ export class DecisionStage implements EngineStage {
 
   private readonly evidence: EvidenceRegistry
   private earthLink: EarthLink
-  private readonly initialEarthLinkOptions: EarthLinkOptions
+  private initialEarthLinkOptions: EarthLinkOptions
   private scenario: ScenarioDecisionContext | undefined
   private readonly crewProfiles = new Map<CrewId, CrewProfile>()
   private readonly activeAlerts = new Map<string, Alert>()
+  private readonly triagedById = new Map<
+    string,
+    { earthDelayClass: EarthDelayClass; timeToHarmMin: number }
+  >()
   private readonly cardStates = new Map<string, ActionCardState>()
   private readonly baselineMedians = new Map<string, number>()
   private readonly auditLog: DecisionAuditEntry[] = []
@@ -222,23 +231,41 @@ export class DecisionStage implements EngineStage {
       }
     }
 
+    const events = ctx.output.alertEvents ?? []
+    if (events.length > 0) {
+      const eventsByT = new Map<SimTimeMs, typeof events>()
+      for (const ev of events) {
+        const list = eventsByT.get(ev.t)
+        if (list) list.push(ev)
+        else eventsByT.set(ev.t, [ev])
+      }
+      const sortedTimes = [...eventsByT.keys()].sort((a, b) => a - b)
+      for (const t of sortedTimes) {
+        this.applyScenarioLinkEvents(t)
+        const linkConfigAtT = this.earthLink.getConfig()
+
+        for (const event of eventsByT.get(t) ?? []) {
+          const result = classify(event.alert, linkConfigAtT, this.evidence)
+          event.alert.earthDelayClass = result.cls
+          event.alert.timeToHarmMin = result.timeToHarmMin
+          this.triagedById.set(event.alert.id, {
+            earthDelayClass: result.cls,
+            timeToHarmMin: result.timeToHarmMin,
+          })
+
+          if (event.type === 'RESOLVED') {
+            this.activeAlerts.delete(event.alert.id)
+          } else {
+            this.activeAlerts.set(event.alert.id, { ...event.alert })
+          }
+        }
+      }
+    }
+
     this.applyScenarioLinkEvents(ctx.simT)
     this.earthLink.tick(ctx.simT)
 
     const linkConfig = this.earthLink.getConfig()
-
-    for (const event of ctx.output.alertEvents ?? []) {
-      const result = classify(event.alert, linkConfig, this.evidence)
-      event.alert.earthDelayClass = result.cls
-      event.alert.timeToHarmMin = result.timeToHarmMin
-
-      if (event.type === 'RESOLVED') {
-        this.activeAlerts.delete(event.alert.id)
-      } else {
-        this.activeAlerts.set(event.alert.id, { ...event.alert })
-      }
-    }
-
     this.reclassifyActiveAlerts(linkConfig)
 
     for (const alert of this.activeAlerts.values()) {
@@ -251,6 +278,53 @@ export class DecisionStage implements EngineStage {
     ctx.scratch[DECISION_SNAPSHOT_SCRATCH_KEY] = snapshot
     ctx.scratch[DECISION_CARDS_SCRATCH_KEY] = snapshot.cards
     ctx.scratch[EARTH_LINK_STATE_SCRATCH_KEY] = snapshot.earth
+  }
+
+  ackAlert(alertId: string, t: SimTimeMs = this.lastSimT): import('../types/alert').AlertEvent | null {
+    const existing = this.activeAlerts.get(alertId)
+    if (!existing) return null
+    const updated: Alert = {
+      ...existing,
+      status: 'ACKED',
+      ackT: t,
+    }
+    this.activeAlerts.set(alertId, updated)
+    if (this.lastSnapshot) {
+      this.buildAndStoreSnapshot(t)
+    }
+    return { type: 'ACKED', alert: { ...updated }, t }
+  }
+
+  applyTriageToAlerts(alerts: readonly Alert[]): Alert[] {
+    const linkConfig = this.earthLink.getConfig()
+    return alerts.map((alert) => {
+      const active = this.activeAlerts.get(alert.id)
+      if (active) {
+        return {
+          ...alert,
+          earthDelayClass: active.earthDelayClass,
+          timeToHarmMin: active.timeToHarmMin,
+        }
+      }
+      const cached = this.triagedById.get(alert.id)
+      if (cached) {
+        return {
+          ...alert,
+          earthDelayClass: cached.earthDelayClass,
+          timeToHarmMin: cached.timeToHarmMin,
+        }
+      }
+      const result = classify(alert, linkConfig, this.evidence)
+      return {
+        ...alert,
+        earthDelayClass: result.cls,
+        timeToHarmMin: result.timeToHarmMin,
+      }
+    })
+  }
+
+  snapshotDecision(simT: SimTimeMs = this.lastSimT): DecisionStageSnapshot {
+    return this.lastSnapshot ?? this.computeSnapshot(simT)
   }
 
   acceptCard(cardId: string, t: SimTimeMs = this.lastSimT): ActionCard | null {
@@ -301,6 +375,19 @@ export class DecisionStage implements EngineStage {
         this.crewProfiles.set(profile.id, profile)
       }
     }
+    this.initialEarthLinkOptions = {
+      ...this.initialEarthLinkOptions,
+      ...(scenario.earthLinkPreset
+        ? {
+            preset: scenario.earthLinkPreset.preset,
+            config: {
+              preset: scenario.earthLinkPreset.preset,
+              oneWayDelaySec: scenario.earthLinkPreset.oneWayDelaySec,
+              blackout: scenario.earthLinkPreset.blackout ?? false,
+            },
+          }
+        : {}),
+    }
     if (scenario.earthLinkPreset) {
       this.earthLink.applyScenarioConfig({
         preset: scenario.earthLinkPreset.preset,
@@ -332,6 +419,7 @@ export class DecisionStage implements EngineStage {
 
   reset(): void {
     this.activeAlerts.clear()
+    this.triagedById.clear()
     this.cardStates.clear()
     this.baselineMedians.clear()
     this.auditLog.length = 0
@@ -345,7 +433,8 @@ export class DecisionStage implements EngineStage {
     nextState: Extract<ActionCardState, 'ACCEPTED' | 'DISMISSED' | 'DONE'>,
     t: SimTimeMs,
   ): ActionCard | null {
-    const existing = this.lastSnapshot?.cards.find((c) => c.id === cardId)
+    const currentCards = this.lastSnapshot?.cards ?? this.buildCards()
+    const existing = currentCards.find((c) => c.id === cardId)
     if (!existing) return null
 
     this.cardStates.set(cardId, nextState)
@@ -415,6 +504,10 @@ export class DecisionStage implements EngineStage {
   private reclassifyActiveAlerts(linkConfig: EarthLinkConfig): void {
     for (const [id, alert] of this.activeAlerts) {
       const result = classify(alert, linkConfig, this.evidence)
+      this.triagedById.set(id, {
+        earthDelayClass: result.cls,
+        timeToHarmMin: result.timeToHarmMin,
+      })
       this.activeAlerts.set(id, {
         ...alert,
         earthDelayClass: result.cls,
@@ -537,14 +630,32 @@ export class DecisionStage implements EngineStage {
 
       const sleepH = this.baselineMedians.get(`${crewId}|sleep.durationH`)
       const hydrationL = this.baselineMedians.get(`${crewId}|hydrationL`)
-      const result: PlannerResult = applyAdjustments(base, activeInputs, {
+      const plannerOpts = {
         evidence: this.evidence,
         ...(sleepH !== undefined ? { baselineSleepMin: sleepH * MIN_PER_HOUR } : {}),
         ...(hydrationL !== undefined ? { baselineHydrationL: hydrationL } : {}),
-      })
+      }
+      const result: PlannerResult = applyAdjustments(base, activeInputs, plannerOpts)
+
+      const acceptedCards = cards.filter(
+        (c) => c.crewId === crewId && (c.state === 'ACCEPTED' || c.state === 'DONE'),
+      )
+      const acceptedInputs: ActiveActionInput[] = acceptedCards.map((c) => ({
+        actionId: c.actionId,
+        sourceAlertIds: c.sourceAlertIds,
+        ...(c.sourceAlertIds[0] ? { byAlertId: c.sourceAlertIds[0] } : {}),
+      }))
+      const acceptedResult: PlannerResult =
+        acceptedInputs.length > 0
+          ? applyAdjustments(base, acceptedInputs, plannerOpts)
+          : { schedule: base, diff: [], hydrationTargetL: result.hydrationTargetL }
+
       byCrew[crewId] = {
+        baseSchedule: base,
         schedule: result.schedule,
         diff: result.diff,
+        acceptedSchedule: acceptedResult.schedule,
+        acceptedDiff: acceptedResult.diff,
         hydrationTargetL: result.hydrationTargetL,
       }
     }
@@ -552,21 +663,25 @@ export class DecisionStage implements EngineStage {
     return byCrew
   }
 
-  private buildAndStoreSnapshot(simT: SimTimeMs): DecisionStageSnapshot {
+  private computeSnapshot(simT: SimTimeMs): DecisionStageSnapshot {
     const cards = this.buildCards()
     const schedulesByCrew = this.buildSchedules(simT, cards)
     const primaryCrewId = cards[0]?.crewId ?? this.crewProfiles.keys().next().value ?? 'cdr'
+    const fallbackBase = buildBaseSchedule(
+      createDefaultCrewProfile(primaryCrewId, this.evidence),
+      Math.max(0, Math.floor(simT / MS_PER_DAY)),
+      this.evidence,
+    )
     const primary = schedulesByCrew[primaryCrewId] ?? {
-      schedule: buildBaseSchedule(
-        createDefaultCrewProfile(primaryCrewId, this.evidence),
-        Math.max(0, Math.floor(simT / MS_PER_DAY)),
-        this.evidence,
-      ),
+      baseSchedule: fallbackBase,
+      schedule: fallbackBase,
       diff: [],
+      acceptedSchedule: fallbackBase,
+      acceptedDiff: [],
       hydrationTargetL: 0,
     }
 
-    const snapshot: DecisionStageSnapshot = {
+    return {
       t: simT,
       cardsCount: cards.length,
       cards,
@@ -577,6 +692,10 @@ export class DecisionStage implements EngineStage {
       earth: this.earthLink.getState(),
       triagedAlerts: this.getTriagedAlerts(),
     }
+  }
+
+  private buildAndStoreSnapshot(simT: SimTimeMs): DecisionStageSnapshot {
+    const snapshot = this.computeSnapshot(simT)
     this.lastSnapshot = snapshot
     return snapshot
   }

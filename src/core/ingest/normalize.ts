@@ -76,8 +76,9 @@ export class IngestNormalizer {
         continue
       }
 
+      const isUserDaily = normalized.kind === 'daily' && normalized.userSubmitted === true
       const dupKey = `${normalized.crewId}|${normalized.kind}|${normalized.t}`
-      if (this.seenKeys.has(dupKey)) {
+      if (!isUserDaily && this.seenKeys.has(dupKey)) {
         dataQuality.push({
           id: this.nextEventId('dup'),
           kind: 'DUPLICATE_FRAME',

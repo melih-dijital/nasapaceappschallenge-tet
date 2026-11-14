@@ -5,6 +5,9 @@ import type { FrameQuery, FrameStore } from './frameStore'
 const DEFAULT_CAPACITY = 100_000
 
 function frameKey(frame: TelemetryFrame): string {
+  if (frame.kind === 'daily') {
+    return `${frame.crewId}|daily|day:${frame.day}`
+  }
   return `${frame.crewId}|${frame.kind}|${frame.t}`
 }
 
