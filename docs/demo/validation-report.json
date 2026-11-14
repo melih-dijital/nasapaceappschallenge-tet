@@ -1,0 +1,3419 @@
+{
+  "params": {
+    "evidenceFingerprint": "fnv1a-0af1f79b4d5f4413",
+    "paramsVersion": "demo-parameters-v1",
+    "tuningSeeds": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "reportSeeds": [
+      100,
+      101,
+      102,
+      103,
+      104,
+      105,
+      106,
+      107,
+      108,
+      109,
+      110,
+      111,
+      112,
+      113,
+      114,
+      115,
+      116,
+      117,
+      118,
+      119
+    ],
+    "quickSeeds": 3,
+    "batchHours": 6
+  },
+  "quick": false,
+  "scenarios": [
+    {
+      "scenarioId": "nominal",
+      "eventStrength": "NONE",
+      "runsCount": 20,
+      "crewDays": 2400,
+      "tp": 0,
+      "fn": 0,
+      "fp": 59,
+      "advisoryCount": 1222,
+      "recall": null,
+      "precision": 0,
+      "specificity": 0.9275,
+      "nominalAlertFreeDayPct": 76.83333333333333,
+      "fpPerCrewDay": 0.024583333333333332,
+      "advisoryPerCrewDay": 0.5091666666666667,
+      "medianLatencyMin": null,
+      "p90LatencyMin": null,
+      "triageAccuracy": null,
+      "triageChecked": 0,
+      "triagePassed": 0,
+      "byCrew": {
+        "cdr": {
+          "tp": 0,
+          "fn": 0,
+          "fp": 10,
+          "advisoryCount": 268,
+          "recall": null,
+          "precision": 0,
+          "medianLatencyMin": null
+        },
+        "md": {
+          "tp": 0,
+          "fn": 0,
+          "fp": 19,
+          "advisoryCount": 313,
+          "recall": null,
+          "precision": 0,
+          "medianLatencyMin": null
+        },
+        "eng": {
+          "tp": 0,
+          "fn": 0,
+          "fp": 15,
+          "advisoryCount": 325,
+          "recall": null,
+          "precision": 0,
+          "medianLatencyMin": null
+        },
+        "sci": {
+          "tp": 0,
+          "fn": 0,
+          "fp": 15,
+          "advisoryCount": 316,
+          "recall": null,
+          "precision": 0,
+          "medianLatencyMin": null
+        }
+      },
+      "byState": {
+        "fatigue": {
+          "tp": 0,
+          "fn": 0,
+          "fp": 29,
+          "advisoryCount": 243,
+          "recall": null,
+          "precision": 0,
+          "medianLatencyMin": null
+        },
+        "stress": {
+          "tp": 0,
+          "fn": 0,
+          "fp": 0,
+          "advisoryCount": 63,
+          "recall": null,
+          "precision": null,
+          "medianLatencyMin": null
+        },
+        "dehydration": {
+          "tp": 0,
+          "fn": 0,
+          "fp": 5,
+          "advisoryCount": 129,
+          "recall": null,
+          "precision": 0,
+          "medianLatencyMin": null
+        },
+        "cardio_strain": {
+          "tp": 0,
+          "fn": 0,
+          "fp": 13,
+          "advisoryCount": 465,
+          "recall": null,
+          "precision": 0,
+          "medianLatencyMin": null
+        },
+        "mood_decline": {
+          "tp": 0,
+          "fn": 0,
+          "fp": 2,
+          "advisoryCount": 99,
+          "recall": null,
+          "precision": 0,
+          "medianLatencyMin": null
+        },
+        "cabinCo2ppm": {
+          "tp": 0,
+          "fn": 0,
+          "fp": 8,
+          "advisoryCount": 58,
+          "recall": null,
+          "precision": 0,
+          "medianLatencyMin": null
+        },
+        "sleep_debt": {
+          "tp": 0,
+          "fn": 0,
+          "fp": 2,
+          "advisoryCount": 104,
+          "recall": null,
+          "precision": 0,
+          "medianLatencyMin": null
+        },
+        "radiation_event": {
+          "tp": 0,
+          "fn": 0,
+          "fp": 0,
+          "advisoryCount": 61,
+          "recall": null,
+          "precision": null,
+          "medianLatencyMin": null
+        }
+      }
+    },
+    {
+      "scenarioId": "solar_particle_event",
+      "eventStrength": "STRONG",
+      "runsCount": 20,
+      "crewDays": 560,
+      "tp": 80,
+      "fn": 0,
+      "fp": 18,
+      "advisoryCount": 349,
+      "recall": 1,
+      "precision": 0.8163265306122449,
+      "specificity": 0.9229166666666667,
+      "nominalAlertFreeDayPct": null,
+      "fpPerCrewDay": 0.03214285714285714,
+      "advisoryPerCrewDay": 0.6232142857142857,
+      "medianLatencyMin": 15,
+      "p90LatencyMin": 15,
+      "triageAccuracy": 1,
+      "triageChecked": 80,
+      "triagePassed": 80,
+      "byCrew": {
+        "cdr": {
+          "tp": 20,
+          "fn": 0,
+          "fp": 3,
+          "advisoryCount": 65,
+          "recall": 1,
+          "precision": 0.8695652173913043,
+          "medianLatencyMin": 15
+        },
+        "md": {
+          "tp": 20,
+          "fn": 0,
+          "fp": 6,
+          "advisoryCount": 89,
+          "recall": 1,
+          "precision": 0.7692307692307693,
+          "medianLatencyMin": 15
+        },
+        "eng": {
+          "tp": 20,
+          "fn": 0,
+          "fp": 4,
+          "advisoryCount": 90,
+          "recall": 1,
+          "precision": 0.8333333333333334,
+          "medianLatencyMin": 15
+        },
+        "sci": {
+          "tp": 20,
+          "fn": 0,
+          "fp": 5,
+          "advisoryCount": 105,
+          "recall": 1,
+          "precision": 0.8,
+          "medianLatencyMin": 15
+        }
+      },
+      "byState": {
+        "radiation_event": {
+          "tp": 80,
+          "fn": 0,
+          "fp": 2,
+          "advisoryCount": 2,
+          "recall": 1,
+          "precision": 0.975609756097561,
+          "medianLatencyMin": 15
+        },
+        "fatigue": {
+          "tp": 0,
+          "fn": 0,
+          "fp": 7,
+          "advisoryCount": 87,
+          "recall": null,
+          "precision": 0,
+          "medianLatencyMin": null
+        },
+        "stress": {
+          "tp": 0,
+          "fn": 0,
+          "fp": 0,
+          "advisoryCount": 43,
+          "recall": null,
+          "precision": null,
+          "medianLatencyMin": null
+        },
+        "dehydration": {
+          "tp": 0,
+          "fn": 0,
+          "fp": 2,
+          "advisoryCount": 63,
+          "recall": null,
+          "precision": 0,
+          "medianLatencyMin": null
+        },
+        "cardio_strain": {
+          "tp": 0,
+          "fn": 0,
+          "fp": 2,
+          "advisoryCount": 102,
+          "recall": null,
+          "precision": 0,
+          "medianLatencyMin": null
+        },
+        "mood_decline": {
+          "tp": 0,
+          "fn": 0,
+          "fp": 0,
+          "advisoryCount": 24,
+          "recall": null,
+          "precision": null,
+          "medianLatencyMin": null
+        },
+        "cabinCo2ppm": {
+          "tp": 0,
+          "fn": 0,
+          "fp": 4,
+          "advisoryCount": 10,
+          "recall": null,
+          "precision": 0,
+          "medianLatencyMin": null
+        },
+        "sleep_debt": {
+          "tp": 0,
+          "fn": 0,
+          "fp": 1,
+          "advisoryCount": 18,
+          "recall": null,
+          "precision": 0,
+          "medianLatencyMin": null
+        }
+      }
+    },
+    {
+      "scenarioId": "sleep_debt",
+      "eventStrength": "STRONG",
+      "runsCount": 20,
+      "crewDays": 1120,
+      "tp": 73,
+      "fn": 7,
+      "fp": 32,
+      "advisoryCount": 638,
+      "recall": 0.9125,
+      "precision": 0.6952380952380952,
+      "specificity": 0.7793478260869565,
+      "nominalAlertFreeDayPct": null,
+      "fpPerCrewDay": 0.02857142857142857,
+      "advisoryPerCrewDay": 0.5696428571428571,
+      "medianLatencyMin": 1439,
+      "p90LatencyMin": 2879,
+      "triageAccuracy": null,
+      "triageChecked": 0,
+      "triagePassed": 0,
+      "byCrew": {
+        "cdr": {
+          "tp": 38,
+          "fn": 2,
+          "fp": 11,
+          "advisoryCount": 126,
+          "recall": 0.95,
+          "precision": 0.7755102040816326,
+          "medianLatencyMin": 1439
+        },
+        "md": {
+          "tp": 0,
+          "fn": 0,
+          "fp": 7,
+          "advisoryCount": 168,
+          "recall": null,
+          "precision": 0,
+          "medianLatencyMin": null
+        },
+        "eng": {
+          "tp": 35,
+          "fn": 5,
+          "fp": 9,
+          "advisoryCount": 175,
+          "recall": 0.875,
+          "precision": 0.7954545454545454,
+          "medianLatencyMin": 1439
+        },
+        "sci": {
+          "tp": 0,
+          "fn": 0,
+          "fp": 5,
+          "advisoryCount": 169,
+          "recall": null,
+          "precision": 0,
+          "medianLatencyMin": null
+        }
+      },
+      "byState": {
+        "sleep_debt": {
+          "tp": 37,
+          "fn": 3,
+          "fp": 1,
+          "advisoryCount": 26,
+          "recall": 0.925,
+          "precision": 0.9736842105263158,
+          "medianLatencyMin": 1439
+        },
+        "fatigue": {
+          "tp": 36,
+          "fn": 4,
+          "fp": 8,
+          "advisoryCount": 108,
+          "recall": 0.9,
+          "precision": 0.8181818181818182,
+          "medianLatencyMin": 1777.5
+        },
+        "stress": {
+          "tp": 0,
+          "fn": 0,
+          "fp": 3,
+          "advisoryCount": 84,
+          "recall": null,
+          "precision": 0,
+          "medianLatencyMin": null
+        },
+        "dehydration": {
+          "tp": 0,
+          "fn": 0,
+          "fp": 3,
+          "advisoryCount": 78,
+          "recall": null,
+          "precision": 0,
+          "medianLatencyMin": null
+        },
+        "cardio_strain": {
+          "tp": 0,
+          "fn": 0,
+          "fp": 8,
+          "advisoryCount": 209,
+          "recall": null,
+          "precision": 0,
+          "medianLatencyMin": null
+        },
+        "mood_decline": {
+          "tp": 0,
+          "fn": 0,
+          "fp": 5,
+          "advisoryCount": 78,
+          "recall": null,
+          "precision": 0,
+          "medianLatencyMin": null
+        },
+        "cabinCo2ppm": {
+          "tp": 0,
+          "fn": 0,
+          "fp": 4,
+          "advisoryCount": 29,
+          "recall": null,
+          "precision": 0,
+          "medianLatencyMin": null
+        },
+        "radiation_event": {
+          "tp": 0,
+          "fn": 0,
+          "fp": 0,
+          "advisoryCount": 26,
+          "recall": null,
+          "precision": null,
+          "medianLatencyMin": null
+        }
+      }
+    },
+    {
+      "scenarioId": "isolation_low_mood",
+      "eventStrength": "MODERATE",
+      "runsCount": 20,
+      "crewDays": 1760,
+      "tp": 20,
+      "fn": 0,
+      "fp": 67,
+      "advisoryCount": 960,
+      "recall": 1,
+      "precision": 0.22988505747126436,
+      "specificity": 0.9290540540540541,
+      "nominalAlertFreeDayPct": null,
+      "fpPerCrewDay": 0.03806818181818182,
+      "advisoryPerCrewDay": 0.5454545454545454,
+      "medianLatencyMin": 7199,
+      "p90LatencyMin": 10223.000000000002,
+      "triageAccuracy": null,
+      "triageChecked": 0,
+      "triagePassed": 0,
+      "byCrew": {
+        "cdr": {
+          "tp": 0,
+          "fn": 0,
+          "fp": 7,
+          "advisoryCount": 210,
+          "recall": null,
+          "precision": 0,
+          "medianLatencyMin": null
+        },
+        "md": {
+          "tp": 0,
+          "fn": 0,
+          "fp": 12,
+          "advisoryCount": 242,
+          "recall": null,
+          "precision": 0,
+          "medianLatencyMin": null
+        },
+        "eng": {
+          "tp": 0,
+          "fn": 0,
+          "fp": 12,
+          "advisoryCount": 238,
+          "recall": null,
+          "precision": 0,
+          "medianLatencyMin": null
+        },
+        "sci": {
+          "tp": 20,
+          "fn": 0,
+          "fp": 36,
+          "advisoryCount": 270,
+          "recall": 1,
+          "precision": 0.35714285714285715,
+          "medianLatencyMin": 7199
+        }
+      },
+      "byState": {
+        "mood_decline": {
+          "tp": 20,
+          "fn": 0,
+          "fp": 1,
+          "advisoryCount": 58,
+          "recall": 1,
+          "precision": 0.9523809523809523,
+          "medianLatencyMin": 7199
+        },
+        "fatigue": {
+          "tp": 0,
+          "fn": 0,
+          "fp": 29,
+          "advisoryCount": 217,
+          "recall": null,
+          "precision": 0,
+          "medianLatencyMin": null
+        },
+        "stress": {
+          "tp": 0,
+          "fn": 0,
+          "fp": 11,
+          "advisoryCount": 81,
+          "recall": null,
+          "precision": 0,
+          "medianLatencyMin": null
+        },
+        "dehydration": {
+          "tp": 0,
+          "fn": 0,
+          "fp": 3,
+          "advisoryCount": 103,
+          "recall": null,
+          "precision": 0,
+          "medianLatencyMin": null
+        },
+        "cardio_strain": {
+          "tp": 0,
+          "fn": 0,
+          "fp": 14,
+          "advisoryCount": 339,
+          "recall": null,
+          "precision": 0,
+          "medianLatencyMin": null
+        },
+        "cabinCo2ppm": {
+          "tp": 0,
+          "fn": 0,
+          "fp": 6,
+          "advisoryCount": 42,
+          "recall": null,
+          "precision": 0,
+          "medianLatencyMin": null
+        },
+        "sleep_debt": {
+          "tp": 0,
+          "fn": 0,
+          "fp": 3,
+          "advisoryCount": 75,
+          "recall": null,
+          "precision": 0,
+          "medianLatencyMin": null
+        },
+        "radiation_event": {
+          "tp": 0,
+          "fn": 0,
+          "fp": 0,
+          "advisoryCount": 45,
+          "recall": null,
+          "precision": null,
+          "medianLatencyMin": null
+        }
+      }
+    },
+    {
+      "scenarioId": "dehydration_co2",
+      "eventStrength": "STRONG",
+      "runsCount": 20,
+      "crewDays": 960,
+      "tp": 18,
+      "fn": 2,
+      "fp": 105,
+      "advisoryCount": 563,
+      "recall": 0.9,
+      "precision": 0.14634146341463414,
+      "specificity": 0.7111111111111111,
+      "nominalAlertFreeDayPct": null,
+      "fpPerCrewDay": 0.109375,
+      "advisoryPerCrewDay": 0.5864583333333333,
+      "medianLatencyMin": 1439,
+      "p90LatencyMin": 1439,
+      "triageAccuracy": null,
+      "triageChecked": 0,
+      "triagePassed": 0,
+      "byCrew": {
+        "cdr": {
+          "tp": 0,
+          "fn": 0,
+          "fp": 23,
+          "advisoryCount": 111,
+          "recall": null,
+          "precision": 0,
+          "medianLatencyMin": null
+        },
+        "md": {
+          "tp": 18,
+          "fn": 2,
+          "fp": 30,
+          "advisoryCount": 160,
+          "recall": 0.9,
+          "precision": 0.375,
+          "medianLatencyMin": 1439
+        },
+        "eng": {
+          "tp": 0,
+          "fn": 0,
+          "fp": 28,
+          "advisoryCount": 137,
+          "recall": null,
+          "precision": 0,
+          "medianLatencyMin": null
+        },
+        "sci": {
+          "tp": 0,
+          "fn": 0,
+          "fp": 24,
+          "advisoryCount": 155,
+          "recall": null,
+          "precision": 0,
+          "medianLatencyMin": null
+        }
+      },
+      "byState": {
+        "dehydration": {
+          "tp": 18,
+          "fn": 2,
+          "fp": 1,
+          "advisoryCount": 70,
+          "recall": 0.9,
+          "precision": 0.9473684210526315,
+          "medianLatencyMin": 1439
+        },
+        "fatigue": {
+          "tp": 0,
+          "fn": 0,
+          "fp": 9,
+          "advisoryCount": 128,
+          "recall": null,
+          "precision": 0,
+          "medianLatencyMin": null
+        },
+        "stress": {
+          "tp": 0,
+          "fn": 0,
+          "fp": 0,
+          "advisoryCount": 46,
+          "recall": null,
+          "precision": null,
+          "medianLatencyMin": null
+        },
+        "cardio_strain": {
+          "tp": 0,
+          "fn": 0,
+          "fp": 11,
+          "advisoryCount": 200,
+          "recall": null,
+          "precision": 0,
+          "medianLatencyMin": null
+        },
+        "mood_decline": {
+          "tp": 0,
+          "fn": 0,
+          "fp": 0,
+          "advisoryCount": 43,
+          "recall": null,
+          "precision": null,
+          "medianLatencyMin": null
+        },
+        "cabinCo2ppm": {
+          "tp": 0,
+          "fn": 0,
+          "fp": 83,
+          "advisoryCount": 16,
+          "recall": null,
+          "precision": 0,
+          "medianLatencyMin": null
+        },
+        "sleep_debt": {
+          "tp": 0,
+          "fn": 0,
+          "fp": 1,
+          "advisoryCount": 41,
+          "recall": null,
+          "precision": 0,
+          "medianLatencyMin": null
+        },
+        "radiation_event": {
+          "tp": 0,
+          "fn": 0,
+          "fp": 0,
+          "advisoryCount": 19,
+          "recall": null,
+          "precision": null,
+          "medianLatencyMin": null
+        }
+      }
+    },
+    {
+      "scenarioId": "comm_blackout",
+      "eventStrength": "STRONG",
+      "runsCount": 20,
+      "crewDays": 800,
+      "tp": 19,
+      "fn": 1,
+      "fp": 20,
+      "advisoryCount": 466,
+      "recall": 0.95,
+      "precision": 0.48717948717948717,
+      "specificity": 0.915625,
+      "nominalAlertFreeDayPct": null,
+      "fpPerCrewDay": 0.025,
+      "advisoryPerCrewDay": 0.5825,
+      "medianLatencyMin": 45,
+      "p90LatencyMin": 288,
+      "triageAccuracy": null,
+      "triageChecked": 0,
+      "triagePassed": 0,
+      "byCrew": {
+        "cdr": {
+          "tp": 0,
+          "fn": 0,
+          "fp": 3,
+          "advisoryCount": 96,
+          "recall": null,
+          "precision": 0,
+          "medianLatencyMin": null
+        },
+        "md": {
+          "tp": 0,
+          "fn": 0,
+          "fp": 5,
+          "advisoryCount": 127,
+          "recall": null,
+          "precision": 0,
+          "medianLatencyMin": null
+        },
+        "eng": {
+          "tp": 19,
+          "fn": 1,
+          "fp": 7,
+          "advisoryCount": 114,
+          "recall": 0.95,
+          "precision": 0.7307692307692307,
+          "medianLatencyMin": 45
+        },
+        "sci": {
+          "tp": 0,
+          "fn": 0,
+          "fp": 5,
+          "advisoryCount": 129,
+          "recall": null,
+          "precision": 0,
+          "medianLatencyMin": null
+        }
+      },
+      "byState": {
+        "cardio_strain": {
+          "tp": 19,
+          "fn": 1,
+          "fp": 3,
+          "advisoryCount": 145,
+          "recall": 0.95,
+          "precision": 0.8636363636363636,
+          "medianLatencyMin": 45
+        },
+        "fatigue": {
+          "tp": 0,
+          "fn": 0,
+          "fp": 9,
+          "advisoryCount": 109,
+          "recall": null,
+          "precision": 0,
+          "medianLatencyMin": null
+        },
+        "stress": {
+          "tp": 0,
+          "fn": 0,
+          "fp": 0,
+          "advisoryCount": 44,
+          "recall": null,
+          "precision": null,
+          "medianLatencyMin": null
+        },
+        "dehydration": {
+          "tp": 0,
+          "fn": 0,
+          "fp": 3,
+          "advisoryCount": 72,
+          "recall": null,
+          "precision": 0,
+          "medianLatencyMin": null
+        },
+        "mood_decline": {
+          "tp": 0,
+          "fn": 0,
+          "fp": 0,
+          "advisoryCount": 31,
+          "recall": null,
+          "precision": null,
+          "medianLatencyMin": null
+        },
+        "cabinCo2ppm": {
+          "tp": 0,
+          "fn": 0,
+          "fp": 4,
+          "advisoryCount": 16,
+          "recall": null,
+          "precision": 0,
+          "medianLatencyMin": null
+        },
+        "sleep_debt": {
+          "tp": 0,
+          "fn": 0,
+          "fp": 1,
+          "advisoryCount": 35,
+          "recall": null,
+          "precision": 0,
+          "medianLatencyMin": null
+        },
+        "radiation_event": {
+          "tp": 0,
+          "fn": 0,
+          "fp": 0,
+          "advisoryCount": 14,
+          "recall": null,
+          "precision": null,
+          "medianLatencyMin": null
+        }
+      }
+    },
+    {
+      "scenarioId": "demo_main",
+      "eventStrength": "STRONG",
+      "runsCount": 20,
+      "crewDays": 480,
+      "tp": 115,
+      "fn": 5,
+      "fp": 48,
+      "advisoryCount": 330,
+      "recall": 0.9583333333333334,
+      "precision": 0.7055214723926381,
+      "specificity": 0.815,
+      "nominalAlertFreeDayPct": null,
+      "fpPerCrewDay": 0.1,
+      "advisoryPerCrewDay": 0.6875,
+      "medianLatencyMin": 15,
+      "p90LatencyMin": 1439,
+      "triageAccuracy": 1,
+      "triageChecked": 80,
+      "triagePassed": 80,
+      "byCrew": {
+        "cdr": {
+          "tp": 40,
+          "fn": 0,
+          "fp": 26,
+          "advisoryCount": 64,
+          "recall": 1,
+          "precision": 0.6060606060606061,
+          "medianLatencyMin": 727
+        },
+        "md": {
+          "tp": 20,
+          "fn": 0,
+          "fp": 5,
+          "advisoryCount": 83,
+          "recall": 1,
+          "precision": 0.8,
+          "medianLatencyMin": 15
+        },
+        "eng": {
+          "tp": 20,
+          "fn": 0,
+          "fp": 2,
+          "advisoryCount": 81,
+          "recall": 1,
+          "precision": 0.9090909090909091,
+          "medianLatencyMin": 15
+        },
+        "sci": {
+          "tp": 35,
+          "fn": 5,
+          "fp": 15,
+          "advisoryCount": 102,
+          "recall": 0.875,
+          "precision": 0.7,
+          "medianLatencyMin": 15
+        }
+      },
+      "byState": {
+        "sleep_debt": {
+          "tp": 20,
+          "fn": 0,
+          "fp": 1,
+          "advisoryCount": 13,
+          "recall": 1,
+          "precision": 0.9523809523809523,
+          "medianLatencyMin": 1439
+        },
+        "mood_decline": {
+          "tp": 15,
+          "fn": 5,
+          "fp": 2,
+          "advisoryCount": 22,
+          "recall": 0.75,
+          "precision": 0.8823529411764706,
+          "medianLatencyMin": 1439
+        },
+        "radiation_event": {
+          "tp": 80,
+          "fn": 0,
+          "fp": 0,
+          "advisoryCount": 6,
+          "recall": 1,
+          "precision": 1,
+          "medianLatencyMin": 15
+        },
+        "fatigue": {
+          "tp": 0,
+          "fn": 0,
+          "fp": 24,
+          "advisoryCount": 73,
+          "recall": null,
+          "precision": 0,
+          "medianLatencyMin": null
+        },
+        "stress": {
+          "tp": 0,
+          "fn": 0,
+          "fp": 12,
+          "advisoryCount": 62,
+          "recall": null,
+          "precision": 0,
+          "medianLatencyMin": null
+        },
+        "dehydration": {
+          "tp": 0,
+          "fn": 0,
+          "fp": 3,
+          "advisoryCount": 57,
+          "recall": null,
+          "precision": 0,
+          "medianLatencyMin": null
+        },
+        "cardio_strain": {
+          "tp": 0,
+          "fn": 0,
+          "fp": 2,
+          "advisoryCount": 89,
+          "recall": null,
+          "precision": 0,
+          "medianLatencyMin": null
+        },
+        "cabinCo2ppm": {
+          "tp": 0,
+          "fn": 0,
+          "fp": 4,
+          "advisoryCount": 8,
+          "recall": null,
+          "precision": 0,
+          "medianLatencyMin": null
+        }
+      }
+    },
+    {
+      "scenarioId": "new_crew_member",
+      "eventStrength": "NONE",
+      "runsCount": 20,
+      "crewDays": 240,
+      "tp": 0,
+      "fn": 0,
+      "fp": 0,
+      "advisoryCount": 305,
+      "recall": null,
+      "precision": null,
+      "specificity": 1,
+      "nominalAlertFreeDayPct": null,
+      "fpPerCrewDay": 0,
+      "advisoryPerCrewDay": 1.2708333333333333,
+      "medianLatencyMin": null,
+      "p90LatencyMin": null,
+      "triageAccuracy": null,
+      "triageChecked": 0,
+      "triagePassed": 0,
+      "byCrew": {
+        "cdr": {
+          "tp": 0,
+          "fn": 0,
+          "fp": 0,
+          "advisoryCount": 53,
+          "recall": null,
+          "precision": null,
+          "medianLatencyMin": null
+        },
+        "md": {
+          "tp": 0,
+          "fn": 0,
+          "fp": 0,
+          "advisoryCount": 64,
+          "recall": null,
+          "precision": null,
+          "medianLatencyMin": null
+        },
+        "eng": {
+          "tp": 0,
+          "fn": 0,
+          "fp": 0,
+          "advisoryCount": 87,
+          "recall": null,
+          "precision": null,
+          "medianLatencyMin": null
+        },
+        "sci": {
+          "tp": 0,
+          "fn": 0,
+          "fp": 0,
+          "advisoryCount": 101,
+          "recall": null,
+          "precision": null,
+          "medianLatencyMin": null
+        }
+      },
+      "byState": {
+        "fatigue": {
+          "tp": 0,
+          "fn": 0,
+          "fp": 0,
+          "advisoryCount": 102,
+          "recall": null,
+          "precision": null,
+          "medianLatencyMin": null
+        },
+        "stress": {
+          "tp": 0,
+          "fn": 0,
+          "fp": 0,
+          "advisoryCount": 43,
+          "recall": null,
+          "precision": null,
+          "medianLatencyMin": null
+        },
+        "dehydration": {
+          "tp": 0,
+          "fn": 0,
+          "fp": 0,
+          "advisoryCount": 55,
+          "recall": null,
+          "precision": null,
+          "medianLatencyMin": null
+        },
+        "cardio_strain": {
+          "tp": 0,
+          "fn": 0,
+          "fp": 0,
+          "advisoryCount": 69,
+          "recall": null,
+          "precision": null,
+          "medianLatencyMin": null
+        },
+        "mood_decline": {
+          "tp": 0,
+          "fn": 0,
+          "fp": 0,
+          "advisoryCount": 10,
+          "recall": null,
+          "precision": null,
+          "medianLatencyMin": null
+        },
+        "sleep_debt": {
+          "tp": 0,
+          "fn": 0,
+          "fp": 0,
+          "advisoryCount": 23,
+          "recall": null,
+          "precision": null,
+          "medianLatencyMin": null
+        },
+        "cabinCo2ppm": {
+          "tp": 0,
+          "fn": 0,
+          "fp": 0,
+          "advisoryCount": 2,
+          "recall": null,
+          "precision": null,
+          "medianLatencyMin": null
+        },
+        "radiation_event": {
+          "tp": 0,
+          "fn": 0,
+          "fp": 0,
+          "advisoryCount": 1,
+          "recall": null,
+          "precision": null,
+          "medianLatencyMin": null
+        }
+      }
+    }
+  ],
+  "aggregate": {
+    "totalRuns": 160,
+    "totalCrewDays": 8320,
+    "tp": 325,
+    "fn": 15,
+    "fp": 349,
+    "advisoryCount": 4833,
+    "recall": 0.9558823529411765,
+    "precision": 0.4821958456973294,
+    "specificity": 0.8838068181818182,
+    "nominalFpPerCrewDay": 0.024583333333333332,
+    "nominalAlertFreeDayPct": 76.83333333333333,
+    "strongRecall": 0.953125,
+    "moderateRecall": 1,
+    "speDetectP90Min": 15,
+    "medianLatencyMin": 30,
+    "p90LatencyMin": 2879,
+    "triageAccuracy": 1,
+    "fpPerCrewDay": 0.04194711538461538,
+    "advisoryPerCrewDay": 0.580889423076923
+  },
+  "tuningSummary": {
+    "label": "tuning",
+    "seeds": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "scenarios": [
+      {
+        "scenarioId": "nominal",
+        "eventStrength": "NONE",
+        "runsCount": 5,
+        "crewDays": 600,
+        "tp": 0,
+        "fn": 0,
+        "fp": 16,
+        "advisoryCount": 296,
+        "recall": null,
+        "precision": 0,
+        "specificity": 0.9183333333333333,
+        "nominalAlertFreeDayPct": 78.66666666666666,
+        "fpPerCrewDay": 0.02666666666666667,
+        "advisoryPerCrewDay": 0.49333333333333335,
+        "medianLatencyMin": null,
+        "p90LatencyMin": null,
+        "triageAccuracy": null,
+        "triageChecked": 0,
+        "triagePassed": 0,
+        "byCrew": {
+          "cdr": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 4,
+            "advisoryCount": 55,
+            "recall": null,
+            "precision": 0,
+            "medianLatencyMin": null
+          },
+          "md": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 4,
+            "advisoryCount": 69,
+            "recall": null,
+            "precision": 0,
+            "medianLatencyMin": null
+          },
+          "eng": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 4,
+            "advisoryCount": 89,
+            "recall": null,
+            "precision": 0,
+            "medianLatencyMin": null
+          },
+          "sci": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 4,
+            "advisoryCount": 83,
+            "recall": null,
+            "precision": 0,
+            "medianLatencyMin": null
+          }
+        },
+        "byState": {
+          "fatigue": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 9,
+            "advisoryCount": 61,
+            "recall": null,
+            "precision": 0,
+            "medianLatencyMin": null
+          },
+          "stress": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 0,
+            "advisoryCount": 15,
+            "recall": null,
+            "precision": null,
+            "medianLatencyMin": null
+          },
+          "dehydration": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 1,
+            "advisoryCount": 30,
+            "recall": null,
+            "precision": 0,
+            "medianLatencyMin": null
+          },
+          "cardio_strain": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 4,
+            "advisoryCount": 120,
+            "recall": null,
+            "precision": 0,
+            "medianLatencyMin": null
+          },
+          "sleep_debt": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 0,
+            "advisoryCount": 26,
+            "recall": null,
+            "precision": null,
+            "medianLatencyMin": null
+          },
+          "cabinCo2ppm": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 1,
+            "advisoryCount": 19,
+            "recall": null,
+            "precision": 0,
+            "medianLatencyMin": null
+          },
+          "mood_decline": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 1,
+            "advisoryCount": 18,
+            "recall": null,
+            "precision": 0,
+            "medianLatencyMin": null
+          },
+          "radiation_event": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 0,
+            "advisoryCount": 7,
+            "recall": null,
+            "precision": null,
+            "medianLatencyMin": null
+          }
+        }
+      },
+      {
+        "scenarioId": "solar_particle_event",
+        "eventStrength": "STRONG",
+        "runsCount": 5,
+        "crewDays": 140,
+        "tp": 20,
+        "fn": 0,
+        "fp": 2,
+        "advisoryCount": 94,
+        "recall": 1,
+        "precision": 0.9090909090909091,
+        "specificity": 0.9666666666666667,
+        "nominalAlertFreeDayPct": null,
+        "fpPerCrewDay": 0.014285714285714285,
+        "advisoryPerCrewDay": 0.6714285714285714,
+        "medianLatencyMin": 15,
+        "p90LatencyMin": 15,
+        "triageAccuracy": 1,
+        "triageChecked": 20,
+        "triagePassed": 20,
+        "byCrew": {
+          "cdr": {
+            "tp": 5,
+            "fn": 0,
+            "fp": 0,
+            "advisoryCount": 14,
+            "recall": 1,
+            "precision": 1,
+            "medianLatencyMin": 15
+          },
+          "md": {
+            "tp": 5,
+            "fn": 0,
+            "fp": 1,
+            "advisoryCount": 18,
+            "recall": 1,
+            "precision": 0.8333333333333334,
+            "medianLatencyMin": 15
+          },
+          "eng": {
+            "tp": 5,
+            "fn": 0,
+            "fp": 0,
+            "advisoryCount": 40,
+            "recall": 1,
+            "precision": 1,
+            "medianLatencyMin": 15
+          },
+          "sci": {
+            "tp": 5,
+            "fn": 0,
+            "fp": 1,
+            "advisoryCount": 22,
+            "recall": 1,
+            "precision": 0.8333333333333334,
+            "medianLatencyMin": 15
+          }
+        },
+        "byState": {
+          "radiation_event": {
+            "tp": 20,
+            "fn": 0,
+            "fp": 0,
+            "advisoryCount": 0,
+            "recall": 1,
+            "precision": 1,
+            "medianLatencyMin": 15
+          },
+          "fatigue": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 0,
+            "advisoryCount": 23,
+            "recall": null,
+            "precision": null,
+            "medianLatencyMin": null
+          },
+          "stress": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 0,
+            "advisoryCount": 12,
+            "recall": null,
+            "precision": null,
+            "medianLatencyMin": null
+          },
+          "dehydration": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 0,
+            "advisoryCount": 20,
+            "recall": null,
+            "precision": null,
+            "medianLatencyMin": null
+          },
+          "cardio_strain": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 1,
+            "advisoryCount": 27,
+            "recall": null,
+            "precision": 0,
+            "medianLatencyMin": null
+          },
+          "sleep_debt": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 0,
+            "advisoryCount": 4,
+            "recall": null,
+            "precision": null,
+            "medianLatencyMin": null
+          },
+          "mood_decline": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 1,
+            "advisoryCount": 5,
+            "recall": null,
+            "precision": 0,
+            "medianLatencyMin": null
+          },
+          "cabinCo2ppm": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 0,
+            "advisoryCount": 3,
+            "recall": null,
+            "precision": null,
+            "medianLatencyMin": null
+          }
+        }
+      },
+      {
+        "scenarioId": "sleep_debt",
+        "eventStrength": "STRONG",
+        "runsCount": 5,
+        "crewDays": 280,
+        "tp": 20,
+        "fn": 0,
+        "fp": 8,
+        "advisoryCount": 162,
+        "recall": 1,
+        "precision": 0.7142857142857143,
+        "specificity": 0.7869565217391304,
+        "nominalAlertFreeDayPct": null,
+        "fpPerCrewDay": 0.02857142857142857,
+        "advisoryPerCrewDay": 0.5785714285714286,
+        "medianLatencyMin": 1439,
+        "p90LatencyMin": 1551.6000000000015,
+        "triageAccuracy": null,
+        "triageChecked": 0,
+        "triagePassed": 0,
+        "byCrew": {
+          "cdr": {
+            "tp": 10,
+            "fn": 0,
+            "fp": 3,
+            "advisoryCount": 26,
+            "recall": 1,
+            "precision": 0.7692307692307693,
+            "medianLatencyMin": 1439
+          },
+          "md": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 2,
+            "advisoryCount": 35,
+            "recall": null,
+            "precision": 0,
+            "medianLatencyMin": null
+          },
+          "eng": {
+            "tp": 10,
+            "fn": 0,
+            "fp": 2,
+            "advisoryCount": 58,
+            "recall": 1,
+            "precision": 0.8333333333333334,
+            "medianLatencyMin": 1439
+          },
+          "sci": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 1,
+            "advisoryCount": 43,
+            "recall": null,
+            "precision": 0,
+            "medianLatencyMin": null
+          }
+        },
+        "byState": {
+          "sleep_debt": {
+            "tp": 10,
+            "fn": 0,
+            "fp": 0,
+            "advisoryCount": 11,
+            "recall": 1,
+            "precision": 1,
+            "medianLatencyMin": 1439
+          },
+          "fatigue": {
+            "tp": 10,
+            "fn": 0,
+            "fp": 4,
+            "advisoryCount": 31,
+            "recall": 1,
+            "precision": 0.7142857142857143,
+            "medianLatencyMin": 1439
+          },
+          "stress": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 1,
+            "advisoryCount": 21,
+            "recall": null,
+            "precision": 0,
+            "medianLatencyMin": null
+          },
+          "dehydration": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 0,
+            "advisoryCount": 20,
+            "recall": null,
+            "precision": null,
+            "medianLatencyMin": null
+          },
+          "cardio_strain": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 2,
+            "advisoryCount": 53,
+            "recall": null,
+            "precision": 0,
+            "medianLatencyMin": null
+          },
+          "mood_decline": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 1,
+            "advisoryCount": 19,
+            "recall": null,
+            "precision": 0,
+            "medianLatencyMin": null
+          },
+          "cabinCo2ppm": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 0,
+            "advisoryCount": 7,
+            "recall": null,
+            "precision": null,
+            "medianLatencyMin": null
+          }
+        }
+      },
+      {
+        "scenarioId": "isolation_low_mood",
+        "eventStrength": "MODERATE",
+        "runsCount": 5,
+        "crewDays": 440,
+        "tp": 5,
+        "fn": 0,
+        "fp": 18,
+        "advisoryCount": 221,
+        "recall": 1,
+        "precision": 0.21739130434782608,
+        "specificity": 0.9243243243243243,
+        "nominalAlertFreeDayPct": null,
+        "fpPerCrewDay": 0.04090909090909091,
+        "advisoryPerCrewDay": 0.5022727272727273,
+        "medianLatencyMin": 5759,
+        "p90LatencyMin": 8639,
+        "triageAccuracy": null,
+        "triageChecked": 0,
+        "triagePassed": 0,
+        "byCrew": {
+          "cdr": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 3,
+            "advisoryCount": 39,
+            "recall": null,
+            "precision": 0,
+            "medianLatencyMin": null
+          },
+          "md": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 2,
+            "advisoryCount": 49,
+            "recall": null,
+            "precision": 0,
+            "medianLatencyMin": null
+          },
+          "eng": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 3,
+            "advisoryCount": 67,
+            "recall": null,
+            "precision": 0,
+            "medianLatencyMin": null
+          },
+          "sci": {
+            "tp": 5,
+            "fn": 0,
+            "fp": 10,
+            "advisoryCount": 66,
+            "recall": 1,
+            "precision": 0.3333333333333333,
+            "medianLatencyMin": 5759
+          }
+        },
+        "byState": {
+          "mood_decline": {
+            "tp": 5,
+            "fn": 0,
+            "fp": 0,
+            "advisoryCount": 9,
+            "recall": 1,
+            "precision": 1,
+            "medianLatencyMin": 5759
+          },
+          "fatigue": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 9,
+            "advisoryCount": 48,
+            "recall": null,
+            "precision": 0,
+            "medianLatencyMin": null
+          },
+          "stress": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 3,
+            "advisoryCount": 21,
+            "recall": null,
+            "precision": 0,
+            "medianLatencyMin": null
+          },
+          "dehydration": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 1,
+            "advisoryCount": 25,
+            "recall": null,
+            "precision": 0,
+            "medianLatencyMin": null
+          },
+          "cardio_strain": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 4,
+            "advisoryCount": 87,
+            "recall": null,
+            "precision": 0,
+            "medianLatencyMin": null
+          },
+          "sleep_debt": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 0,
+            "advisoryCount": 16,
+            "recall": null,
+            "precision": null,
+            "medianLatencyMin": null
+          },
+          "cabinCo2ppm": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 1,
+            "advisoryCount": 11,
+            "recall": null,
+            "precision": 0,
+            "medianLatencyMin": null
+          },
+          "radiation_event": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 0,
+            "advisoryCount": 4,
+            "recall": null,
+            "precision": null,
+            "medianLatencyMin": null
+          }
+        }
+      },
+      {
+        "scenarioId": "dehydration_co2",
+        "eventStrength": "STRONG",
+        "runsCount": 5,
+        "crewDays": 240,
+        "tp": 4,
+        "fn": 1,
+        "fp": 30,
+        "advisoryCount": 133,
+        "recall": 0.8,
+        "precision": 0.11764705882352941,
+        "specificity": 0.75,
+        "nominalAlertFreeDayPct": null,
+        "fpPerCrewDay": 0.125,
+        "advisoryPerCrewDay": 0.5541666666666667,
+        "medianLatencyMin": 1439,
+        "p90LatencyMin": 1439,
+        "triageAccuracy": null,
+        "triageChecked": 0,
+        "triagePassed": 0,
+        "byCrew": {
+          "cdr": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 7,
+            "advisoryCount": 20,
+            "recall": null,
+            "precision": 0,
+            "medianLatencyMin": null
+          },
+          "md": {
+            "tp": 4,
+            "fn": 1,
+            "fp": 9,
+            "advisoryCount": 33,
+            "recall": 0.8,
+            "precision": 0.3076923076923077,
+            "medianLatencyMin": 1439
+          },
+          "eng": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 7,
+            "advisoryCount": 47,
+            "recall": null,
+            "precision": 0,
+            "medianLatencyMin": null
+          },
+          "sci": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 7,
+            "advisoryCount": 33,
+            "recall": null,
+            "precision": 0,
+            "medianLatencyMin": null
+          }
+        },
+        "byState": {
+          "dehydration": {
+            "tp": 4,
+            "fn": 1,
+            "fp": 1,
+            "advisoryCount": 21,
+            "recall": 0.8,
+            "precision": 0.8,
+            "medianLatencyMin": 1439
+          },
+          "fatigue": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 5,
+            "advisoryCount": 31,
+            "recall": null,
+            "precision": 0,
+            "medianLatencyMin": null
+          },
+          "stress": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 0,
+            "advisoryCount": 13,
+            "recall": null,
+            "precision": null,
+            "medianLatencyMin": null
+          },
+          "cardio_strain": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 4,
+            "advisoryCount": 46,
+            "recall": null,
+            "precision": 0,
+            "medianLatencyMin": null
+          },
+          "sleep_debt": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 0,
+            "advisoryCount": 10,
+            "recall": null,
+            "precision": null,
+            "medianLatencyMin": null
+          },
+          "cabinCo2ppm": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 20,
+            "advisoryCount": 2,
+            "recall": null,
+            "precision": 0,
+            "medianLatencyMin": null
+          },
+          "mood_decline": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 0,
+            "advisoryCount": 10,
+            "recall": null,
+            "precision": null,
+            "medianLatencyMin": null
+          }
+        }
+      },
+      {
+        "scenarioId": "comm_blackout",
+        "eventStrength": "STRONG",
+        "runsCount": 5,
+        "crewDays": 200,
+        "tp": 4,
+        "fn": 1,
+        "fp": 6,
+        "advisoryCount": 115,
+        "recall": 0.8,
+        "precision": 0.4,
+        "specificity": 0.89375,
+        "nominalAlertFreeDayPct": null,
+        "fpPerCrewDay": 0.03,
+        "advisoryPerCrewDay": 0.575,
+        "medianLatencyMin": 60,
+        "p90LatencyMin": 159.00000000000003,
+        "triageAccuracy": null,
+        "triageChecked": 0,
+        "triagePassed": 0,
+        "byCrew": {
+          "cdr": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 1,
+            "advisoryCount": 17,
+            "recall": null,
+            "precision": 0,
+            "medianLatencyMin": null
+          },
+          "md": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 2,
+            "advisoryCount": 25,
+            "recall": null,
+            "precision": 0,
+            "medianLatencyMin": null
+          },
+          "eng": {
+            "tp": 4,
+            "fn": 1,
+            "fp": 2,
+            "advisoryCount": 41,
+            "recall": 0.8,
+            "precision": 0.6666666666666666,
+            "medianLatencyMin": 60
+          },
+          "sci": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 1,
+            "advisoryCount": 32,
+            "recall": null,
+            "precision": 0,
+            "medianLatencyMin": null
+          }
+        },
+        "byState": {
+          "cardio_strain": {
+            "tp": 4,
+            "fn": 1,
+            "fp": 2,
+            "advisoryCount": 35,
+            "recall": 0.8,
+            "precision": 0.6666666666666666,
+            "medianLatencyMin": 60
+          },
+          "fatigue": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 3,
+            "advisoryCount": 26,
+            "recall": null,
+            "precision": 0,
+            "medianLatencyMin": null
+          },
+          "stress": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 0,
+            "advisoryCount": 13,
+            "recall": null,
+            "precision": null,
+            "medianLatencyMin": null
+          },
+          "dehydration": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 0,
+            "advisoryCount": 21,
+            "recall": null,
+            "precision": null,
+            "medianLatencyMin": null
+          },
+          "sleep_debt": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 0,
+            "advisoryCount": 7,
+            "recall": null,
+            "precision": null,
+            "medianLatencyMin": null
+          },
+          "mood_decline": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 0,
+            "advisoryCount": 8,
+            "recall": null,
+            "precision": null,
+            "medianLatencyMin": null
+          },
+          "cabinCo2ppm": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 1,
+            "advisoryCount": 5,
+            "recall": null,
+            "precision": 0,
+            "medianLatencyMin": null
+          }
+        }
+      },
+      {
+        "scenarioId": "demo_main",
+        "eventStrength": "STRONG",
+        "runsCount": 5,
+        "crewDays": 120,
+        "tp": 27,
+        "fn": 3,
+        "fp": 11,
+        "advisoryCount": 84,
+        "recall": 0.9,
+        "precision": 0.7105263157894737,
+        "specificity": 0.88,
+        "nominalAlertFreeDayPct": null,
+        "fpPerCrewDay": 0.09166666666666666,
+        "advisoryPerCrewDay": 0.7,
+        "medianLatencyMin": 15,
+        "p90LatencyMin": 1439,
+        "triageAccuracy": 1,
+        "triageChecked": 20,
+        "triagePassed": 20,
+        "byCrew": {
+          "cdr": {
+            "tp": 10,
+            "fn": 0,
+            "fp": 5,
+            "advisoryCount": 18,
+            "recall": 1,
+            "precision": 0.6666666666666666,
+            "medianLatencyMin": 727
+          },
+          "md": {
+            "tp": 5,
+            "fn": 0,
+            "fp": 1,
+            "advisoryCount": 16,
+            "recall": 1,
+            "precision": 0.8333333333333334,
+            "medianLatencyMin": 15
+          },
+          "eng": {
+            "tp": 5,
+            "fn": 0,
+            "fp": 0,
+            "advisoryCount": 32,
+            "recall": 1,
+            "precision": 1,
+            "medianLatencyMin": 15
+          },
+          "sci": {
+            "tp": 7,
+            "fn": 3,
+            "fp": 5,
+            "advisoryCount": 18,
+            "recall": 0.7,
+            "precision": 0.5833333333333334,
+            "medianLatencyMin": 15
+          }
+        },
+        "byState": {
+          "sleep_debt": {
+            "tp": 5,
+            "fn": 0,
+            "fp": 0,
+            "advisoryCount": 3,
+            "recall": 1,
+            "precision": 1,
+            "medianLatencyMin": 1439
+          },
+          "mood_decline": {
+            "tp": 2,
+            "fn": 3,
+            "fp": 1,
+            "advisoryCount": 4,
+            "recall": 0.4,
+            "precision": 0.6666666666666666,
+            "medianLatencyMin": 2159
+          },
+          "radiation_event": {
+            "tp": 20,
+            "fn": 0,
+            "fp": 0,
+            "advisoryCount": 0,
+            "recall": 1,
+            "precision": 1,
+            "medianLatencyMin": 15
+          },
+          "fatigue": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 7,
+            "advisoryCount": 18,
+            "recall": null,
+            "precision": 0,
+            "medianLatencyMin": null
+          },
+          "stress": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 3,
+            "advisoryCount": 18,
+            "recall": null,
+            "precision": 0,
+            "medianLatencyMin": null
+          },
+          "dehydration": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 0,
+            "advisoryCount": 18,
+            "recall": null,
+            "precision": null,
+            "medianLatencyMin": null
+          },
+          "cardio_strain": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 0,
+            "advisoryCount": 20,
+            "recall": null,
+            "precision": null,
+            "medianLatencyMin": null
+          },
+          "cabinCo2ppm": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 0,
+            "advisoryCount": 3,
+            "recall": null,
+            "precision": null,
+            "medianLatencyMin": null
+          }
+        }
+      },
+      {
+        "scenarioId": "new_crew_member",
+        "eventStrength": "NONE",
+        "runsCount": 5,
+        "crewDays": 60,
+        "tp": 0,
+        "fn": 0,
+        "fp": 0,
+        "advisoryCount": 91,
+        "recall": null,
+        "precision": null,
+        "specificity": 1,
+        "nominalAlertFreeDayPct": null,
+        "fpPerCrewDay": 0,
+        "advisoryPerCrewDay": 1.5166666666666666,
+        "medianLatencyMin": null,
+        "p90LatencyMin": null,
+        "triageAccuracy": null,
+        "triageChecked": 0,
+        "triagePassed": 0,
+        "byCrew": {
+          "cdr": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 0,
+            "advisoryCount": 18,
+            "recall": null,
+            "precision": null,
+            "medianLatencyMin": null
+          },
+          "md": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 0,
+            "advisoryCount": 23,
+            "recall": null,
+            "precision": null,
+            "medianLatencyMin": null
+          },
+          "eng": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 0,
+            "advisoryCount": 23,
+            "recall": null,
+            "precision": null,
+            "medianLatencyMin": null
+          },
+          "sci": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 0,
+            "advisoryCount": 27,
+            "recall": null,
+            "precision": null,
+            "medianLatencyMin": null
+          }
+        },
+        "byState": {
+          "fatigue": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 0,
+            "advisoryCount": 23,
+            "recall": null,
+            "precision": null,
+            "medianLatencyMin": null
+          },
+          "stress": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 0,
+            "advisoryCount": 15,
+            "recall": null,
+            "precision": null,
+            "medianLatencyMin": null
+          },
+          "dehydration": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 0,
+            "advisoryCount": 17,
+            "recall": null,
+            "precision": null,
+            "medianLatencyMin": null
+          },
+          "cardio_strain": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 0,
+            "advisoryCount": 23,
+            "recall": null,
+            "precision": null,
+            "medianLatencyMin": null
+          },
+          "sleep_debt": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 0,
+            "advisoryCount": 7,
+            "recall": null,
+            "precision": null,
+            "medianLatencyMin": null
+          },
+          "cabinCo2ppm": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 0,
+            "advisoryCount": 5,
+            "recall": null,
+            "precision": null,
+            "medianLatencyMin": null
+          },
+          "mood_decline": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 0,
+            "advisoryCount": 1,
+            "recall": null,
+            "precision": null,
+            "medianLatencyMin": null
+          }
+        }
+      }
+    ],
+    "aggregate": {
+      "totalRuns": 40,
+      "totalCrewDays": 2080,
+      "tp": 80,
+      "fn": 5,
+      "fp": 91,
+      "advisoryCount": 1196,
+      "recall": 0.9411764705882353,
+      "precision": 0.4678362573099415,
+      "specificity": 0.8875,
+      "nominalFpPerCrewDay": 0.02666666666666667,
+      "nominalAlertFreeDayPct": 78.66666666666666,
+      "strongRecall": 0.9375,
+      "moderateRecall": 1,
+      "speDetectP90Min": 15,
+      "medianLatencyMin": 30,
+      "p90LatencyMin": 1439,
+      "triageAccuracy": 1,
+      "fpPerCrewDay": 0.04375,
+      "advisoryPerCrewDay": 0.575
+    }
+  },
+  "reportSummary": {
+    "label": "report",
+    "seeds": [
+      100,
+      101,
+      102,
+      103,
+      104,
+      105,
+      106,
+      107,
+      108,
+      109,
+      110,
+      111,
+      112,
+      113,
+      114,
+      115,
+      116,
+      117,
+      118,
+      119
+    ],
+    "scenarios": [
+      {
+        "scenarioId": "nominal",
+        "eventStrength": "NONE",
+        "runsCount": 20,
+        "crewDays": 2400,
+        "tp": 0,
+        "fn": 0,
+        "fp": 59,
+        "advisoryCount": 1222,
+        "recall": null,
+        "precision": 0,
+        "specificity": 0.9275,
+        "nominalAlertFreeDayPct": 76.83333333333333,
+        "fpPerCrewDay": 0.024583333333333332,
+        "advisoryPerCrewDay": 0.5091666666666667,
+        "medianLatencyMin": null,
+        "p90LatencyMin": null,
+        "triageAccuracy": null,
+        "triageChecked": 0,
+        "triagePassed": 0,
+        "byCrew": {
+          "cdr": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 10,
+            "advisoryCount": 268,
+            "recall": null,
+            "precision": 0,
+            "medianLatencyMin": null
+          },
+          "md": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 19,
+            "advisoryCount": 313,
+            "recall": null,
+            "precision": 0,
+            "medianLatencyMin": null
+          },
+          "eng": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 15,
+            "advisoryCount": 325,
+            "recall": null,
+            "precision": 0,
+            "medianLatencyMin": null
+          },
+          "sci": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 15,
+            "advisoryCount": 316,
+            "recall": null,
+            "precision": 0,
+            "medianLatencyMin": null
+          }
+        },
+        "byState": {
+          "fatigue": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 29,
+            "advisoryCount": 243,
+            "recall": null,
+            "precision": 0,
+            "medianLatencyMin": null
+          },
+          "stress": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 0,
+            "advisoryCount": 63,
+            "recall": null,
+            "precision": null,
+            "medianLatencyMin": null
+          },
+          "dehydration": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 5,
+            "advisoryCount": 129,
+            "recall": null,
+            "precision": 0,
+            "medianLatencyMin": null
+          },
+          "cardio_strain": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 13,
+            "advisoryCount": 465,
+            "recall": null,
+            "precision": 0,
+            "medianLatencyMin": null
+          },
+          "mood_decline": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 2,
+            "advisoryCount": 99,
+            "recall": null,
+            "precision": 0,
+            "medianLatencyMin": null
+          },
+          "cabinCo2ppm": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 8,
+            "advisoryCount": 58,
+            "recall": null,
+            "precision": 0,
+            "medianLatencyMin": null
+          },
+          "sleep_debt": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 2,
+            "advisoryCount": 104,
+            "recall": null,
+            "precision": 0,
+            "medianLatencyMin": null
+          },
+          "radiation_event": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 0,
+            "advisoryCount": 61,
+            "recall": null,
+            "precision": null,
+            "medianLatencyMin": null
+          }
+        }
+      },
+      {
+        "scenarioId": "solar_particle_event",
+        "eventStrength": "STRONG",
+        "runsCount": 20,
+        "crewDays": 560,
+        "tp": 80,
+        "fn": 0,
+        "fp": 18,
+        "advisoryCount": 349,
+        "recall": 1,
+        "precision": 0.8163265306122449,
+        "specificity": 0.9229166666666667,
+        "nominalAlertFreeDayPct": null,
+        "fpPerCrewDay": 0.03214285714285714,
+        "advisoryPerCrewDay": 0.6232142857142857,
+        "medianLatencyMin": 15,
+        "p90LatencyMin": 15,
+        "triageAccuracy": 1,
+        "triageChecked": 80,
+        "triagePassed": 80,
+        "byCrew": {
+          "cdr": {
+            "tp": 20,
+            "fn": 0,
+            "fp": 3,
+            "advisoryCount": 65,
+            "recall": 1,
+            "precision": 0.8695652173913043,
+            "medianLatencyMin": 15
+          },
+          "md": {
+            "tp": 20,
+            "fn": 0,
+            "fp": 6,
+            "advisoryCount": 89,
+            "recall": 1,
+            "precision": 0.7692307692307693,
+            "medianLatencyMin": 15
+          },
+          "eng": {
+            "tp": 20,
+            "fn": 0,
+            "fp": 4,
+            "advisoryCount": 90,
+            "recall": 1,
+            "precision": 0.8333333333333334,
+            "medianLatencyMin": 15
+          },
+          "sci": {
+            "tp": 20,
+            "fn": 0,
+            "fp": 5,
+            "advisoryCount": 105,
+            "recall": 1,
+            "precision": 0.8,
+            "medianLatencyMin": 15
+          }
+        },
+        "byState": {
+          "radiation_event": {
+            "tp": 80,
+            "fn": 0,
+            "fp": 2,
+            "advisoryCount": 2,
+            "recall": 1,
+            "precision": 0.975609756097561,
+            "medianLatencyMin": 15
+          },
+          "fatigue": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 7,
+            "advisoryCount": 87,
+            "recall": null,
+            "precision": 0,
+            "medianLatencyMin": null
+          },
+          "stress": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 0,
+            "advisoryCount": 43,
+            "recall": null,
+            "precision": null,
+            "medianLatencyMin": null
+          },
+          "dehydration": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 2,
+            "advisoryCount": 63,
+            "recall": null,
+            "precision": 0,
+            "medianLatencyMin": null
+          },
+          "cardio_strain": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 2,
+            "advisoryCount": 102,
+            "recall": null,
+            "precision": 0,
+            "medianLatencyMin": null
+          },
+          "mood_decline": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 0,
+            "advisoryCount": 24,
+            "recall": null,
+            "precision": null,
+            "medianLatencyMin": null
+          },
+          "cabinCo2ppm": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 4,
+            "advisoryCount": 10,
+            "recall": null,
+            "precision": 0,
+            "medianLatencyMin": null
+          },
+          "sleep_debt": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 1,
+            "advisoryCount": 18,
+            "recall": null,
+            "precision": 0,
+            "medianLatencyMin": null
+          }
+        }
+      },
+      {
+        "scenarioId": "sleep_debt",
+        "eventStrength": "STRONG",
+        "runsCount": 20,
+        "crewDays": 1120,
+        "tp": 73,
+        "fn": 7,
+        "fp": 32,
+        "advisoryCount": 638,
+        "recall": 0.9125,
+        "precision": 0.6952380952380952,
+        "specificity": 0.7793478260869565,
+        "nominalAlertFreeDayPct": null,
+        "fpPerCrewDay": 0.02857142857142857,
+        "advisoryPerCrewDay": 0.5696428571428571,
+        "medianLatencyMin": 1439,
+        "p90LatencyMin": 2879,
+        "triageAccuracy": null,
+        "triageChecked": 0,
+        "triagePassed": 0,
+        "byCrew": {
+          "cdr": {
+            "tp": 38,
+            "fn": 2,
+            "fp": 11,
+            "advisoryCount": 126,
+            "recall": 0.95,
+            "precision": 0.7755102040816326,
+            "medianLatencyMin": 1439
+          },
+          "md": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 7,
+            "advisoryCount": 168,
+            "recall": null,
+            "precision": 0,
+            "medianLatencyMin": null
+          },
+          "eng": {
+            "tp": 35,
+            "fn": 5,
+            "fp": 9,
+            "advisoryCount": 175,
+            "recall": 0.875,
+            "precision": 0.7954545454545454,
+            "medianLatencyMin": 1439
+          },
+          "sci": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 5,
+            "advisoryCount": 169,
+            "recall": null,
+            "precision": 0,
+            "medianLatencyMin": null
+          }
+        },
+        "byState": {
+          "sleep_debt": {
+            "tp": 37,
+            "fn": 3,
+            "fp": 1,
+            "advisoryCount": 26,
+            "recall": 0.925,
+            "precision": 0.9736842105263158,
+            "medianLatencyMin": 1439
+          },
+          "fatigue": {
+            "tp": 36,
+            "fn": 4,
+            "fp": 8,
+            "advisoryCount": 108,
+            "recall": 0.9,
+            "precision": 0.8181818181818182,
+            "medianLatencyMin": 1777.5
+          },
+          "stress": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 3,
+            "advisoryCount": 84,
+            "recall": null,
+            "precision": 0,
+            "medianLatencyMin": null
+          },
+          "dehydration": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 3,
+            "advisoryCount": 78,
+            "recall": null,
+            "precision": 0,
+            "medianLatencyMin": null
+          },
+          "cardio_strain": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 8,
+            "advisoryCount": 209,
+            "recall": null,
+            "precision": 0,
+            "medianLatencyMin": null
+          },
+          "mood_decline": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 5,
+            "advisoryCount": 78,
+            "recall": null,
+            "precision": 0,
+            "medianLatencyMin": null
+          },
+          "cabinCo2ppm": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 4,
+            "advisoryCount": 29,
+            "recall": null,
+            "precision": 0,
+            "medianLatencyMin": null
+          },
+          "radiation_event": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 0,
+            "advisoryCount": 26,
+            "recall": null,
+            "precision": null,
+            "medianLatencyMin": null
+          }
+        }
+      },
+      {
+        "scenarioId": "isolation_low_mood",
+        "eventStrength": "MODERATE",
+        "runsCount": 20,
+        "crewDays": 1760,
+        "tp": 20,
+        "fn": 0,
+        "fp": 67,
+        "advisoryCount": 960,
+        "recall": 1,
+        "precision": 0.22988505747126436,
+        "specificity": 0.9290540540540541,
+        "nominalAlertFreeDayPct": null,
+        "fpPerCrewDay": 0.03806818181818182,
+        "advisoryPerCrewDay": 0.5454545454545454,
+        "medianLatencyMin": 7199,
+        "p90LatencyMin": 10223.000000000002,
+        "triageAccuracy": null,
+        "triageChecked": 0,
+        "triagePassed": 0,
+        "byCrew": {
+          "cdr": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 7,
+            "advisoryCount": 210,
+            "recall": null,
+            "precision": 0,
+            "medianLatencyMin": null
+          },
+          "md": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 12,
+            "advisoryCount": 242,
+            "recall": null,
+            "precision": 0,
+            "medianLatencyMin": null
+          },
+          "eng": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 12,
+            "advisoryCount": 238,
+            "recall": null,
+            "precision": 0,
+            "medianLatencyMin": null
+          },
+          "sci": {
+            "tp": 20,
+            "fn": 0,
+            "fp": 36,
+            "advisoryCount": 270,
+            "recall": 1,
+            "precision": 0.35714285714285715,
+            "medianLatencyMin": 7199
+          }
+        },
+        "byState": {
+          "mood_decline": {
+            "tp": 20,
+            "fn": 0,
+            "fp": 1,
+            "advisoryCount": 58,
+            "recall": 1,
+            "precision": 0.9523809523809523,
+            "medianLatencyMin": 7199
+          },
+          "fatigue": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 29,
+            "advisoryCount": 217,
+            "recall": null,
+            "precision": 0,
+            "medianLatencyMin": null
+          },
+          "stress": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 11,
+            "advisoryCount": 81,
+            "recall": null,
+            "precision": 0,
+            "medianLatencyMin": null
+          },
+          "dehydration": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 3,
+            "advisoryCount": 103,
+            "recall": null,
+            "precision": 0,
+            "medianLatencyMin": null
+          },
+          "cardio_strain": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 14,
+            "advisoryCount": 339,
+            "recall": null,
+            "precision": 0,
+            "medianLatencyMin": null
+          },
+          "cabinCo2ppm": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 6,
+            "advisoryCount": 42,
+            "recall": null,
+            "precision": 0,
+            "medianLatencyMin": null
+          },
+          "sleep_debt": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 3,
+            "advisoryCount": 75,
+            "recall": null,
+            "precision": 0,
+            "medianLatencyMin": null
+          },
+          "radiation_event": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 0,
+            "advisoryCount": 45,
+            "recall": null,
+            "precision": null,
+            "medianLatencyMin": null
+          }
+        }
+      },
+      {
+        "scenarioId": "dehydration_co2",
+        "eventStrength": "STRONG",
+        "runsCount": 20,
+        "crewDays": 960,
+        "tp": 18,
+        "fn": 2,
+        "fp": 105,
+        "advisoryCount": 563,
+        "recall": 0.9,
+        "precision": 0.14634146341463414,
+        "specificity": 0.7111111111111111,
+        "nominalAlertFreeDayPct": null,
+        "fpPerCrewDay": 0.109375,
+        "advisoryPerCrewDay": 0.5864583333333333,
+        "medianLatencyMin": 1439,
+        "p90LatencyMin": 1439,
+        "triageAccuracy": null,
+        "triageChecked": 0,
+        "triagePassed": 0,
+        "byCrew": {
+          "cdr": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 23,
+            "advisoryCount": 111,
+            "recall": null,
+            "precision": 0,
+            "medianLatencyMin": null
+          },
+          "md": {
+            "tp": 18,
+            "fn": 2,
+            "fp": 30,
+            "advisoryCount": 160,
+            "recall": 0.9,
+            "precision": 0.375,
+            "medianLatencyMin": 1439
+          },
+          "eng": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 28,
+            "advisoryCount": 137,
+            "recall": null,
+            "precision": 0,
+            "medianLatencyMin": null
+          },
+          "sci": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 24,
+            "advisoryCount": 155,
+            "recall": null,
+            "precision": 0,
+            "medianLatencyMin": null
+          }
+        },
+        "byState": {
+          "dehydration": {
+            "tp": 18,
+            "fn": 2,
+            "fp": 1,
+            "advisoryCount": 70,
+            "recall": 0.9,
+            "precision": 0.9473684210526315,
+            "medianLatencyMin": 1439
+          },
+          "fatigue": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 9,
+            "advisoryCount": 128,
+            "recall": null,
+            "precision": 0,
+            "medianLatencyMin": null
+          },
+          "stress": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 0,
+            "advisoryCount": 46,
+            "recall": null,
+            "precision": null,
+            "medianLatencyMin": null
+          },
+          "cardio_strain": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 11,
+            "advisoryCount": 200,
+            "recall": null,
+            "precision": 0,
+            "medianLatencyMin": null
+          },
+          "mood_decline": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 0,
+            "advisoryCount": 43,
+            "recall": null,
+            "precision": null,
+            "medianLatencyMin": null
+          },
+          "cabinCo2ppm": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 83,
+            "advisoryCount": 16,
+            "recall": null,
+            "precision": 0,
+            "medianLatencyMin": null
+          },
+          "sleep_debt": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 1,
+            "advisoryCount": 41,
+            "recall": null,
+            "precision": 0,
+            "medianLatencyMin": null
+          },
+          "radiation_event": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 0,
+            "advisoryCount": 19,
+            "recall": null,
+            "precision": null,
+            "medianLatencyMin": null
+          }
+        }
+      },
+      {
+        "scenarioId": "comm_blackout",
+        "eventStrength": "STRONG",
+        "runsCount": 20,
+        "crewDays": 800,
+        "tp": 19,
+        "fn": 1,
+        "fp": 20,
+        "advisoryCount": 466,
+        "recall": 0.95,
+        "precision": 0.48717948717948717,
+        "specificity": 0.915625,
+        "nominalAlertFreeDayPct": null,
+        "fpPerCrewDay": 0.025,
+        "advisoryPerCrewDay": 0.5825,
+        "medianLatencyMin": 45,
+        "p90LatencyMin": 288,
+        "triageAccuracy": null,
+        "triageChecked": 0,
+        "triagePassed": 0,
+        "byCrew": {
+          "cdr": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 3,
+            "advisoryCount": 96,
+            "recall": null,
+            "precision": 0,
+            "medianLatencyMin": null
+          },
+          "md": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 5,
+            "advisoryCount": 127,
+            "recall": null,
+            "precision": 0,
+            "medianLatencyMin": null
+          },
+          "eng": {
+            "tp": 19,
+            "fn": 1,
+            "fp": 7,
+            "advisoryCount": 114,
+            "recall": 0.95,
+            "precision": 0.7307692307692307,
+            "medianLatencyMin": 45
+          },
+          "sci": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 5,
+            "advisoryCount": 129,
+            "recall": null,
+            "precision": 0,
+            "medianLatencyMin": null
+          }
+        },
+        "byState": {
+          "cardio_strain": {
+            "tp": 19,
+            "fn": 1,
+            "fp": 3,
+            "advisoryCount": 145,
+            "recall": 0.95,
+            "precision": 0.8636363636363636,
+            "medianLatencyMin": 45
+          },
+          "fatigue": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 9,
+            "advisoryCount": 109,
+            "recall": null,
+            "precision": 0,
+            "medianLatencyMin": null
+          },
+          "stress": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 0,
+            "advisoryCount": 44,
+            "recall": null,
+            "precision": null,
+            "medianLatencyMin": null
+          },
+          "dehydration": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 3,
+            "advisoryCount": 72,
+            "recall": null,
+            "precision": 0,
+            "medianLatencyMin": null
+          },
+          "mood_decline": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 0,
+            "advisoryCount": 31,
+            "recall": null,
+            "precision": null,
+            "medianLatencyMin": null
+          },
+          "cabinCo2ppm": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 4,
+            "advisoryCount": 16,
+            "recall": null,
+            "precision": 0,
+            "medianLatencyMin": null
+          },
+          "sleep_debt": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 1,
+            "advisoryCount": 35,
+            "recall": null,
+            "precision": 0,
+            "medianLatencyMin": null
+          },
+          "radiation_event": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 0,
+            "advisoryCount": 14,
+            "recall": null,
+            "precision": null,
+            "medianLatencyMin": null
+          }
+        }
+      },
+      {
+        "scenarioId": "demo_main",
+        "eventStrength": "STRONG",
+        "runsCount": 20,
+        "crewDays": 480,
+        "tp": 115,
+        "fn": 5,
+        "fp": 48,
+        "advisoryCount": 330,
+        "recall": 0.9583333333333334,
+        "precision": 0.7055214723926381,
+        "specificity": 0.815,
+        "nominalAlertFreeDayPct": null,
+        "fpPerCrewDay": 0.1,
+        "advisoryPerCrewDay": 0.6875,
+        "medianLatencyMin": 15,
+        "p90LatencyMin": 1439,
+        "triageAccuracy": 1,
+        "triageChecked": 80,
+        "triagePassed": 80,
+        "byCrew": {
+          "cdr": {
+            "tp": 40,
+            "fn": 0,
+            "fp": 26,
+            "advisoryCount": 64,
+            "recall": 1,
+            "precision": 0.6060606060606061,
+            "medianLatencyMin": 727
+          },
+          "md": {
+            "tp": 20,
+            "fn": 0,
+            "fp": 5,
+            "advisoryCount": 83,
+            "recall": 1,
+            "precision": 0.8,
+            "medianLatencyMin": 15
+          },
+          "eng": {
+            "tp": 20,
+            "fn": 0,
+            "fp": 2,
+            "advisoryCount": 81,
+            "recall": 1,
+            "precision": 0.9090909090909091,
+            "medianLatencyMin": 15
+          },
+          "sci": {
+            "tp": 35,
+            "fn": 5,
+            "fp": 15,
+            "advisoryCount": 102,
+            "recall": 0.875,
+            "precision": 0.7,
+            "medianLatencyMin": 15
+          }
+        },
+        "byState": {
+          "sleep_debt": {
+            "tp": 20,
+            "fn": 0,
+            "fp": 1,
+            "advisoryCount": 13,
+            "recall": 1,
+            "precision": 0.9523809523809523,
+            "medianLatencyMin": 1439
+          },
+          "mood_decline": {
+            "tp": 15,
+            "fn": 5,
+            "fp": 2,
+            "advisoryCount": 22,
+            "recall": 0.75,
+            "precision": 0.8823529411764706,
+            "medianLatencyMin": 1439
+          },
+          "radiation_event": {
+            "tp": 80,
+            "fn": 0,
+            "fp": 0,
+            "advisoryCount": 6,
+            "recall": 1,
+            "precision": 1,
+            "medianLatencyMin": 15
+          },
+          "fatigue": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 24,
+            "advisoryCount": 73,
+            "recall": null,
+            "precision": 0,
+            "medianLatencyMin": null
+          },
+          "stress": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 12,
+            "advisoryCount": 62,
+            "recall": null,
+            "precision": 0,
+            "medianLatencyMin": null
+          },
+          "dehydration": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 3,
+            "advisoryCount": 57,
+            "recall": null,
+            "precision": 0,
+            "medianLatencyMin": null
+          },
+          "cardio_strain": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 2,
+            "advisoryCount": 89,
+            "recall": null,
+            "precision": 0,
+            "medianLatencyMin": null
+          },
+          "cabinCo2ppm": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 4,
+            "advisoryCount": 8,
+            "recall": null,
+            "precision": 0,
+            "medianLatencyMin": null
+          }
+        }
+      },
+      {
+        "scenarioId": "new_crew_member",
+        "eventStrength": "NONE",
+        "runsCount": 20,
+        "crewDays": 240,
+        "tp": 0,
+        "fn": 0,
+        "fp": 0,
+        "advisoryCount": 305,
+        "recall": null,
+        "precision": null,
+        "specificity": 1,
+        "nominalAlertFreeDayPct": null,
+        "fpPerCrewDay": 0,
+        "advisoryPerCrewDay": 1.2708333333333333,
+        "medianLatencyMin": null,
+        "p90LatencyMin": null,
+        "triageAccuracy": null,
+        "triageChecked": 0,
+        "triagePassed": 0,
+        "byCrew": {
+          "cdr": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 0,
+            "advisoryCount": 53,
+            "recall": null,
+            "precision": null,
+            "medianLatencyMin": null
+          },
+          "md": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 0,
+            "advisoryCount": 64,
+            "recall": null,
+            "precision": null,
+            "medianLatencyMin": null
+          },
+          "eng": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 0,
+            "advisoryCount": 87,
+            "recall": null,
+            "precision": null,
+            "medianLatencyMin": null
+          },
+          "sci": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 0,
+            "advisoryCount": 101,
+            "recall": null,
+            "precision": null,
+            "medianLatencyMin": null
+          }
+        },
+        "byState": {
+          "fatigue": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 0,
+            "advisoryCount": 102,
+            "recall": null,
+            "precision": null,
+            "medianLatencyMin": null
+          },
+          "stress": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 0,
+            "advisoryCount": 43,
+            "recall": null,
+            "precision": null,
+            "medianLatencyMin": null
+          },
+          "dehydration": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 0,
+            "advisoryCount": 55,
+            "recall": null,
+            "precision": null,
+            "medianLatencyMin": null
+          },
+          "cardio_strain": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 0,
+            "advisoryCount": 69,
+            "recall": null,
+            "precision": null,
+            "medianLatencyMin": null
+          },
+          "mood_decline": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 0,
+            "advisoryCount": 10,
+            "recall": null,
+            "precision": null,
+            "medianLatencyMin": null
+          },
+          "sleep_debt": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 0,
+            "advisoryCount": 23,
+            "recall": null,
+            "precision": null,
+            "medianLatencyMin": null
+          },
+          "cabinCo2ppm": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 0,
+            "advisoryCount": 2,
+            "recall": null,
+            "precision": null,
+            "medianLatencyMin": null
+          },
+          "radiation_event": {
+            "tp": 0,
+            "fn": 0,
+            "fp": 0,
+            "advisoryCount": 1,
+            "recall": null,
+            "precision": null,
+            "medianLatencyMin": null
+          }
+        }
+      }
+    ],
+    "aggregate": {
+      "totalRuns": 160,
+      "totalCrewDays": 8320,
+      "tp": 325,
+      "fn": 15,
+      "fp": 349,
+      "advisoryCount": 4833,
+      "recall": 0.9558823529411765,
+      "precision": 0.4821958456973294,
+      "specificity": 0.8838068181818182,
+      "nominalFpPerCrewDay": 0.024583333333333332,
+      "nominalAlertFreeDayPct": 76.83333333333333,
+      "strongRecall": 0.953125,
+      "moderateRecall": 1,
+      "speDetectP90Min": 15,
+      "medianLatencyMin": 30,
+      "p90LatencyMin": 2879,
+      "triageAccuracy": 1,
+      "fpPerCrewDay": 0.04194711538461538,
+      "advisoryPerCrewDay": 0.580889423076923
+    }
+  },
+  "overfitting": {
+    "detected": false,
+    "tuningRecall": 0.9411764705882353,
+    "reportRecall": 0.9558823529411765,
+    "recallGap": -0.014705882352941235,
+    "threshold": 0.15
+  },
+  "targetChecks": [
+    {
+      "id": "target.nominal_fp_per_crew_day",
+      "metricKey": "nominalFpPerCrewDay",
+      "actual": 0.024583333333333332,
+      "target": 0.1,
+      "comparator": "LTE",
+      "status": "PASS"
+    },
+    {
+      "id": "target.strong_recall",
+      "metricKey": "strongRecall",
+      "actual": 0.953125,
+      "target": 0.9,
+      "comparator": "GTE",
+      "status": "PASS"
+    },
+    {
+      "id": "target.spe_detect_p90_min",
+      "metricKey": "speDetectP90Min",
+      "actual": 15,
+      "target": 60,
+      "comparator": "LTE",
+      "status": "PASS"
+    }
+  ],
+  "sensitivity": [
+    {
+      "parameter": "det.z.warning",
+      "pct": 20,
+      "baseValue": 3,
+      "points": [
+        {
+          "label": "minus",
+          "value": 2.4,
+          "recall": 0.9411764705882353,
+          "fpPerCrewDay": 0.1141826923076923,
+          "advisoryPerCrewDay": 0.5240384615384616,
+          "tp": 32,
+          "fn": 2,
+          "fp": 95
+        },
+        {
+          "label": "base",
+          "value": 3,
+          "recall": 0.9411764705882353,
+          "fpPerCrewDay": 0.04326923076923077,
+          "advisoryPerCrewDay": 0.5889423076923077,
+          "tp": 32,
+          "fn": 2,
+          "fp": 36
+        },
+        {
+          "label": "plus",
+          "value": 3.6,
+          "recall": 0.9411764705882353,
+          "fpPerCrewDay": 0.018028846153846152,
+          "advisoryPerCrewDay": 0.6105769230769231,
+          "tp": 32,
+          "fn": 2,
+          "fp": 15
+        }
+      ]
+    },
+    {
+      "parameter": "det.persist.minFrames.vitals",
+      "pct": 20,
+      "baseValue": 4,
+      "points": [
+        {
+          "label": "minus",
+          "value": 3,
+          "recall": 0.8529411764705882,
+          "fpPerCrewDay": 0.13822115384615385,
+          "advisoryPerCrewDay": 0.9855769230769231,
+          "tp": 29,
+          "fn": 5,
+          "fp": 115
+        },
+        {
+          "label": "base",
+          "value": 4,
+          "recall": 0.9411764705882353,
+          "fpPerCrewDay": 0.04326923076923077,
+          "advisoryPerCrewDay": 0.5889423076923077,
+          "tp": 32,
+          "fn": 2,
+          "fp": 36
+        },
+        {
+          "label": "plus",
+          "value": 5,
+          "recall": 0.9411764705882353,
+          "fpPerCrewDay": 0.042067307692307696,
+          "advisoryPerCrewDay": 0.3557692307692308,
+          "tp": 32,
+          "fn": 2,
+          "fp": 35
+        }
+      ]
+    }
+  ],
+  "limitations": [
+    "Veriler sentetik; olaylar simülatörün enjekte ettiği örüntülerdir; algılayıcı ve simülatör aynı takım tarafından yazılmıştır (döngüsellik riski); gerçek astronot verisiyle doğrulanmamıştır; tıbbi performans iddiası yoktur.",
+    "Synthetic telemetry only: injected anomalies reflect scripted scenario patterns written by the same team as the detector (circularity risk); not validated on real astronaut flight data and makes no claim of medical diagnostic performance.",
+    "Nearly all detection, baseline, and triage thresholds carry DEMO_PARAMETER (UNVERIFIED) provenance; targets and scores measure internal software consistency rather than clinical sensitivity/specificity."
+  ],
+  "assumptions": [
+    "Backfill defaults to 14 sim-days (3 days for new_crew_member) and live runs use fixed 6 sim-hour Engine ingestion batches for batch-size determinism.",
+    "True Positive rule (FAZ_08 §3.2): alert must reach >= minSeverity within [exp.fromT, exp.toT] (firstSeenT inside window); Earth Delay class is captured at that first qualifying event.",
+    "False Positives count unmatched WARNING/CRITICAL alert episodes per scenario; unmatched ADVISORY alerts are isolated into advisoryCount and never mixed into FP or specificity.",
+    "Specificity measures the fraction of event-free crew-days without an active WARNING/CRITICAL alert across nominal and non-event crew-days of other scenarios.",
+    "Strong event scenarios: solar_particle_event, sleep_debt, dehydration_co2, comm_blackout, demo_main; moderate event scenario: isolation_low_mood; baseline-only: nominal, new_crew_member."
+  ]
+}

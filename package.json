@@ -27,7 +27,8 @@
     "evidence:build": "tsx scripts/build-evidence.ts",
     "calibration:check": "tsx scripts/check-calibration.ts",
     "calibration:build": "tsx scripts/build-calibration.ts",
-    "validate": "tsx scripts/placeholder.ts validate"
+    "validate": "tsx scripts/validate.ts",
+    "validate:quick": "tsx scripts/validate.ts --quick"
   },
   "dependencies": {
     "class-variance-authority": "^0.7.1",
