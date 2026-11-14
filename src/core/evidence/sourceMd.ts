@@ -155,9 +155,8 @@ export function parseSourceMd(file: SourceMdFile): {
     })
     return { parsed: [], issues }
   }
-  if (table.rows.length === 0) {
-    issues.push({ file: file.path, line: table.headerLine, message: 'değer tablosunda satır yok' })
-  }
+  // Niteliksel kaynaklarda (ör. NASA HRP risk sayfaları) sayısal değer bulunmayabilir;
+  // değer uydurmamak (§3.7) için boş değer tablosu derleyiciyi kırmaz.
 
   const parsed: ParsedEvidence[] = []
   for (const row of table.rows) {
