@@ -1,0 +1,233 @@
+{
+  "metrics": {
+    "hr": {
+      "metric": "hr",
+      "unit": "bpm",
+      "mean": 64,
+      "betweenSd": 6,
+      "withinSd": 3.5,
+      "plausibleMin": 30,
+      "plausibleMax": 220,
+      "evidenceId": null,
+      "demo": true,
+      "sourceFile": null
+    },
+    "spo2": {
+      "metric": "spo2",
+      "unit": "%",
+      "mean": 97.6,
+      "betweenSd": 0.4,
+      "withinSd": 0.5,
+      "plausibleMin": 70,
+      "plausibleMax": 100,
+      "evidenceId": null,
+      "demo": true,
+      "sourceFile": null
+    },
+    "hrv": {
+      "metric": "hrv",
+      "unit": "ms",
+      "mean": 54,
+      "betweenSd": 9,
+      "withinSd": 5,
+      "plausibleMin": 10,
+      "plausibleMax": 180,
+      "evidenceId": null,
+      "demo": true,
+      "sourceFile": null
+    },
+    "sleep.durationH": {
+      "metric": "sleep.durationH",
+      "unit": "h",
+      "mean": 6.8,
+      "betweenSd": 0.45,
+      "withinSd": 0.5,
+      "plausibleMin": 0,
+      "plausibleMax": 14,
+      "evidenceId": null,
+      "demo": true,
+      "sourceFile": null
+    },
+    "sleep.efficiency": {
+      "metric": "sleep.efficiency",
+      "unit": "ratio",
+      "mean": 0.87,
+      "betweenSd": 0.03,
+      "withinSd": 0.04,
+      "plausibleMin": 0.2,
+      "plausibleMax": 1,
+      "evidenceId": null,
+      "demo": true,
+      "sourceFile": null
+    },
+    "sleep.midpointShiftMin": {
+      "metric": "sleep.midpointShiftMin",
+      "unit": "min",
+      "mean": 0,
+      "betweenSd": 10,
+      "withinSd": 14,
+      "plausibleMin": -360,
+      "plausibleMax": 360,
+      "evidenceId": null,
+      "demo": true,
+      "sourceFile": null
+    },
+    "activity.exerciseMin": {
+      "metric": "activity.exerciseMin",
+      "unit": "min",
+      "mean": 60,
+      "betweenSd": 10,
+      "withinSd": 10,
+      "plausibleMin": 0,
+      "plausibleMax": 240,
+      "evidenceId": null,
+      "demo": true,
+      "sourceFile": null
+    },
+    "activity.resistiveMin": {
+      "metric": "activity.resistiveMin",
+      "unit": "min",
+      "mean": 35,
+      "betweenSd": 7,
+      "withinSd": 8,
+      "plausibleMin": 0,
+      "plausibleMax": 180,
+      "evidenceId": null,
+      "demo": true,
+      "sourceFile": null
+    },
+    "hydrationL": {
+      "metric": "hydrationL",
+      "unit": "L",
+      "mean": 2.5,
+      "betweenSd": 0.25,
+      "withinSd": 0.25,
+      "plausibleMin": 0,
+      "plausibleMax": 8,
+      "evidenceId": null,
+      "demo": true,
+      "sourceFile": null
+    },
+    "cabinCo2ppm": {
+      "metric": "cabinCo2ppm",
+      "unit": "ppm",
+      "mean": 2100,
+      "betweenSd": 40,
+      "withinSd": 100,
+      "plausibleMin": 350,
+      "plausibleMax": 10000,
+      "evidenceId": null,
+      "demo": true,
+      "sourceFile": null
+    },
+    "mood.stress": {
+      "metric": "mood.stress",
+      "unit": "score",
+      "mean": 3,
+      "betweenSd": 0.5,
+      "withinSd": 0.6,
+      "plausibleMin": 1,
+      "plausibleMax": 10,
+      "evidenceId": null,
+      "demo": true,
+      "sourceFile": null
+    },
+    "mood.mood": {
+      "metric": "mood.mood",
+      "unit": "score",
+      "mean": 7.2,
+      "betweenSd": 0.5,
+      "withinSd": 0.6,
+      "plausibleMin": 1,
+      "plausibleMax": 10,
+      "evidenceId": null,
+      "demo": true,
+      "sourceFile": null
+    },
+    "mood.motivation": {
+      "metric": "mood.motivation",
+      "unit": "score",
+      "mean": 7.4,
+      "betweenSd": 0.5,
+      "withinSd": 0.6,
+      "plausibleMin": 1,
+      "plausibleMax": 10,
+      "evidenceId": null,
+      "demo": true,
+      "sourceFile": null
+    },
+    "pvt.medianMs": {
+      "metric": "pvt.medianMs",
+      "unit": "ms",
+      "mean": 250,
+      "betweenSd": 16,
+      "withinSd": 14,
+      "plausibleMin": 150,
+      "plausibleMax": 1000,
+      "evidenceId": null,
+      "demo": true,
+      "sourceFile": null
+    },
+    "pvt.lapses": {
+      "metric": "pvt.lapses",
+      "unit": "count",
+      "mean": 0.8,
+      "betweenSd": 0.4,
+      "withinSd": 0.7,
+      "plausibleMin": 0,
+      "plausibleMax": 30,
+      "evidenceId": null,
+      "demo": true,
+      "sourceFile": null
+    },
+    "rad.doseRateMsvDay": {
+      "metric": "rad.doseRateMsvDay",
+      "unit": "mSv/day",
+      "mean": 0.35,
+      "betweenSd": 0.02,
+      "withinSd": 0.03,
+      "plausibleMin": 0,
+      "plausibleMax": 50,
+      "evidenceId": null,
+      "demo": true,
+      "sourceFile": null
+    }
+  },
+  "environments": {
+    "LEO": {
+      "environment": "LEO",
+      "doseRateMsvDayMean": 0.35,
+      "evidenceId": null,
+      "demo": true,
+      "sourceFile": null
+    },
+    "MARS_TRANSIT": {
+      "environment": "MARS_TRANSIT",
+      "doseRateMsvDayMean": 1,
+      "evidenceId": null,
+      "demo": true,
+      "sourceFile": null
+    },
+    "LUNAR_ORBIT": {
+      "environment": "LUNAR_ORBIT",
+      "doseRateMsvDayMean": 0.8,
+      "evidenceId": null,
+      "demo": true,
+      "sourceFile": null
+    },
+    "LUNAR_SURFACE": {
+      "environment": "LUNAR_SURFACE",
+      "doseRateMsvDayMean": 0.6,
+      "evidenceId": null,
+      "demo": true,
+      "sourceFile": null
+    },
+    "MARS_SURFACE": {
+      "environment": "MARS_SURFACE",
+      "doseRateMsvDayMean": 0.85,
+      "evidenceId": null,
+      "demo": true,
+      "sourceFile": null
+    }
+  }
+}

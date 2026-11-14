@@ -7,22 +7,23 @@
     "node": ">=20"
   },
   "scripts": {
-    "predev": "npm run evidence:build",
+    "predev": "tsx scripts/generate.ts",
     "dev": "vite",
-    "prebuild": "npm run evidence:build",
+    "prebuild": "tsx scripts/generate.ts",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
-    "pretypecheck": "npm run evidence:build",
+    "pretypecheck": "tsx scripts/generate.ts",
     "typecheck": "tsc -b --noEmit",
     "lint": "eslint .",
     "format": "prettier --write src tests scripts vite.config.ts eslint.config.js",
-    "pretest": "npm run evidence:build",
+    "pretest": "tsx scripts/generate.ts",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:cov": "vitest run --coverage",
     "check": "tsx scripts/check.ts",
     "evidence:build": "tsx scripts/build-evidence.ts",
     "calibration:check": "tsx scripts/check-calibration.ts",
+    "calibration:build": "tsx scripts/build-calibration.ts",
     "validate": "tsx scripts/placeholder.ts validate"
   },
   "dependencies": {

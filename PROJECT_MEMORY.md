@@ -184,7 +184,7 @@ NASA HRP risk sayfaları nitelikseldir; HR/SpO2/uyku için sayısal eşik **verm
 |---|---|---|---|
 | 0 | Proje iskeleti + hafıza | ☑ | Vite 8 + React 19 + TS 6.0; `npm run check` yeşil (2 test dosyası, 7 test); 4 rota + DisclaimerBar |
 | 1 | Sözleşmeler, şemalar, kanıt kayıt defteri | ☑ | 130 evidence kaydı (SPE düzeltmesi sonrası: 3 VERIFIED, 3 PARTIAL, 1 CONFLICTING, 123 UNVERIFIED); tipler donduruldu; protocol + EngineClient + mockEngine hazır; 10 test dosyası / 78 test |
-| 2 | Simülatör ve senaryolar | ☐ | |
+| 2 | Simülatör ve senaryolar | ☑ | Tohumlu RNG (`mulberry32` + FNV-1a `fork`), `SimClock`, kalibrasyon okuyucu (`calibration:build`, 16 DEMO varsayılanı + `getCalibrationProvenance`), `generateCrew`, 3 saf üretici (`vitals`/`daily`/`radiation`), 8 senaryo, `Simulator`, `TelemetrySource` + `InProcessSimSource`; `npm run check` yeşil (16 test dosyası, 103 test) |
 | 3 | Giriş, depolama, pipeline, worker | ☐ | |
 | 4 | Baseline motoru | ☐ | |
 | 5 | Algılama motoru L1–L4 | ☐ | |
@@ -232,6 +232,10 @@ Durum işaretleri: ☐ başlamadı · ◐ sürüyor · ☑ bitti.
 | 2026-11-14 | Mock motor (`src/ui/mock/mockEngine.ts`): `Math.random` yok, oransız sinüslerin toplamıyla deterministik gürültü; zamanlayıcı `MockScheduler.every()` ile enjekte; hız ve sim zamanı Evidence'tan (`sim.speed.*`, `sim.secondsPerSimDay`); sahte uyarılar: gün 1'de CDR `sleep_debt` ADVISORY, gün 2'de SCI `radiation_event` CRITICAL/ACT_NOW ve kartları. Sahte değerler yalnızca gösterim, eşik değil | §10 rastgelelik kuralı; Kişi A için tekrarlanabilir akış |
 | 2026-11-14 | Commit mesajı yalnızca `faz-N: kısa açıklama`; yapay zekâ imzası veya `Co-Authored-By` satırı eklenmez | Kullanıcı kararı (Faz 1) |
 | 2026-11-14 | `rad.spe.limit.msv` kapsamı düzeltildi: VERIFIED → **PARTIAL**. Değer, tasarım referansı SPE (Ekim 1989 olaylarının toplamı) için mürettebat koruma hedefi (etkin doz, mSv); kişisel olay-başı limit değil. Radyasyon uyarı ve UI metinlerinde etiket **"design reference SPE protection target"** olur. FAZ_06 `speFractionOfLimit`, FAZ_09 "olay dozu / 250 mSv çubuğu", FAZ_10 "250 mSv (SPE)" kartı bu etiketle gösterilir, "limit" denmez. Evidence id'si (`rad.spe.limit.msv`) bağımlılıklar kırılmasın diye değişmedi | Dürüstlük §3.7, §7: kaynağı olmayan kesinlik iddia edilmez |
+| 2026-11-14 | Kalibrasyon derleyici ayrımı: saf `calibrationBuilder.ts` (JSON ithali yok) + çalışma zamanı okuyucu `calibration.ts` (`calibration.generated.json` ithali); `scripts/generate.ts` `predev/prebuild/pretest/pretypecheck` içinde hem `evidence:build` hem `calibration:build` çalıştırır; `.prettierignore`'a `src/sim/*.generated.*` eklendi | `calibration:build` taze klonda `calibration.generated.json` henüz yokken çalışabilsin; Windows'ta `&&` olmadan ön-üretim |
+| 2026-11-14 | Günlük çerçeve zaman damgası `dailyFrameTimeForDay(day) = (day + 1) * MS_PER_DAY - MS_PER_MIN` (23:59); `advanceTo(t)` `< t` aralığını üretir | Backfill gün `-days..-1` her zaman `t ∈ [-days*MS_PER_DAY, 0)` içinde kalır, `dayOf(t) === day`, gün sonu vitals (`23:45`) sonrası sıralı düşer ve 30 gün tam `30*96` vitals/rad + `30` daily üretir |
+| 2026-11-14 | `MOOD_DECLINE` olayına isteğe bağlı `ramp?: boolean` eklendi; `isolation_low_mood` `durationDays: 22` (gün 8'den 14 gün); `daily.ts`/`vitals.ts` uyku borcu→PVT/verim/motivasyon, dehidrasyon→HR, HR→HRV fizyolojik eşleştirmesi (`SIM_DEMO_DEFAULTS`) | Kademeli moral düşüşü senaryo sonunda sıfırlanmasın; bileşik durumlar (`fatigue`, `dehydration`, `cardio_strain`) gerçekçi çoklu metrik sinyali üretsin |
+| 2026-11-14 | `InProcessSimSource<THandle>` zamanlayıcıyı `IntervalScheduler` olarak enjekte alır (global `setInterval` yok), `tickMs >= 100` (≤ 10 Hz) zorlar; backfill yalnızca ilk `start()` / `reset()` / `setScenario()` sonrasında tek `onFrames` çağrısıyla yayılır | FAZ_02 §3.9, §10; `src/core` içinde zamanlayıcı/DOM bağımlılığı yok |
 
 ## 14. AÇIK SORULAR / BİLİNEN SORUNLAR
 - [ ] Resmi challenge "Resources" sekmesindeki ek kaynaklar okunamadı (ekip kontrol edecek).
@@ -249,6 +253,8 @@ Durum işaretleri: ☐ başlamadı · ◐ sürüyor · ☑ bitti.
 - [ ] `rad.spe.limit.msv` (PARTIAL): birincil standart (NASA-STD-3001 Vol.1) açılıp 30 günlük limitle karşılaştırılacak.
 - [ ] i18n anahtarları: `METRIC_META.labelKey` (`metric.*`) ve mock'taki `alert.*.title`, `why.*`, `action.*.step*` henüz `docs/i18n-keys.md`'de yok (dosya Faz 5'te başlar). Faz 9 bunları sözlüğe alırken mock anahtarlarının yer tutucu olduğunu bilmeli.
 - [ ] Mock motorun sahte değerleri ve uyarıları yalnızca `src/ui/mock/` altında; Faz 3'te UI gerçek `engineClient`'a geçince kullanılmayacak.
+- [ ] `docs/calibration/` altında henüz `.md` dosyası yok; bu nedenle `calibration.generated.json` içindeki tüm 16 metrik ve 5 ortam şu an `DEMO_PARAMETER` (`demo: true`) varsayılanlarıyla üretiliyor (takım `.md` ekleyince `calibration:build` otomatik üzerine yazar).
+- [ ] Windows PowerShell yürütme ilkesi `npm.ps1`'i engelleyebiliyor; doğrudan PowerShell'de `npm.cmd run check` kullanılıyor (`scripts/check.ts` ve `scripts/generate.ts` içinde `shell: true` cmd üzerinden sorunsuz çalışıyor).
 
 ## 15. DEĞİŞİKLİK GÜNLÜĞÜ
 | Tarih/Saat | Faz | Yapan | Ne yapıldı | Dokunulan dosyalar |
@@ -258,6 +264,7 @@ Durum işaretleri: ☐ başlamadı · ◐ sürüyor · ☑ bitti.
 | 2026-11-14 | 1 (düzeltme) | Claude (kullanıcı isteği) | `rad.spe.limit.msv` VERIFIED → PARTIAL; scope/note: tasarım referansı SPE (Ekim 1989 toplamı) koruma hedefi, kişisel limit değil; UI etiketi "design reference SPE protection target"; registry testindeki §7 status'u güncellendi | `docs/sources/seed-verified-values.md`, `src/core/evidence/evidence.generated.json`, `tests/core/registry.test.ts`, `PROJECT_MEMORY.md` §7, §12–15 |
 | 2026-11-14 | 1 (düzeltme) | Claude (kullanıcı isteği) | SPE etiketi şablon ve prompt'lara taşındı: şablon örnek satırı PARTIAL; FAZ_06/09/10'da 250 mSv için "design reference SPE protection target" (alan adları `speFractionOfLimit`/`fractionOfSpeLimit` ve evidence id `rad.spe.limit.msv` değişmedi) | `templates/SOURCE_TEMPLATE.md`, `prompts/FAZ_06_Alan_Modulleri.md`, `prompts/FAZ_09_UI1_Kabuk_ve_Kokpit.md`, `prompts/FAZ_10_UI2_Uyarilar_Karar_Davranis_Kanit.md`, `PROJECT_MEMORY.md` §15 |
 | 2026-11-14 | 1 (düzeltme) | Melih Yeşilyurt (Claude ile) | FAZ_05 L17: SPE yaklaşımı "design reference SPE protection target" ifadesiyle (evidence id değişmedi) | `prompts/FAZ_05_Algilama_Motoru.md`, `PROJECT_MEMORY.md` §14–15 |
+| 2026-11-14 13:33 | 2 | Kişi B oturumu | Tohumlu RNG + `SimClock`, DEMO varsayılanları + `calibrationBuilder`/`calibration:build` + `getCalibrationProvenance`, `generateCrew`, 3 saf üretici (`vitals`/`daily`/`radiation`), olay tipleri + SPE eğrisi + 8 senaryo, `Simulator`, `TelemetrySource` + `InProcessSimSource`, `scripts/generate.ts`, 6 yeni sim test dosyası (25 yeni test) | `src/sim/{rng,clock,defaults,calibrationBuilder,calibration,calibration.generated.json,crew,scenario,simulator,index}.ts`, `src/sim/generators/*` (5), `src/sim/scenarios/*` (9), `src/core/telemetry/{source,inProcessSource,index}.ts`, `scripts/{build-calibration,generate}.ts`, `tests/sim/*` (6), `package.json`, `.prettierignore`, `PROJECT_MEMORY.md` §12–15 |
 
 ---
 

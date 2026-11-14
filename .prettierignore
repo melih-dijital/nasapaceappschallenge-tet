@@ -5,8 +5,9 @@ templates/
 docs/
 # shadcn/ui tarafından üretilen bileşenler kendi biçiminde kalır.
 src/components/ui/
-# evidence:build çıktısı deterministik; biçimlendirici dokunmaz.
+# evidence:build ve calibration:build çıktıları deterministik; biçimlendirici dokunmaz.
 src/core/evidence/*.generated.*
+src/sim/*.generated.*
 dist/
 coverage/
 node_modules/
