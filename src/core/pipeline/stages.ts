@@ -11,6 +11,7 @@ import {
 } from '../ingest'
 import type { PersistPort } from '../storage'
 import type {
+  Alert,
   AlertEvent,
   CrewId,
   MetricId,
@@ -87,6 +88,10 @@ export interface EngineStage {
   readonly runOnBackfill?: boolean
   process(ctx: EngineContext): void
   reset?(): void
+  /** Uyarı üreten aşamalar (Detection): açık + son çözülmüş uyarılar (Engine.snapshot için). */
+  listAlerts?(t: SimTimeMs): Alert[]
+  /** Kullanıcı onayı (ACK_ALERT). Uyarı yoksa/ACTIVE değilse null. */
+  ackAlert?(alertId: string, t: SimTimeMs): AlertEvent | null
 }
 
 /** 1. Aşama: Biçim (Zod), SpO2 0–100 normalize, makullük, monoton zaman, kopya bastırma ve stale izleme. */
@@ -199,17 +204,8 @@ export class ModulesStage implements EngineStage {
   }
 }
 
-/** 5. Aşama (Faz 5 yer tutucusu): L1–L4 algılama + AlertManager (backfill atlanır). */
-export class DetectionStage implements EngineStage {
-  readonly name = 'DetectionStage'
-  readonly runOnBackfill = false
-
-  process(ctx: EngineContext): void {
-    if (ctx.liveFrames.length === 0) return
-    ctx.output.states ??= []
-    ctx.output.alertEvents ??= []
-  }
-}
+/** 5. Aşama: L1–L4 algılama + AlertManager (backfill atlanır) — uygulama `core/detection`'da (Faz 5). */
+export { DetectionStage } from '../detection/detectionStage'
 
 /** 6. Aşama (Faz 7 yer tutucusu): Karar destek, planlayıcı ve Earth Link triyajı (backfill atlanır). */
 export class DecisionStage implements EngineStage {

@@ -187,7 +187,17 @@ export function createWorkerHandler<THandle = unknown>(
         deps.postMessage({ type: 'SNAPSHOT', snapshot: engine.snapshot() })
         return
       }
-      case 'ACK_ALERT':
+      case 'ACK_ALERT': {
+        if (!engine) return
+        const event = engine.ackAlert(msg.alertId)
+        if (event) {
+          deps.postMessage({
+            type: 'ENGINE_OUTPUT',
+            output: { t: event.t, alertEvents: [event], dataQualityCount: engine.snapshot().dataQualityCount },
+          })
+        }
+        return
+      }
       case 'SUBMIT_CHECKIN':
       case 'SUBMIT_PVT':
       case 'ACCEPT_ACTION':

@@ -4,7 +4,7 @@ import type { BaselineEngine } from '../baseline'
 import { registry, type EvidenceRegistry } from '../evidence/registry'
 import type { PlausibleRanges } from '../ingest'
 import type { PersistPort } from '../storage'
-import type { SimTimeMs } from '../types'
+import type { AlertEvent, SimTimeMs } from '../types'
 import { EngineBuffers } from './buffer'
 import {
   BaselineStage,
@@ -100,11 +100,24 @@ export class Engine {
     return output
   }
 
+  /** ACK_ALERT: uyarıyı ACTIVE → ACKED yapar; olay yoksa null. */
+  ackAlert(alertId: string): AlertEvent | null {
+    for (const stage of this.stages) {
+      const event = stage.ackAlert?.(alertId, this.simT)
+      if (event) return event
+    }
+    return null
+  }
+
+  /**
+   * `activeAlerts`: açık (ACTIVE/ACKED) + son `alert.recentResolvedHours` sim-saatte çözülmüş uyarılar
+   * (FAZ_05 §3.5 `snapshot().alerts`). UI `selectActiveAlerts` RESOLVED'ı zaten süzer.
+   */
   snapshot(): EngineSnapshot {
     return {
       t: this.simT,
       latest: this.buffers.getLatestSnapshot(),
-      activeAlerts: [],
+      activeAlerts: this.stages.flatMap((stage) => stage.listAlerts?.(this.simT) ?? []),
       states: this.previousOutput?.states ?? [],
       cards: [],
       dataQualityCount: this.dataQualityCount,

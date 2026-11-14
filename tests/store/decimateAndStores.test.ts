@@ -88,8 +88,12 @@ describe('decimate ve store/EngineClient akışı', () => {
     pauseSimulation()
     expect(useSessionStore.getState().running).toBe(false)
 
+    // Faz 5'ten beri demo_main gün 0 sonunda CDR uyku açığı uyarısı üretir; olmayan id'yi ACK etmek hiçbir şeyi değiştirmez.
+    const before = selectActiveAlerts(useAlertStore.getState())
     ackAlert('non-existent')
-    expect(selectActiveAlerts(useAlertStore.getState())).toEqual([])
+    const after = selectActiveAlerts(useAlertStore.getState())
+    expect(after).toEqual(before)
+    expect(after.some((a) => a.status === 'ACKED')).toBe(false)
 
     resetSimulation()
     setEngineClient(null)
