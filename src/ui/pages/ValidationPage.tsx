@@ -1,5 +1,7 @@
+import { useT } from '@/ui/i18n'
 import { PlaceholderPage } from './PlaceholderPage'
 
 export function ValidationPage() {
-  return <PlaceholderPage title="Validation" />
+  const { t } = useT()
+  return <PlaceholderPage title={t('nav.validation')} />
 }

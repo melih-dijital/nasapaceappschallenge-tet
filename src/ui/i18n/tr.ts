@@ -1,0 +1,297 @@
+// FAZ 9 §3.2 — Türkçe i18n sözlüğü.
+// en.ts ile birebir aynı anahtar kümesine sahiptir (hem derleme zamanı tip kontrolü hem CI testi).
+import type { I18nDictionary } from './en'
+
+export const tr: I18nDictionary = {
+  // Uygulama & Kabuk
+  'app.title': 'ASTRO SAĞLIK KOKPİTİ',
+  'app.subtitle': 'Otonom Mürettebat Sağlık Karar Desteği',
+  'app.disclaimer': 'Karar destek prototipi · sentetik veri · tıbbi cihaz değildir',
+  'app.placeholderHint': 'Faz 9–10’da doldurulacak · Faz 10 entegrasyonu için rota hazır',
+
+  // Navigasyon
+  'nav.mainLabel': 'Ana Menü',
+  'nav.modulesLabel': 'Mürettebat Modülleri',
+  'nav.cockpit': 'Kokpit',
+  'nav.alerts': 'Uyarılar ve Eylemler',
+  'nav.behavioral': 'Davranışsal',
+  'nav.evidence': 'Kanıtlar',
+  'nav.validation': 'Doğrulama',
+  'nav.ground': 'Yer İstasyonu',
+  'nav.comingSoon': 'Faz 10',
+
+  // Üst çubuk & Sim kontrolleri
+  'controls.missionClock': 'Görev Geçen Süresi (MET)',
+  'controls.day': 'Gün {day}',
+  'controls.scenario': 'Senaryo',
+  'controls.speed': 'Sim Hızı',
+  'controls.speedScale': '1× = 20 sn / sim-gün',
+  'controls.play': 'Simülasyonu başlat',
+  'controls.pause': 'Simülasyonu duraklat',
+  'controls.reset': 'Simülasyonu sıfırla',
+  'controls.bookmarks': 'Yer imine atla',
+  'controls.bookmarkSelect': 'Yer imi…',
+  'controls.language': 'Dil',
+  'controls.timeCompressed': 'zaman sıkıştırılmış',
+  'controls.running': 'CANLI',
+  'controls.paused': 'DURAKLATILDI',
+
+  // Senaryolar (Faz 2 & Mock)
+  'scenario.demo_main.title': 'Ana Demo (Kürate 3 Günlük Görev)',
+  'scenario.nominal.title': 'Nominal (30 Günlük Baseline)',
+  'scenario.solar_particle_event.title': 'Güneş Parçacık Olayı (SPE)',
+  'scenario.sleep_debt.title': 'Birikimli Uyku Borcu',
+  'scenario.isolation_low_mood.title': 'İzolasyon ve Moral Düşüşü',
+  'scenario.dehydration_co2.title': 'Dehidrasyon ve Kabin CO₂ Artışı',
+  'scenario.comm_blackout.title': 'İletişim Kesintisi ve Kardiyo Yük',
+  'scenario.new_crew_member.title': 'Yeni Mürettebat (Soğuk Baseline)',
+
+  // Bookmarklar (demo_main)
+  'bookmark.demo_main.0': '1 · G+000 Uyku Açığı Başlangıcı',
+  'bookmark.demo_main.1': '2 · G+001 SCI Moral Düşüşü',
+  'bookmark.demo_main.2': '3 · G+002 SPE Öncesi Sabah',
+  'bookmark.demo_main.3': '4 · G+002 Güneş Parçacık Olayı',
+
+  // Mürettebat seçici
+  'crew.selectorLabel': 'Mürettebat Seçimi',
+  'crew.role.CDR': 'Komutan',
+  'crew.role.MD': 'Uçuş Tabibi',
+  'crew.role.ENG': 'Uçuş Mühendisi',
+  'crew.role.SCI': 'Görev Uzmanı',
+  'crew.activeAlerts': '{count} aktif',
+  'crew.noAlerts': 'Nominal',
+
+  // Durum seviyeleri (Severity)
+  'severity.NOMINAL': 'Nominal',
+  'severity.INFO': 'Bilgi',
+  'severity.ADVISORY': 'Tavsiye',
+  'severity.WARNING': 'Uyarı',
+  'severity.CRITICAL': 'Kritik',
+
+  // Gecikme-bilinçli triyaj sınıfları (EarthDelayClass)
+  'earthDelay.ACT_NOW': 'Şimdi harekete geç',
+  'earthDelay.ACT_THEN_REPORT': 'Uygula, sonra bildir',
+  'earthDelay.CAN_WAIT_FOR_EARTH': 'Dünya’yı bekleyebilir',
+  'earthDelay.ACT_NOW.desc': 'Zarar süresi Dünya gidiş-dönüş iletişim gecikmesinden daha kısa.',
+  'earthDelay.ACT_THEN_REPORT.desc': 'Araç içi protokolü şimdi başlat ve Dünya için telemetri raporu kuyruğa al.',
+  'earthDelay.CAN_WAIT_FOR_EARTH.desc': 'Dünya uçuş ekibi değerlendirmesini beklemek güvenli.',
+
+  // Metrikler (METRIC_META.labelKey ile birebir)
+  'metric.hr': 'Kalp Atım Hızı (HR)',
+  'metric.spo2': 'Kan Oksijeni (SpO₂)',
+  'metric.hrv': 'Kalp Hızı Değişkenliği (HRV)',
+  'metric.sleep.durationH': 'Uyku Süresi',
+  'metric.sleep.efficiency': 'Uyku Verimliliği',
+  'metric.sleep.midpointShiftMin': 'Sirkadiyen Orta Nokta Kayması',
+  'metric.activity.exerciseMin': 'Aerobik Egzersiz',
+  'metric.activity.resistiveMin': 'Direnç Egzersizi',
+  'metric.hydrationL': 'Sıvı Alımı',
+  'metric.cabinCo2ppm': 'Kabin CO₂',
+  'metric.mood.stress': 'Algılanan Stres',
+  'metric.mood.mood': 'Ruh Hali Skoru',
+  'metric.mood.motivation': 'Motivasyon',
+  'metric.pvt.medianMs': 'Reaksiyon Süresi (PVT-benzeri)',
+  'metric.pvt.lapses': 'Dikkat Gecikmeleri',
+  'metric.rad.doseRateMsvDay': 'Radyasyon Doz Hızı',
+
+  // Bileşik durumlar (7 StateId)
+  'state.fatigue': 'Yorgunluk',
+  'state.stress': 'Stres Yükü',
+  'state.dehydration': 'Dehidrasyon Riski',
+  'state.sleep_debt': 'Uyku Borcu',
+  'state.radiation_event': 'Radyasyon Maruziyeti',
+  'state.cardio_strain': 'Kardiyo Zorlanma',
+  'state.mood_decline': 'Moral Düşüş Örüntüsü',
+
+  // Kokpit — Sol sütun (kişi özeti)
+  'cockpit.crewSummaryTitle': 'Kişi Fizyolojik ve Durum Özeti',
+  'cockpit.baselineConfidence': 'Kişisel Baseline Güveni',
+  'cockpit.baselineReady': 'Baseline hazır (14g medyan/MAD)',
+  'cockpit.learningBaseline': 'Learning baseline…',
+  'cockpit.learningBaselineDay': 'Learning baseline (day {day}/{target})',
+  'cockpit.stateChipsTitle': 'Bileşik Durum Çıkarımları (L4)',
+  'cockpit.stateConfidence': 'Güven %{pct}',
+  'cockpit.latestTilesTitle': 'Son Biyometri ve Günlük Girdiler',
+  'cockpit.zScore': 'z = {z}',
+  'cockpit.baselineMedian': 'baz {median} {unit}',
+  'cockpit.sensorFaultStale': 'sensor fault/stale',
+  'cockpit.simulateSensorFault': 'Sensör hatası testini değiştir',
+
+  // Kokpit — Orta sütun (telemetri grafikleri)
+  'cockpit.hrChartTitle': 'Kalp Atım Hızı (Son 24 Sim-Saat)',
+  'cockpit.hrChartSubtitle': '15 dk kadans · Kişisel 6 saatlik blok medyan ± uyarı z-bandı ve uyku penceresi',
+  'cockpit.hrChartAria': 'Kişisel baseline bandı ve uyku gölgelemesi ile son 24 simüle saatlik kalp atım hızı grafiği',
+  'cockpit.spo2ChartTitle': 'SpO₂ Satürasyonu (Son 24 Sim-Saat)',
+  'cockpit.spo2ChartSubtitle': '15 dk kadans · Mutlak klinik eşik referansı',
+  'cockpit.spo2ChartAria': 'Kritik eşik çizgisi ile son 24 simüle saatlik kan oksijen satürasyonu grafiği',
+  'cockpit.sleepChartTitle': 'Uyku ve Aktivite Geçmişi (Son 14 Sim-Gün)',
+  'cockpit.sleepChartSubtitle': 'Günlük uyku sütunları, kişisel baseline medyanı ve birikimli uyku borcu',
+  'cockpit.sleepChartAria': 'Günlük uyku süresi, baseline medyanı ve uyku borcunu gösteren 14 günlük sütun ve alan grafiği',
+  'cockpit.nightSleepBlock': 'Uyku bloğu',
+  'cockpit.baselineBandLabel': 'Baseline bandı (±{z}σ)',
+  'cockpit.criticalThresholdLabel': 'Kritik eşik ({value}{unit})',
+  'cockpit.sleepDebtLabel': 'Uyku borcu (sa)',
+
+  // Kokpit — Radyasyon paneli
+  'radiation.panelTitle': 'Radyasyon ve Güneş Parçacık Olayı (SPE) İzleyici',
+  'radiation.panelSubtitle': 'Kümülatif kariyer etkin dozu, canlı akı hızı ve SPE durum makinesi',
+  'radiation.careerGaugeLabel': 'NASA-STD-3001 career limit (verified)',
+  'radiation.careerDoseTitle': 'Kümülatif Kariyer Etkin Dozu',
+  'radiation.priorDose': 'Önceki kariyer: {value} mSv',
+  'radiation.missionDose': 'Görev: +{value} mSv',
+  'radiation.rateChartTitle': 'Radyasyon Doz Hızı (mSv/gün)',
+  'radiation.rateChartAria': 'Nominal GCR/ISS bandı ve güneş parçacık olayı artışlarını gösteren radyasyon doz hızı grafiği',
+  'radiation.expectedBand': 'Beklenen referans aralığı',
+  'radiation.speStateLabel': 'SPE Durumu',
+  'radiation.speState.IDLE': 'IDLE',
+  'radiation.speState.SUSPECTED': 'SUSPECTED',
+  'radiation.speState.CONFIRMED': 'CONFIRMED',
+  'radiation.speState.DECAYING': 'DECAYING',
+  'radiation.speTargetLabel': 'design reference SPE protection target',
+  'radiation.speTargetNote': 'Tasarım referansı SPE (Ekim 1989 toplamı, 250 mSv) için mürettebat koruma hedefi; kişisel olay-başı limit değildir.',
+  'radiation.speEventDose': 'Olay dozu: {dose} / {target} mSv',
+
+  // Kokpit — Kemik tahmini kartı
+  'bone.cardTitle': 'Kemik Mineral Yoğunluğu Kayıp Tahmini',
+  'bone.indicativeBadge': 'Indicative estimate',
+  'bone.estimate.disclaimer': 'Indicative estimate — bone density is measured by scans before/after flight',
+  'bone.monthlyLoss': 'Tahmini Aylık Kayıp',
+  'bone.cumulativeLoss': 'Tahmini Görev Birikimli',
+  'bone.resistiveAdherence': '7g Direnç Egzersizi Uyumu',
+
+  // Kokpit — Sağ sütun (uyarılar, eylem kartları, Earth Link)
+  'cockpit.recentAlertsTitle': 'Son Uyarılar (İlk 5)',
+  'cockpit.noActiveAlerts': 'Aktif anomali tespit edilmedi',
+  'cockpit.noActiveAlertsDesc': 'İzlenen tüm metrikler kişisel baseline ve L1 sınırları içinde.',
+  'cockpit.ackAlert': 'Onayla',
+  'cockpit.acked': 'Onaylandı',
+  'cockpit.priorityActionsTitle': 'Öncelikli Karar Kartları (İlk 2)',
+  'cockpit.noActionCards': 'Bekleyen araç içi eylem yok',
+  'cockpit.noActionCardsDesc': 'Karar planlayıcıda bekleyen takvim müdahalesi bulunmuyor.',
+  'cockpit.acceptAction': 'Kabul Et',
+  'cockpit.dismissAction': 'Yoksay',
+  'cockpit.completeAction': 'Tamamlandı',
+  'cockpit.cardState.SUGGESTED': 'Önerildi',
+  'cockpit.cardState.ACCEPTED': 'Kabul Edildi',
+  'cockpit.cardState.DISMISSED': 'Yoksayıldı',
+  'cockpit.cardState.DONE': 'Tamamlandı',
+
+  // Earth Link
+  'earth.badgeLabel': 'Earth Link',
+  'earth.cardTitle': 'Earth Link ve Gecikme-Bilinçli Triyaj',
+  'earth.cardSubtitle': 'Sakla-ve-ilet telemetri ve gidiş-dönüş karar ufku',
+  'earth.oneWay': 'Tek yön gecikme',
+  'earth.roundTrip': 'Gidiş-dönüş + yer ekibi',
+  'earth.preset.MOON': 'Ay (1.3 sn)',
+  'earth.preset.MARS_MIN': 'Mars min (3 dk)',
+  'earth.preset.MARS_MAX': 'Mars maks (22 dk)',
+  'earth.preset.CUSTOM': 'Özel',
+  'earth.status.connected': 'BAĞLANTI NOMİNAL',
+  'earth.status.blackout': 'İLETİŞİM KESİNTİSİ',
+  'earth.pendingReplies': '{count} bekleyen yanıt',
+  'earth.replyEta': 'Dünya yanıtı ETA: {eta}',
+  'earth.noPendingReply': 'Bekleyen yer sorgusu yok · Giden kutusu senkron',
+  'earth.triageRule': 'Zarar süresi ≤ gidiş-dönüş ({rt} dk) ise mürettebat araç içinde otonom hareket etmelidir.',
+
+  // Kanıt & ProvenanceTag
+  'provenance.source.NASA_STD': 'NASA_STD',
+  'provenance.source.NASA_HRP': 'NASA_HRP',
+  'provenance.source.PEER_REVIEWED': 'PEER',
+  'provenance.source.CLINICAL_CONVENTION': 'CLINICAL',
+  'provenance.source.DEMO_PARAMETER': 'DEMO',
+  'provenance.status.VERIFIED': 'Doğrulanmış kaynak',
+  'provenance.status.PARTIAL': 'Kısmi / tasarım ref.',
+  'provenance.status.CONFLICTING': 'Çelişkili kaynaklar',
+  'provenance.status.UNVERIFIED': 'Doğrulanmadı / demo parametre',
+  'provenance.sheetTitle': 'Kanıt ve Parametre Kaynak Kaydı',
+  'provenance.sheetDescription': 'Her eşik ve model parametresi Kanıt Kayıt Defteri içinde izlenir.',
+  'provenance.parameterId': 'Parametre ID',
+  'provenance.valueUnit': 'Değer ve Birim',
+  'provenance.sourceType': 'Kaynak Kategorisi',
+  'provenance.verification': 'Doğrulama Durumu',
+  'provenance.sourceTitle': 'Kaynak Başlığı',
+  'provenance.scope': 'Kapsam',
+  'provenance.note': 'Notlar ve Sınırlamalar',
+  'provenance.openSourceUrl': 'Birincil kaynağı aç',
+  'provenance.viewAllEvidence': 'Tüm Kanıt Kayıt Defteri sayfasını aç',
+
+  // Motor / Worker hata ve durumlar
+  'worker.errorTitle': 'Telemetri Motoru Hatası',
+  'worker.restartButton': 'Restart engine',
+  'worker.loading': 'Görev telemetri motoru başlatılıyor…',
+  'cockpit.criticalLiveAnnouncement': '{crew} için kritik uyarı: {title}. {triage}.',
+
+  // Uyarı başlıkları ve nedenleri (Mock + Faz 5–6)
+  'alert.sleep_debt.title': 'Kişisel Baseline Altında Birikimli Uyku Borcu',
+  'alert.radiation_event.title': 'Güneş Parçacık Olayı — Yüksek Radyasyon Doz Hızı',
+  'alert.fatigue.title': 'Yüksek Mürettebat Yorgunluk Skoru',
+  'alert.stress.title': 'Süregelen Fizyolojik Stres Örüntüsü',
+  'alert.dehydration.title': 'Düşük Sıvı Alımı ve Kardiyovasküler Sapma',
+  'alert.cardio_strain.title': 'Yüksek İstirahat Kalp Hızı ve Kardiyo Zorlanma',
+  'alert.mood_decline.title': 'Çok Günlü Moral Düşüş Eğilimi',
+  'alert.spo2_low.title': 'Eşik Altı Kritik SpO₂ Desatürasyonu',
+  'alert.co2_high.title': 'Yüksek Kabin CO₂ Konsantrasyonu',
+  'alert.career_dose.title': 'Kariyer Radyasyon Doz Sınırına Yaklaşım',
+
+  'why.sleep.belowBaseline': 'Uyku süresi {valueH} sa vs kişisel baseline {baselineH} sa (z = {z})',
+  'why.radiation.rateRatio': 'Doz hızı kişisel baseline hızının {ratio}× üzerinde',
+  'why.l1.threshold': 'Metrik mutlak L1 eşiğini aştı ({value} vs {limit})',
+  'why.l2.deviation': 'Kalıcı kişisel baseline sapması (z = {z})',
+  'why.l3.consecutive': 'Art arda çok günlü eşik ihlali ({days} gün)',
+  'why.l3.cusum': 'Kümülatif toplam (CUSUM) sapması karar aralığını aştı',
+  'why.l3.theilSen': 'Anlamlı çok günlü Theil-Sen eğimi tespit edildi',
+  'why.l4.stateScore': 'Bileşik durum skoru {score} seviyesine ulaştı',
+
+  // Eylem Kataloğu (Faz 7 §3.1 — 13 ActionId + Mock)
+  'action.ACT_REST_BLOCK.title': 'Toparlanma Dinlenme Bloğu Ekle',
+  'action.ACT_REST_BLOCK.step1': 'Sonraki görevden önce 45 dakikalık düşük uyaranlı dinlenme bloğu planlamayı değerlendirin.',
+  'action.ACT_REST_BLOCK.step2': 'Kritik olmayan bakım görevlerini görev takvimi kurallarına göre erteleyin.',
+
+  'action.ACT_REDUCE_WORKLOAD.title': 'Yüksek Yoğunluklu İş Yükünü Azalt',
+  'action.ACT_REDUCE_WORKLOAD.step1': 'Yüksek bilişsel yük gerektiren işleri ikincil pencereye kaydırın ve direnç egzersizini düşük yoğunlukta tutun.',
+  'action.ACT_REDUCE_WORKLOAD.step2': 'İş yükü değişikliğini uçuş tabibi incelemesi için araç içi plan farkına kaydedin.',
+
+  'action.ACT_BREATHING.title': 'Rehberli Otonom Nefes Egzersizi',
+  'action.ACT_BREATHING.step1': 'Mürettebat alanında 10 dakikalık tempolu nefes ve toparlanma seansı değerlendirin.',
+  'action.ACT_BREATHING.step2': 'Sonraki 6 saatlik baseline bloğunda istirahat HR ve HRV değerlerini yeniden kontrol edin.',
+
+  'action.ACT_COMMS_FAMILY.title': 'Özel Aile / Destek İletişimi Planla',
+  'action.ACT_COMMS_FAMILY.step1': 'Earth Link giden kutusunda sakla-ve-ilet özel aile video mesajına öncelik verin.',
+  'action.ACT_COMMS_FAMILY.step2': 'Planlanmamış kişisel dinlenme penceresini koruyun.',
+
+  'action.ACT_HYDRATE.title': 'Yapılandırılmış Hidrasyon Protokolü',
+  'action.ACT_HYDRATE.step1': 'Önümüzdeki 6 saat içine iki planlı sıvı alım bloğu ekleyin.',
+  'action.ACT_HYDRATE.step2': 'Günlük toplam sıvı alımını kişisel baseline ile karşılaştırarak izleyin.',
+
+  'action.ACT_SLEEP_SHIFT.title': 'Uyku Penceresini Öne Çek ve Toparlanmayı Koru',
+  'action.ACT_SLEEP_SHIFT.step1': 'Uyku bloğu başlangıcını 30 dakika erkene çekin ve tam 8 saatlik uyku penceresini koruyun.',
+  'action.ACT_SLEEP_SHIFT.step2': 'Uykudan önceki 90 dakika içinde yüksek yoğunluklu çalışmadan kaçının.',
+
+  'action.ACT_LIGHT_CONTROL.title': 'Sirkadiyen Kabin Aydınlatma Ayarı',
+  'action.ACT_LIGHT_CONTROL.step1': 'Planlı uyku penceresinden 2 saat önce mavi-zengin kabin aydınlatmasını kısın.',
+  'action.ACT_LIGHT_CONTROL.step2': 'Orta nokta kaymasını dengelemek için uyanışta yüksek melanopik ışık uygulayın.',
+
+  'action.ACT_SHELTER.title': 'Görev Protokolüne Göre Radyasyon Sığınağına Geç',
+  'action.ACT_SHELTER.step1': 'Görev radyasyon protokolü uyarınca aracın en yüksek koruma sağlayan bölgesine geçin.',
+  'action.ACT_SHELTER.step2': 'Doz hızı eşik altına düşene kadar EVA ve korumasız egzersiz bloklarını askıya alın.',
+
+  'action.ACT_DOSE_CHECK.title': 'Kişisel Dozimetre ve Koruma Kontrolü',
+  'action.ACT_DOSE_CHECK.step1': 'Aktif kişisel dozimetre okumasını araç bölge radyasyon monitörüyle çapraz doğrulayın.',
+  'action.ACT_DOSE_CHECK.step2': 'Earth Link üzerinden yüksek öncelikli radyasyon telemetri paketini iletin.',
+
+  'action.ACT_CARDIO_CHECK.title': 'Kardiyovasküler ve Egzersiz Yükü Kontrolü',
+  'action.ACT_CARDIO_CHECK.step1': 'İstirahat kalp hızı trendini ve kabin çevresel parametrelerini gözden geçirin.',
+  'action.ACT_CARDIO_CHECK.step2': 'Zorlanma sınırlarını aşmadan düşük yoğunluklu direnç karşı-önlemini sürdürün.',
+
+  'action.ACT_JOURNAL.title': 'Araç İçi Özel Günlük Kaydı',
+  'action.ACT_JOURNAL.step1': 'Kısa bir özel değerlendirme notu kaydetmeyi düşünün (yalnızca bu cihazda kalır).',
+  'action.ACT_JOURNAL.step2': 'Uyku düzenliliği ve günlük check-in eğilimlerini gözden geçirin.',
+
+  'action.ACT_PSYCH_CHECKIN.title': 'Davranışsal ve Hazbulunuşluk Check-In',
+  'action.ACT_PSYCH_CHECKIN.step1': '30 saniyelik günlük ruh hali/stres check-in ve 60 saniyelik reaksiyon testini tamamlayın.',
+  'action.ACT_PSYCH_CHECKIN.step2': 'Özet metrikleri yalnızca davranışsal onay kategorisi açıksa yer istasyonuyla paylaşın.',
+
+  'action.ACT_PRELANDING_FLUIDS.title': 'İniş Öncesi Ortostatik Sıvı Yüklemesi',
+  'action.ACT_PRELANDING_FLUIDS.step1': 'Yerçekimi geçişi öncesinde görev sıvı yükleme karşı-önlem takvimini izleyin.',
+  'action.ACT_PRELANDING_FLUIDS.step2': 'Dik duruş kontrolleri sırasında kardiyovasküler toleransı doğrulayın.',
+}

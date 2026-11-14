@@ -1,5 +1,7 @@
+import { useT } from '@/ui/i18n'
 import { PlaceholderPage } from './PlaceholderPage'
 
 export function EvidencePage() {
-  return <PlaceholderPage title="Evidence" />
+  const { t } = useT()
+  return <PlaceholderPage title={t('nav.evidence')} />
 }
