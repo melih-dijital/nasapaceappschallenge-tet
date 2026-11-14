@@ -3,14 +3,14 @@
 // kancasıyla AYNI karede okur (döngü yok). Backfill (t < 0) atlanır.
 import { DETECTION_EXTRAS_SCRATCH_KEY, type DetectionExtras } from '../detection/detectionStage'
 import type { ExtraStateInput } from '../detection/l4States'
-import type { EvidenceRegistry } from '../evidence/registry'
+import { registry as defaultRegistry, type EvidenceRegistry } from '../evidence/registry'
 import type { EngineContext, EngineStage } from '../pipeline/stages'
 import type { CrewId, RadiationFrame, SimTimeMs, StateId } from '../types'
 import { RadiationModule } from './radiation'
 import type { ModuleReport } from './types'
 
 export interface ModulesStageOptions {
-  evidence: EvidenceRegistry
+  evidence?: EvidenceRegistry
   priorCareerDoseMsv?: (crewId: CrewId) => number | undefined
   missionDays?: number | (() => number | undefined)
 }
@@ -22,9 +22,9 @@ export class ModulesStage implements EngineStage {
   private readonly radiation: RadiationModule
   private latest = new Map<CrewId, ModuleReport[]>()
 
-  constructor(opts: ModulesStageOptions) {
+  constructor(opts: ModulesStageOptions = {}) {
     this.radiation = new RadiationModule({
-      evidence: opts.evidence,
+      evidence: opts.evidence ?? defaultRegistry,
       ...(opts.priorCareerDoseMsv ? { priorCareerDoseMsv: opts.priorCareerDoseMsv } : {}),
       ...(opts.missionDays !== undefined ? { missionDays: opts.missionDays } : {}),
     })

@@ -129,3 +129,65 @@ Tüm `triage.reason.*` anahtarları `{ severity, oneWayDelaySec, roundTripMin, t
 | `REPLY_GENERIC_ACK` | `ground.reply.REPLY_GENERIC_ACK.title` | Mission Control: Telemetry Packet Received | Görev Kontrolü: Telemetri Paketi Alındı |
 | `REPLY_GENERIC_ACK` | `ground.reply.REPLY_GENERIC_ACK.body` | Ground console received your delayed downlink packet and updated mission status logs. | Yer konsolu gecikmeli iletim paketinizi aldı ve görev durum kayıtlarını güncelledi. |
 | `REPLY_GENERIC_ACK` | `ground.reply.REPLY_GENERIC_ACK.followUp` | Continue following current onboard advisory procedures and monitor next comm pass. | Mevcut araç içi öneri prosedürlerini izlemeye devam edin ve sonraki iletişim geçişini takip edin. |
+
+---
+
+## 5. Algılama Motoru ve Metrik Anahtarları (Faz 5: `src/core/detection/i18nKeys.ts`)
+
+Bu bölüm, `src/core/detection/i18nKeys.ts` içindeki `DETECTION_I18N_KEYS` listesinin tamamını (39 anahtar) içerir.
+
+### 5.1 Durum ve Limit Uyarı Başlıkları
+
+| Anahtar | Parametreler | İngilizce (`en`) | Türkçe (`tr`) | Not |
+|---|---|---|---|---|
+| `alert.fatigue.title` | `—` | Elevated fatigue pattern detected | Yüksek yorgunluk örüntüsü algılandı | `STATE_IDS` |
+| `alert.stress.title` | `—` | Elevated stress indicators detected | Artan stres göstergeleri algılandı | `STATE_IDS` |
+| `alert.dehydration.title` | `—` | Hydration deficit pattern detected | Sıvı açığı örüntüsü algılandı | `STATE_IDS` |
+| `alert.sleep_debt.title` | `—` | Cumulative sleep debt detected | Birikimli uyku borcu algılandı | `STATE_IDS` |
+| `alert.radiation_event.title` | `—` | Elevated radiation environment detected | Yüksek radyasyon ortamı algılandı | `STATE_IDS` |
+| `alert.cardio_strain.title` | `—` | Cardiovascular strain trend detected | Kardiyovasküler zorlanma eğilimi algılandı | `STATE_IDS` |
+| `alert.mood_decline.title` | `—` | Behavioral mood decline trend detected | Davranışsal duygu durum düşüşü algılandı | `STATE_IDS` |
+| `alert.l1.SPO2_LOW.title` | `—` | Low SpO2 threshold crossed | Düşük SpO2 eşiği aşıldı | `L1_RULES` |
+| `alert.l1.CO2_HIGH.title` | `—` | Elevated cabin CO2 threshold crossed | Yüksek kabin CO2 eşiği aşıldı | `L1_RULES` |
+| `alert.l1.CAREER_DOSE.title` | `—` | Career radiation dose threshold approached | Kariyer radyasyon dozu eşiğine yaklaşıldı | `L1_RULES` |
+| `alert.l1.SPE_DOSE.title` | `—` | Solar particle event protection target approached | Güneş parçacık olayı koruma hedefine yaklaşıldı | `L1_RULES` |
+| `alert.metric.cabinCo2ppm.title` | `—` | Cabin CO2 deviation or trend detected | Kabin CO2 sapması veya eğilimi algılandı | durum eşlemesi olmayan metrik uyarısı (L2/L3) |
+
+### 5.2 Açıklanabilirlik ("Why?") Gerekçe Anahtarları
+
+> **Doğrulanmamış / SPE Notu:** `why.l1.*` anahtarlarında `verified=0` ise UI `"unverified / doğrulanmadı"` etiketini gösterir. `why.l1.SPE_DOSE` eşiği kişisel limit değil **"design reference SPE protection target"** olarak etiketlenir.
+
+| Anahtar | Parametreler | İngilizce (`en`) | Türkçe (`tr`) | Not |
+|---|---|---|---|---|
+| `why.l1.SPO2_LOW` | `value`, `threshold`, `verified` | SpO2 reading ({{value}}%) fell below reference threshold ({{threshold}}%). | SpO2 ölçümü ({{value}}%) referans eşiğin ({{threshold}}%) altına indi. | `verified=0` ise doğrulanmadı etiketi |
+| `why.l1.CO2_HIGH` | `value`, `threshold`, `verified` | Cabin CO2 ({{value}} ppm) reached advisory threshold ({{threshold}} ppm). | Kabin CO2 düzeyi ({{value}} ppm) uyarı eşiğine ({{threshold}} ppm) ulaştı. | `verified=0` ise doğrulanmadı etiketi (DEMO parametre) |
+| `why.l1.CAREER_DOSE` | `value`, `threshold`, `verified` | Cumulative career dose ({{value}} mSv) reached threshold ({{threshold}} mSv). | Kümülatif kariyer dozu ({{value}} mSv) eşik değere ({{threshold}} mSv) ulaştı. | `verified=0` ise doğrulanmadı etiketi |
+| `why.l1.SPE_DOSE` | `value`, `threshold`, `verified` | Event dose ({{value}} mSv) approached design reference SPE protection target ({{threshold}} mSv). | Olay dozu ({{value}} mSv) tasarım referansı SPE koruma hedefine ({{threshold}} mSv) yaklaştı. | limit değil, **design reference SPE protection target** |
+| `why.l2.deviation` | `metric`, `z`, `persistFrames` | {{metric}} deviated from personal baseline (z={{z}}) across {{persistFrames}} consecutive frames. | {{metric}} kişisel referanstan {{persistFrames}} ardışık kare boyunca saptı (z={{z}}). | L2 kalıcılık gerekçesi |
+| `why.l3.consecutive` | `metric`, `days`, `value`, `below` | {{metric}} stayed outside target for {{days}} consecutive days (latest {{value}}, threshold {{below}}). | {{metric}} {{days}} ardışık gün boyunca hedefin dışında kaldı (son {{value}}, eşik {{below}}). | L3 çok günlü kural |
+| `why.l3.cusum` | `metric`, `s`, `h` | {{metric}} cumulative shift statistic (S={{s}}) exceeded threshold (h={{h}}). | {{metric}} birikimli kayma istatistiği (S={{s}}) eşiği (h={{h}}) aştı. | L3 günlük CUSUM |
+| `why.l3.theil_sen` | `metric`, `slopePerDay`, `sameSign`, `windowDays`, `rise` | {{metric}} trend slope ({{slopePerDay}}/day, {{sameSign}} consistent days over {{windowDays}}d, rise {{rise}}). | {{metric}} eğim trendi ({{slopePerDay}}/gün, {{windowDays}} günde {{sameSign}} tutarlı gün, artış {{rise}}). | L3 Theil-Sen eğimi |
+| `why.baseline.lowConfidence` | `confidence` | Personal baseline confidence is low ({{confidence}}); alert severity capped at ADVISORY. | Kişisel baseline güveni düşük ({{confidence}}); uyarı seviyesi en fazla ADVISORY olarak sınırlandı. | güven kapısı |
+| `why.state.score` | `state`, `score`, `confidence` | Composite {{state}} score reached {{score}} (baseline confidence {{confidence}}). | Bileşik {{state}} skoru {{score}} değerine ulaştı (baseline güveni {{confidence}}). | L4 durum skoru |
+| `why.state.contributor` | `metric`, `z`, `weightPct`, `contribution` | {{metric}} contributed {{contribution}} (z={{z}}, weight {{weightPct}}%). | {{metric}} metriği {{contribution}} katkı sağladı (z={{z}}, ağırlık %{{weightPct}}). | L4 katkı çubuğu |
+
+### 5.3 Metrik Etiketleri (`METRIC_META.labelKey`)
+
+| Anahtar | Parametreler | İngilizce (`en`) | Türkçe (`tr`) | Not |
+|---|---|---|---|---|
+| `metric.hr` | `—` | Heart Rate (bpm) | Kalp Atım Hızı (bpm) | `METRIC_META.labelKey` |
+| `metric.spo2` | `—` | SpO2 (%) | SpO2 (%) | `METRIC_META.labelKey` |
+| `metric.hrv` | `—` | Heart Rate Variability (ms) | Kalp Hızı Değişkenliği (ms) | `METRIC_META.labelKey` |
+| `metric.sleep.durationH` | `—` | Sleep Duration (h) | Uyku Süresi (sa) | `METRIC_META.labelKey` |
+| `metric.sleep.efficiency` | `—` | Sleep Efficiency | Uyku Verimliliği | `METRIC_META.labelKey` |
+| `metric.sleep.midpointShiftMin` | `—` | Sleep Midpoint Shift (min) | Uyku Orta Nokta Kayması (dk) | `METRIC_META.labelKey` |
+| `metric.activity.exerciseMin` | `—` | Aerobic Exercise (min) | Aerobik Egzersiz (dk) | `METRIC_META.labelKey` |
+| `metric.activity.resistiveMin` | `—` | Resistive Exercise (min) | Direnç Egzersizi (dk) | `METRIC_META.labelKey` |
+| `metric.hydrationL` | `—` | Hydration Intake (L) | Sıvı Alımı (L) | `METRIC_META.labelKey` |
+| `metric.cabinCo2ppm` | `—` | Cabin CO2 (ppm) | Kabin CO2 (ppm) | `METRIC_META.labelKey` |
+| `metric.mood.stress` | `—` | Perceived Stress (1–10) | Algılanan Stres (1–10) | `METRIC_META.labelKey` |
+| `metric.mood.mood` | `—` | Mood Score (1–10) | Duygu Durum Skoru (1–10) | `METRIC_META.labelKey` |
+| `metric.mood.motivation` | `—` | Motivation Score (1–10) | Motivasyon Skoru (1–10) | `METRIC_META.labelKey` |
+| `metric.pvt.medianMs` | `—` | PVT Median Reaction Time (ms) | PVT Medyan Tepki Süresi (ms) | `METRIC_META.labelKey` |
+| `metric.pvt.lapses` | `—` | PVT Lapses (count) | PVT Dikkat Boşluğu (adet) | `METRIC_META.labelKey` |
+| `metric.rad.doseRateMsvDay` | `—` | Radiation Dose Rate (mSv/day) | Radyasyon Doz Hızı (mSv/gün) | `METRIC_META.labelKey` |
