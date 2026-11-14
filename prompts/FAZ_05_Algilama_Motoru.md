@@ -14,7 +14,7 @@ Dört katmanlı, açıklanabilir, histerezisli algılama: ham limitlerden kişis
 ## 3. Görevler
 
 ### 3.1 L1 — Mutlak limitler (`detection/l1Limits.ts`)
-- `evaluateL1(frame, ctx): L1Hit[]`. Kurallar Evidence'tan: `spo2.critical` (SpO2 < eşik → CRITICAL, `timeToHarm = earth.timeToHarmMin.spo2_low`), kümülatif doz yaklaşımı (Faz 6 sağlar; burada kanca): `rad.career.warn.fraction` ve `rad.career.critical.fraction` × `rad.career.limit.msv`, SPE başına `rad.spe.limit.msv` yaklaşımı, kabin CO2 yüksek (`limit.cabinCo2ppm.warning`; Faz 1'de **DEMO_PARAMETER** olarak eklendi, `verified:false`; bu değer NASA limiti gibi sunulmaz — takım birincil kaynağı bulursa md güncellenir).
+- `evaluateL1(frame, ctx): L1Hit[]`. Kurallar Evidence'tan: `spo2.critical` (SpO2 < eşik → CRITICAL, `timeToHarm = earth.timeToHarmMin.spo2_low`), kümülatif doz yaklaşımı (Faz 6 sağlar; burada kanca): `rad.career.warn.fraction` ve `rad.career.critical.fraction` × `rad.career.limit.msv`, SPE olay dozunun 250 mSv "design reference SPE protection target"'a (`rad.spe.limit.msv`; kişisel olay-başı limit değil, "limit" denmez) yaklaşımı, kabin CO2 yüksek (`limit.cabinCo2ppm.warning`; Faz 1'de **DEMO_PARAMETER** olarak eklendi, `verified:false`; bu değer NASA limiti gibi sunulmaz — takım birincil kaynağı bulursa md güncellenir).
 - L1, baseline'dan **bağımsızdır** ve `confidence = 1` (kaynak doğrulamasına bağlı olarak `evidence.verified` değerini uyarıya taşı: `L1Hit.evidenceVerified`).
 
 ### 3.2 L2 — Kişisel sapma (`detection/l2Deviation.ts`)
