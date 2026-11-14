@@ -62,12 +62,15 @@ export function BehavioralPage() {
   const [journalText, setJournalText] = useState('')
   const [savedBanner, setSavedBanner] = useState(false)
 
-  useEffect(() => {
+  const syncKey = `${selectedCrewId}:${day}`
+  const [prevSyncKey, setPrevSyncKey] = useState(syncKey)
+  if (prevSyncKey !== syncKey) {
+    setPrevSyncKey(syncKey)
     setStress(todayCheckIn?.stress ?? 4)
     setMood(todayCheckIn?.mood ?? 7)
     setMotivation(todayCheckIn?.motivation ?? 7)
     setSavedBanner(false)
-  }, [selectedCrewId, day, todayCheckIn?.stress, todayCheckIn?.mood, todayCheckIn?.motivation])
+  }
 
   const handleCheckInSubmit = (e: React.FormEvent) => {
     e.preventDefault()

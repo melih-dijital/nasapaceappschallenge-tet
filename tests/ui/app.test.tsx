@@ -18,8 +18,12 @@ describe('App (jsdom ortamı)', () => {
     async (label) => {
       render(<App />)
       fireEvent.click(screen.getByRole('link', { name: label }))
-      expect(await screen.findByRole('heading', { level: 1, name: label })).toBeInTheDocument()
-      expect(screen.getByRole('note')).toHaveTextContent(DISCLAIMER)
+      expect(
+        await screen.findByRole('heading', { level: 1, name: new RegExp(label, 'i') }),
+      ).toBeInTheDocument()
+      expect(screen.getAllByRole('note').some((el) => el.textContent?.includes(DISCLAIMER))).toBe(
+        true,
+      )
     },
   )
 

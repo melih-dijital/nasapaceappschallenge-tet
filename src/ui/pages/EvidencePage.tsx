@@ -62,15 +62,17 @@ export function EvidencePage() {
       return (
         e.id.toLowerCase().includes(q) ||
         e.sourceTitle.toLowerCase().includes(q) ||
-        e.note.toLowerCase().includes(q)
+        (e.note ?? '').toLowerCase().includes(q)
       )
     })
 
     return [...list].sort((a, b) => {
-      let cmp = 0
-      if (sortField === 'id') cmp = a.id.localeCompare(b.id)
-      else if (sortField === 'sourceType') cmp = a.sourceType.localeCompare(b.sourceType)
-      else cmp = Number(b.verified) - Number(a.verified)
+      const cmp =
+        sortField === 'id'
+          ? a.id.localeCompare(b.id)
+          : sortField === 'sourceType'
+            ? a.sourceType.localeCompare(b.sourceType)
+            : Number(b.verified) - Number(a.verified)
       return sortAsc ? cmp : -cmp
     })
   }, [entries, query, sourceFilter, unverifiedOnly, sortField, sortAsc])
@@ -132,7 +134,7 @@ export function EvidencePage() {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <ProvenanceTag evidenceId={item.entry.id} compact />
+                  <ProvenanceTag evidenceId={item.entry.id} />
                   {item.entry.sourceUrl && item.entry.sourceUrl !== '—' && (
                     <a
                       href={item.entry.sourceUrl}
@@ -286,7 +288,7 @@ export function EvidencePage() {
                     {formatEvidenceValue(entry)}
                   </td>
                   <td className="p-2.5">
-                    <ProvenanceTag evidenceId={entry.id} compact />
+                    <ProvenanceTag evidenceId={entry.id} />
                   </td>
                   <td className="p-2.5">
                     {entry.verified ? (

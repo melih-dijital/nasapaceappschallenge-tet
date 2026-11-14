@@ -248,7 +248,7 @@ export function AlertsPage() {
         <div className="lg:col-span-7">
           <SectionCard
             title={t('nav.alerts')}
-            rightSlot={
+            headerRight={
               <span className="rounded-full bg-secondary px-2 py-0.5 font-mono text-[11px] tabular-nums">
                 {sortedAlerts.length}
               </span>
@@ -286,7 +286,7 @@ export function AlertsPage() {
                             </div>
                             <div className="mt-0.5 flex flex-wrap items-center gap-2 font-mono text-[11px] text-muted-foreground">
                               <span>
-                                {crew.code} · {crew.name}
+                                {crew.role} · {crew.displayName}
                               </span>
                               <span>·</span>
                               <span>
@@ -303,7 +303,7 @@ export function AlertsPage() {
                         </div>
 
                         <div className="flex flex-wrap items-center gap-1.5">
-                          <EarthDelayBadge earthDelayClass={al.earthDelayClass} />
+                          <EarthDelayBadge delayClass={al.earthDelayClass} />
                           <StatusBadge severity={al.severity} />
                         </div>
                       </div>
@@ -314,7 +314,7 @@ export function AlertsPage() {
                             {t('alerts.confidence', { pct: confPct })}
                           </span>
                           {al.evidenceIds.slice(0, 2).map((evId) => (
-                            <ProvenanceTag key={evId} evidenceId={evId} compact />
+                            <ProvenanceTag key={evId} evidenceId={evId} />
                           ))}
                         </div>
 
@@ -385,11 +385,11 @@ export function AlertsPage() {
                           <Sparkles aria-hidden="true" className="size-3.5 shrink-0 text-primary" />
                           <span>{t(card.titleKey as Parameters<typeof t>[0])}</span>
                         </div>
-                        <EarthDelayBadge earthDelayClass={card.earthDelayClass} />
+                        <EarthDelayBadge delayClass={card.earthDelayClass} />
                       </div>
 
                       <div className="flex flex-wrap items-center gap-2 font-mono text-[10px] text-muted-foreground">
-                        <span>{crew.code}</span>
+                        <span>{crew.role}</span>
                         <span>·</span>
                         <span>{card.state}</span>
                         {srcAlertId && (
@@ -413,7 +413,7 @@ export function AlertsPage() {
                       <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
                         <div className="flex flex-wrap gap-1">
                           {card.evidenceIds.slice(0, 2).map((evId) => (
-                            <ProvenanceTag key={evId} evidenceId={evId} compact />
+                            <ProvenanceTag key={evId} evidenceId={evId} />
                           ))}
                         </div>
 
@@ -468,7 +468,7 @@ export function AlertsPage() {
       <div ref={scheduleSectionRef}>
         <SectionCard
           title={`${t('alerts.scheduleTitle')} — ${selectedCrewId.toUpperCase()}`}
-          rightSlot={
+          headerRight={
             <Tabs
               value={scheduleTab}
               onValueChange={(v) => setScheduleTab(v as 'suggested' | 'accepted')}
@@ -582,12 +582,12 @@ export function AlertsPage() {
                 <div className="flex items-center gap-2">
                   <SeverityIcon severity={whyAlert.severity} />
                   <StatusBadge severity={whyAlert.severity} />
-                  <EarthDelayBadge earthDelayClass={whyAlert.earthDelayClass} />
+                  <EarthDelayBadge delayClass={whyAlert.earthDelayClass} />
                 </div>
                 <SheetTitle>{t('alerts.whyDrawerTitle')}</SheetTitle>
                 <SheetDescription>
                   {t(whyAlert.titleKey as Parameters<typeof t>[0])} ·{' '}
-                  {getCrewProfile(whyAlert.crewId).name} ({formatMissionClock(whyAlert.lastSeenT)})
+                  {getCrewProfile(whyAlert.crewId).displayName} ({formatMissionClock(whyAlert.lastSeenT)})
                 </SheetDescription>
               </SheetHeader>
 

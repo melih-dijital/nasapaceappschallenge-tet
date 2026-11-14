@@ -6,8 +6,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { EngineClient } from '@/store/engineClient'
 import { AppShell } from '@/ui/components/AppShell'
 import { GroundStationPanel } from '@/ui/components/GroundStationPanel'
-import { dictionaries } from '@/ui/i18n'
+import { en, tr } from '@/ui/i18n'
 import { MockEngine } from '@/ui/mock/mockEngine'
+
+const dictionaries = { en, tr }
 import { GroundPage } from '@/ui/pages/GroundPage'
 import { actions, bindEngineClient, isDemoModeQuery, useSessionStore } from '@/ui/store'
 import type { WorkerToUiMessage, UiToWorkerMessage } from '@/workers/protocol'
@@ -25,7 +27,7 @@ function createSpyClient() {
         listener = null
       }
     },
-    destroy() {
+    dispose() {
       listener = null
     },
   }
@@ -104,7 +106,7 @@ describe('FAZ 11 UI — Bağlantı Rozeti, ?demo=1 & Ground Station (optional)',
     expect(isDemoModeQuery('?demo=1')).toBe(true)
     expect(isDemoModeQuery('?mock=1&demo=true')).toBe(true)
 
-    const { rerender } = render(
+    const { unmount } = render(
       <MemoryRouter initialEntries={['/']}>
         <AppShell>
           <div>child</div>
@@ -112,8 +114,9 @@ describe('FAZ 11 UI — Bağlantı Rozeti, ?demo=1 & Ground Station (optional)',
       </MemoryRouter>,
     )
     expect(screen.queryByTestId('demo-mode-badge')).not.toBeInTheDocument()
+    unmount()
 
-    rerender(
+    render(
       <MemoryRouter initialEntries={['/?demo=1']}>
         <AppShell>
           <div>child</div>

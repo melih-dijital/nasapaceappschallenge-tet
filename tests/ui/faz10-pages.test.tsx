@@ -5,7 +5,7 @@ import App from '@/App'
 import { en } from '@/ui/i18n/en'
 import { tr } from '@/ui/i18n/tr'
 import { MockEngine, type MockScheduler } from '@/ui/mock/mockEngine'
-import { actions, bindEngineClient } from '@/ui/store'
+import { actions, bindEngineClient, useEarthLinkStore } from '@/ui/store'
 
 function createFakeScheduler() {
   let cb: (() => void) | null = null
@@ -55,7 +55,7 @@ describe('FAZ 10 /alerts sayfası, Neden çekmecesi, Takvim farkı ve Kritik şe
     const clock = createFakeScheduler()
     bindEngineClient(new MockEngine({ scheduler: clock.scheduler }), {
       scenarioId: 'demo_main',
-      speed: 1,
+      speed: 50,
     })
 
     navigateTo('/alerts')
@@ -79,7 +79,7 @@ describe('FAZ 10 /alerts sayfası, Neden çekmecesi, Takvim farkı ve Kritik şe
     expect(whyButtons.length).toBeGreaterThan(0)
 
     // "Why?" çekmecesini aç
-    fireEvent.click(whyButtons[0])
+    fireEvent.click(whyButtons[0]!)
     expect(screen.getByTestId('why-drawer')).toBeInTheDocument()
     expect(screen.getByTestId('why-drivers-list')).toBeInTheDocument()
     expect(screen.getByTestId('why-earth-rationale')).toBeInTheDocument()
@@ -87,18 +87,32 @@ describe('FAZ 10 /alerts sayfası, Neden çekmecesi, Takvim farkı ve Kritik şe
     // ACK işlemi
     const ackButtons = screen.getAllByTestId(/^ack-btn-/)
     expect(ackButtons.length).toBeGreaterThan(0)
-    fireEvent.click(ackButtons[0])
+    fireEvent.click(ackButtons[0]!)
 
-    // Dünya gecikme önayarını MARS_MAX yap (750s)
-    fireEvent.click(screen.getByTestId('earth-preset-MARS_MAX'))
-    expect(screen.getByTestId('why-earth-rationale')).toHaveTextContent('750s')
+    // Dünya gecikme önayarını MOON -> MARS_MAX yaparak canlı yeniden sınıflandırmayı doğrula
+    act(() => {
+      actions.setEarthLinkPreset('MOON')
+    })
+    const formatRt = (v: number) =>
+      new Intl.NumberFormat('en-US', { maximumFractionDigits: 1 }).format(v)
+    const moonRt = formatRt(useEarthLinkStore.getState().roundTripMin)
+    expect(screen.getByTestId('why-earth-rationale')).toHaveTextContent(`Round-trip ${moonRt} min`)
+
+    act(() => {
+      actions.setEarthLinkPreset('MARS_MAX')
+    })
+    const marsMaxRt = formatRt(useEarthLinkStore.getState().roundTripMin)
+    expect(marsMaxRt).not.toBe(moonRt)
+    expect(screen.getByTestId('why-earth-rationale')).toHaveTextContent(
+      `Round-trip ${marsMaxRt} min`,
+    )
   })
 
   it('karar kartı kabul edilince 24 saatlik takvim farkını günceller', () => {
     const clock = createFakeScheduler()
     bindEngineClient(new MockEngine({ scheduler: clock.scheduler }), {
       scenarioId: 'demo_main',
-      speed: 1,
+      speed: 50,
     })
 
     navigateTo('/alerts')
@@ -111,7 +125,7 @@ describe('FAZ 10 /alerts sayfası, Neden çekmecesi, Takvim farkı ve Kritik şe
 
     const acceptButtons = screen.getAllByTestId(/^alerts-accept-/)
     expect(acceptButtons.length).toBeGreaterThan(0)
-    fireEvent.click(acceptButtons[0])
+    fireEvent.click(acceptButtons[0]!)
 
     expect(screen.getByTestId('schedule-tab-accepted')).toBeInTheDocument()
     expect(screen.getByTestId('schedule-diff-list')).toBeInTheDocument()
@@ -126,9 +140,18 @@ describe('FAZ 10 /behavioral sayfası (Check-in, Yerel Günlük, 60s PVT)', () =
     expect(screen.getByTestId('behavioral-page')).toBeInTheDocument()
     expect(screen.getByTestId('passive-proxy-score')).toBeInTheDocument()
 
-    fireEvent.change(screen.getByTestId('checkin-stress-slider'), { target: { value: '7' } })
-    fireEvent.change(screen.getByTestId('checkin-mood-slider'), { target: { value: '6' } })
-    fireEvent.change(screen.getByTestId('checkin-motivation-slider'), { target: { value: '8' } })
+    const stepSlider = (testId: string, key: 'ArrowRight' | 'ArrowLeft', steps: number) => {
+      const root = screen.getByTestId(testId)
+      const thumb = root.querySelector('[role="slider"]')
+      expect(thumb).not.toBeNull()
+      for (let i = 0; i < steps; i++) {
+        fireEvent.keyDown(thumb!, { key })
+      }
+    }
+
+    stepSlider('checkin-stress-slider', 'ArrowRight', 3)
+    stepSlider('checkin-mood-slider', 'ArrowLeft', 1)
+    stepSlider('checkin-motivation-slider', 'ArrowRight', 1)
     fireEvent.change(screen.getByTestId('checkin-journal-input'), {
       target: { value: 'Private crew reflection note' },
     })
@@ -155,11 +178,11 @@ describe('FAZ 10 /behavioral sayfası (Check-in, Yerel Günlük, 60s PVT)', () =
 })
 
 describe('FAZ 10 /evidence ve /validation sayfaları', () => {
-  it('/evidence sayfasında doğruluk uyarısı, arama ve doğrulanmamış filtresi çalışır', () => {
+  it('/evidence sayfasında doğruluk uyarısı, arama ve doğrulanmamış filtresi çalışır', async () => {
     navigateTo('/evidence')
     render(<App />)
 
-    expect(screen.getByTestId('evidence-page')).toBeInTheDocument()
+    expect(await screen.findByTestId('evidence-page')).toBeInTheDocument()
     expect(screen.getByTestId('evidence-honesty-banner')).toBeInTheDocument()
     expect(screen.getByTestId('evidence-summary-counts')).toBeInTheDocument()
     expect(screen.getByTestId('evidence-table')).toBeInTheDocument()
@@ -169,11 +192,11 @@ describe('FAZ 10 /evidence ve /validation sayfaları', () => {
     expect(screen.getByTestId('evidence-table')).toBeInTheDocument()
   })
 
-  it('/validation sayfasında sınırlılık kutusu her zaman görünür ve hızlı doğrulama sonuç tablosu üretir', () => {
+  it('/validation sayfasında sınırlılık kutusu her zaman görünür ve hızlı doğrulama sonuç tablosu üretir', async () => {
     navigateTo('/validation')
     render(<App />)
 
-    expect(screen.getByTestId('validation-page')).toBeInTheDocument()
+    expect(await screen.findByTestId('validation-page')).toBeInTheDocument()
     expect(screen.getByTestId('validation-limitations-box')).toBeInTheDocument()
 
     fireEvent.click(screen.getByTestId('validation-run-quick-btn'))
@@ -186,7 +209,7 @@ describe('FAZ 10 /evidence ve /validation sayfaları', () => {
 })
 
 describe('FAZ 10 /ground sayfası (Gecikmeli ve Rıza Kısıtlı Yer Görünümü)', () => {
-  it('özel günlük metnini sızdırmaz, blackout anahtarını ve yer yanıt kuyruğunu çalıştırır', () => {
+  it('özel günlük metnini sızdırmaz, blackout anahtarını ve yer yanıt kuyruğunu çalıştırır', async () => {
     // Önce yerel özel günlük kaydet
     navigateTo('/behavioral')
     const { unmount } = render(<App />)
@@ -200,7 +223,7 @@ describe('FAZ 10 /ground sayfası (Gecikmeli ve Rıza Kısıtlı Yer Görünüm�
     navigateTo('/ground')
     render(<App />)
 
-    expect(screen.getByTestId('ground-page')).toBeInTheDocument()
+    expect(await screen.findByTestId('ground-page')).toBeInTheDocument()
     expect(screen.getByTestId('ground-contrast-banner')).toBeInTheDocument()
     expect(screen.getByTestId('ground-data-age-badge')).toBeInTheDocument()
 

@@ -57,7 +57,7 @@ export function EarthLinkPanel({ compact = false }: { compact?: boolean }) {
       title={t('earth.cardTitle')}
       subtitle={t('earth.cardSubtitle')}
       provenanceId="earth.groundProcessingMin"
-      rightSlot={
+      headerRight={
         earthLink.config.blackout ? (
           <span
             data-testid="earth-link-down-badge"

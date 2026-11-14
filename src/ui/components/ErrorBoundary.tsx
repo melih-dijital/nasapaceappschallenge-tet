@@ -1,5 +1,5 @@
 // FAZ 10 §3.7 — Sayfa/modül düzeyinde hata sınırı (ErrorBoundary): çökme uygulamayı düşürmez.
-import { Component, type ErrorInfo, type ReactNode } from 'react'
+import { Component, type ReactNode } from 'react'
 import { AlertTriangle, RotateCcw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { t as translate } from '@/ui/i18n'
@@ -33,7 +33,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     }
   }
 
-  override componentDidCatch(_error: Error, _info: ErrorInfo): void {
+  override componentDidCatch(): void {
     // Konsol gürültüsü bırakmadan yalıtılmış durum gösterilir
   }
 

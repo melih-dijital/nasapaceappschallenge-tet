@@ -5,7 +5,7 @@ import { AlertTriangle, CheckCircle2, Download, Play, RotateCcw, ShieldCheck, X 
 import { useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
-import { getFingerprint } from '@/core/evidence/registry'
+import { computeEvidenceFingerprint } from '@/core/validation/fingerprint'
 import type { ScenarioId } from '@/core/types'
 import { EmptyState } from '@/ui/components/EmptyState'
 import { SectionCard } from '@/ui/components/SectionCard'
@@ -57,7 +57,7 @@ export function ValidationPage() {
   const navigate = useNavigate()
   const { running, progress, report } = useValidationStore()
 
-  const fingerprint = report?.evidenceFingerprint ?? getFingerprint()
+  const fingerprint = report?.evidenceFingerprint ?? computeEvidenceFingerprint()
   const limitations = report?.limitations ?? DEFAULT_LIMITATIONS
 
   const handleReplay = (scenarioId: ScenarioId) => {
@@ -178,7 +178,7 @@ export function ValidationPage() {
               tuning: report.tuningSeeds,
               report: report.reportSeeds,
             })}
-            rightSlot={
+            headerRight={
               <div className="flex items-center gap-1.5">
                 <Button
                   type="button"

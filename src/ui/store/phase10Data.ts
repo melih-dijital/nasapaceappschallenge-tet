@@ -1,7 +1,6 @@
 // FAZ 10 — Planlayıcı önizleme, Davranışsal trendler, Doğrulama raporu (mock/fallback) ve cihaz-içi günlük yardımcıları.
-import { getFingerprint } from '@/core/evidence/registry'
+import { computeEvidenceFingerprint } from '@/core/validation/fingerprint'
 import {
-  SCENARIO_IDS,
   type ActionCard,
   type Alert,
   type CrewId,
@@ -12,6 +11,7 @@ import {
   type ScheduleDiffItem,
   type SimTimeMs,
 } from '@/core/types'
+import { BUILTIN_SCENARIO_IDS } from '@/sim/scenarios'
 import { getCrewProfile } from './crewProfiles'
 
 export interface CheckInRecord {
@@ -451,7 +451,7 @@ export function buildMockBehavioralTrends(
 }
 
 export function buildMockValidationReport(quick: boolean): UiValidationReport {
-  const scenarios: ScenarioValidationRow[] = SCENARIO_IDS.map((scenarioId) => {
+  const scenarios: ScenarioValidationRow[] = BUILTIN_SCENARIO_IDS.map((scenarioId: ScenarioId) => {
     const isNominal = scenarioId === 'nominal'
     const isNewCrew = scenarioId === 'new_crew_member'
     const recall = isNominal ? 1 : isNewCrew ? 0.84 : 0.92
@@ -477,7 +477,7 @@ export function buildMockValidationReport(quick: boolean): UiValidationReport {
 
   return {
     mode: quick ? 'quick' : 'full',
-    evidenceFingerprint: getFingerprint(),
+    evidenceFingerprint: computeEvidenceFingerprint(),
     tuningSeeds: quick ? '1–2 (quick)' : '1–5',
     reportSeeds: quick ? '100–102 (quick)' : '100–119',
     overfittingWarning: quick

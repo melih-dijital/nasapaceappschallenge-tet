@@ -91,7 +91,7 @@ export function GroundPage() {
           {/* Ulaşan Uyarı Paketleri */}
           <SectionCard
             title={`${t('earth.consent.ALERTS')} (${groundDeliveredAlerts.length})`}
-            rightSlot={
+            headerRight={
               !alertsAllowed ? (
                 <span className="inline-flex items-center gap-1 font-mono text-[10px] text-status-warning">
                   <Lock aria-hidden="true" className="size-3" />
@@ -123,7 +123,7 @@ export function GroundPage() {
                       </div>
                     </div>
                     <div className="flex items-center gap-1.5">
-                      <EarthDelayBadge earthDelayClass={al.earthDelayClass} />
+                      <EarthDelayBadge delayClass={al.earthDelayClass} />
                       <StatusBadge severity={al.severity} />
                     </div>
                   </div>
@@ -214,7 +214,7 @@ export function GroundPage() {
           <EarthLinkPanel />
           <GroundStationPanel />
           <div className="rounded-lg border border-border/60 bg-card/50 p-3 text-[11px] text-muted-foreground">
-            Crew directory on ground manifest: {CREW_PROFILES.map((c) => c.code).join(' · ')}
+            Crew directory on ground manifest: {CREW_PROFILES.map((c) => c.role).join(' · ')}
           </div>
         </div>
       </div>
