@@ -3,7 +3,7 @@
 
 export const en = {
   // Uygulama & Kabuk
-  'app.title': 'Astro Health Cockpit',
+  'app.title': 'Tether',
   'app.subtitle': 'Autonomous Crew Health Decision Support',
   'app.disclaimer':
     'Synthetic telemetry · Decision-support prototype, not a medical device · Thresholds labelled by evidence status',

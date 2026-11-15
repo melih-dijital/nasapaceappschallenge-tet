@@ -3,7 +3,6 @@
 // (Shift+P veya ?demo=1). Altında mürettebat şeridi; altta tek ince sabit uyarı satırı (app.disclaimer).
 import { useEffect, useState, type ReactNode } from 'react'
 import {
-  Activity,
   Bell,
   Brain,
   FileCheck2,
@@ -170,7 +169,12 @@ export function AppShell({ children }: { children: ReactNode }) {
       <header className="border-b border-border bg-card">
         <div className="mx-auto flex max-w-[1920px] flex-wrap items-center gap-x-4 gap-y-2 px-4 py-2">
           <div className="flex items-center gap-2">
-            <Activity aria-hidden="true" className="size-4 text-muted-foreground" />
+            <img
+              src="/tether-logo.jpg"
+              alt=""
+              aria-hidden="true"
+              className="size-5 shrink-0 rounded-sm object-contain"
+            />
             <span className="text-sm font-medium text-foreground">{t('app.title')}</span>
           </div>
 

@@ -20,8 +20,8 @@ export default defineConfig({
       injectRegister: false,
       includeManifestIcons: false,
       manifest: {
-        name: 'Astronaut Health Cockpit',
-        short_name: 'Health Cockpit',
+        name: 'Tether — Astronaut Health Cockpit',
+        short_name: 'Tether',
         description:
           'Decision support prototype · synthetic data · not a medical device. Runs fully offline in the browser.',
         theme_color: PWA_THEME_COLOR,
@@ -38,7 +38,7 @@ export default defineConfig({
       },
       workbox: {
         // Tüm statik varlıklar: JS (worker bundle'ları dahil), CSS, HTML, ikonlar, JSON, manifest.
-        globPatterns: ['**/*.{js,mjs,css,html,svg,png,ico,json,webmanifest,woff2}'],
+        globPatterns: ['**/*.{js,mjs,css,html,svg,png,jpg,ico,json,webmanifest,woff2}'],
         navigateFallback: '/index.html',
         cleanupOutdatedCaches: true,
         // Harici istek yok → çalışma zamanı önbelleği gerekmez.

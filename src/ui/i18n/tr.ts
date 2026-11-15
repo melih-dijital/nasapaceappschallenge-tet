@@ -4,7 +4,7 @@ import type { I18nDictionary } from './en'
 
 export const tr: I18nDictionary = {
   // Uygulama & Kabuk
-  'app.title': 'Astro Sağlık Kokpiti',
+  'app.title': 'Tether',
   'app.subtitle': 'Otonom Mürettebat Sağlık Karar Desteği',
   'app.disclaimer':
     'Sentetik telemetri · Karar destek prototipi, tıbbi cihaz değildir · Eşikler kanıt durumuna göre etiketlidir',
