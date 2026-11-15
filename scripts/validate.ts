@@ -1,5 +1,7 @@
 // CLI doğrulama koşucusu (FAZ_08 §3.4): `npm run validate` / `npm run validate:quick`
-// Çıktılar deterministiktir; duvar saati zaman damgası yazılmaz.
+// `docs/demo/validation-report.{json,md}` deterministiktir; duvar saati zaman damgası yazılmaz.
+// Varsayılan dizine yazılırken ayrıca UI anlık görüntüsü (`src/ui/data/validation-report.json`) üretilir:
+// aynı rapor + üretim tarihi + komut. Doğrulama sayfası yalnızca bu dosyayı gösterir (tarayıcıda koşu yok).
 import fs from 'node:fs'
 import path from 'node:path'
 import type { ScenarioId } from '../src/core/types'
@@ -18,9 +20,12 @@ interface CliArgs {
   includeSensitivity: boolean
 }
 
+const DEFAULT_OUT_DIR = path.resolve(process.cwd(), 'docs/demo')
+const UI_SNAPSHOT_PATH = path.resolve(process.cwd(), 'src/ui/data/validation-report.json')
+
 function parseArgs(argv: readonly string[]): CliArgs {
   let quick = false
-  let outDir = path.resolve(process.cwd(), 'docs/demo')
+  let outDir = DEFAULT_OUT_DIR
   let scenarios: ScenarioId[] | undefined
   let includeSensitivity = true
 
@@ -64,6 +69,19 @@ function main(): void {
   fs.writeFileSync(jsonPath, formatValidationReportJson(report), 'utf8')
   fs.writeFileSync(mdPath, formatValidationReportMarkdown(report), 'utf8')
 
+  // UI anlık görüntüsü yalnızca yayınlanan rapor (varsayılan dizin) güncellenirken yazılır;
+  // `--out-dir` ile yapılan deneme koşuları uygulamanın gösterdiği raporu değiştirmez.
+  const writeUiSnapshot = path.resolve(outDir) === DEFAULT_OUT_DIR
+  if (writeUiSnapshot) {
+    fs.mkdirSync(path.dirname(UI_SNAPSHOT_PATH), { recursive: true })
+    const snapshot = {
+      generatedAt: new Date().toISOString(),
+      command: quick ? 'npm run validate:quick' : 'npm run validate',
+      report,
+    }
+    fs.writeFileSync(UI_SNAPSHOT_PATH, `${JSON.stringify(snapshot, null, 2)}\n`, 'utf8')
+  }
+
   console.log(formatValidationConsoleSummary(report))
   console.log('\nScenario Summary (Report Seeds):')
   console.table(
@@ -84,6 +102,7 @@ function main(): void {
   )
   console.log(`Written: ${jsonPath}`)
   console.log(`Written: ${mdPath}`)
+  if (writeUiSnapshot) console.log(`Written: ${UI_SNAPSHOT_PATH}`)
 }
 
 main()

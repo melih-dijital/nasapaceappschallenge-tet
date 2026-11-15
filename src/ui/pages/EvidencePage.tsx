@@ -1,11 +1,19 @@
 // FAZ 10 §3.4 — Kanıt Kayıt Defteri Sayfası (/evidence):
 // Tüm EvidenceEntry tablosu, filtre/arama/sıralama, dürüstlük bandı, radyasyon hedefleri ve kalibrasyon provenance.
 import { useMemo, useState } from 'react'
-import { AlertTriangle, ArrowUpDown, CheckCircle2, ExternalLink, Search, ShieldAlert } from 'lucide-react'
+import {
+  AlertTriangle,
+  ArrowUpDown,
+  CheckCircle2,
+  ExternalLink,
+  Search,
+  ShieldAlert,
+} from 'lucide-react'
 import { useSearchParams } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { all as getAllEvidence, getEvidence } from '@/core/evidence/registry'
-import { SOURCE_TYPES, type EvidenceEntry, type SourceType } from '@/core/types'
+import { SOURCE_TYPES, type EvidenceEntry, type MetricId, type SourceType } from '@/core/types'
+import { getCalibrationData, getCalibrationProvenance } from '@/sim/calibration'
 import { cn } from '@/lib/utils'
 import { ProvenanceTag } from '@/ui/components/ProvenanceTag'
 import { SectionCard } from '@/ui/components/SectionCard'
@@ -14,17 +22,17 @@ import { useT } from '@/ui/i18n'
 type SortField = 'id' | 'sourceType' | 'verified'
 
 function formatEvidenceValue(entry: EvidenceEntry): string {
-  const val = Array.isArray(entry.value) ? `${entry.value[0]}–${entry.value[1]}` : String(entry.value)
+  const val = Array.isArray(entry.value)
+    ? `${entry.value[0]}–${entry.value[1]}`
+    : String(entry.value)
   return entry.unit ? `${val} ${entry.unit}` : val
 }
 
-const CALIBRATION_PROVENANCE_ROWS = [
-  { metric: 'hr', sourceType: 'DEMO_PARAMETER' as const, note: 'Resting & circadian baseline generator' },
-  { metric: 'spo2', sourceType: 'DEMO_PARAMETER' as const, note: 'Nominal O2 saturation band' },
-  { metric: 'hrv', sourceType: 'DEMO_PARAMETER' as const, note: 'RMSSD variability proxy' },
-  { metric: 'sleep.durationH', sourceType: 'DEMO_PARAMETER' as const, note: 'Crew sleep window & debt model' },
-  { metric: 'rad.doseRateMsvDay', sourceType: 'NASA_STD' as const, note: 'GCR + SPE curve anchored to ISS/transit references' },
-] as const
+// Simülatör kalibrasyon kaynakçası: elle yazılmış liste değil, `calibration.generated.json` (calibration:build) çıktısı.
+// docs/calibration/*.md yoksa her metrik DEMO varsayılanıdır ve öyle gösterilir.
+const CALIBRATION_PROVENANCE_ROWS = (Object.keys(getCalibrationData().metrics) as MetricId[]).map(
+  (metric) => getCalibrationProvenance(metric),
+)
 
 export function EvidencePage() {
   const { t } = useT()
@@ -39,18 +47,17 @@ export function EvidencePage() {
 
   const entries = useMemo(() => getAllEvidence(), [])
 
+  // Özet: kaynak türüne göre değil doğrulama durumuna göre (NASA_* etiketi tek başına "doğrulandı" demek değildir).
   const counts = useMemo(() => {
-    let nasaStd = 0
-    let nasaHrp = 0
-    let peer = 0
-    let demo = 0
-    for (const e of entries) {
-      if (e.sourceType === 'NASA_STD') nasaStd++
-      else if (e.sourceType === 'NASA_HRP') nasaHrp++
-      else if (e.sourceType === 'PEER_REVIEWED') peer++
-      else if (e.sourceType === 'DEMO_PARAMETER') demo++
+    const byStatus = { VERIFIED: 0, PARTIAL: 0, CONFLICTING: 0, UNVERIFIED: 0 }
+    for (const e of entries) byStatus[e.verificationStatus]++
+    return {
+      total: entries.length,
+      verified: byStatus.VERIFIED,
+      partial: byStatus.PARTIAL,
+      conflicting: byStatus.CONFLICTING,
+      unverified: byStatus.UNVERIFIED,
     }
-    return { total: entries.length, nasaStd, nasaHrp, peer, demo }
   }, [entries])
 
   const filtered = useMemo(() => {
@@ -109,7 +116,10 @@ export function EvidencePage() {
           <AlertTriangle aria-hidden="true" className="size-4 shrink-0" />
           <span>{t('evidence.honestyBanner')}</span>
         </div>
-        <span data-testid="evidence-summary-counts" className="font-mono text-[11px] text-foreground">
+        <span
+          data-testid="evidence-summary-counts"
+          className="font-mono text-[11px] text-foreground"
+        >
           {t('evidence.summaryCounts', counts)}
         </span>
       </div>
@@ -152,29 +162,34 @@ export function EvidencePage() {
           </div>
         </SectionCard>
 
-        <SectionCard
-          title={t('evidence.calCardTitle')}
-          subtitle={t('evidence.calNote')}
-        >
+        <SectionCard title={t('evidence.calCardTitle')} subtitle={t('evidence.calNote')}>
           <div className="space-y-1.5 text-xs">
             {CALIBRATION_PROVENANCE_ROWS.map((row) => (
               <div
                 key={row.metric}
+                data-testid={`calibration-row-${row.metric}`}
                 className="flex items-center justify-between gap-2 rounded-lg border border-border/70 bg-background/60 px-3 py-2"
               >
                 <div>
                   <span className="font-mono font-semibold text-foreground">{row.metric}</span>
-                  <span className="ml-2 text-[11px] text-muted-foreground">{row.note}</span>
+                  <span className="ml-2 text-[11px] text-muted-foreground">
+                    {row.demo
+                      ? t('evidence.calDemoDefault')
+                      : t('evidence.calFromFile', {
+                          file: row.sourceFile ?? '—',
+                          id: row.evidenceId ?? '—',
+                        })}
+                  </span>
                 </div>
                 <span
                   className={cn(
                     'rounded px-1.5 py-0.5 font-mono text-[10px] font-semibold',
-                    row.sourceType === 'DEMO_PARAMETER'
+                    row.demo
                       ? 'bg-status-warning/20 text-status-warning'
                       : 'bg-primary/20 text-primary',
                   )}
                 >
-                  {row.sourceType}
+                  {row.demo ? 'DEMO_PARAMETER' : t('evidence.calCalibrated')}
                 </span>
               </div>
             ))}

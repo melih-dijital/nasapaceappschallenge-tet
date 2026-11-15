@@ -1,5 +1,5 @@
-// FAZ 10 — Planlayıcı önizleme, Davranışsal trendler, Doğrulama raporu (mock/fallback) ve cihaz-içi günlük yardımcıları.
-import { computeEvidenceFingerprint } from '@/core/validation/fingerprint'
+// FAZ 10 — Planlayıcı önizleme, davranışsal ÖRNEK eğilimler (motor davranış modülü yok; UI'da "sample data"
+// etiketiyle gösterilir) ve cihaz-içi günlük yardımcıları. Doğrulama raporu burada ÜRETİLMEZ: src/ui/data/.
 import {
   type ActionCard,
   type Alert,
@@ -11,7 +11,6 @@ import {
   type ScheduleDiffItem,
   type SimTimeMs,
 } from '@/core/types'
-import { BUILTIN_SCENARIO_IDS } from '@/sim/scenarios'
 import { getCrewProfile } from './crewProfiles'
 
 export interface CheckInRecord {
@@ -37,44 +36,6 @@ export interface PassiveProxySummary {
   checkInCompliancePct: number
   passiveProxyScore: number
   moodTrendSlope: number
-}
-
-export interface ScenarioValidationRow {
-  scenarioId: ScenarioId
-  recall: number
-  precision: number
-  fpPerCrewDay: number
-  medianDelayMin: number
-  p90DelayMin: number
-  triageAccuracy: number
-  recallTargetMet: boolean
-  fpTargetMet: boolean
-  triageTargetMet: boolean
-}
-
-export interface SensitivityRow {
-  paramId: string
-  deltaPct: number
-  recallDelta: number
-  fpDelta: number
-}
-
-export interface UiValidationReport {
-  mode: 'quick' | 'full'
-  evidenceFingerprint: string
-  tuningSeeds: string
-  reportSeeds: string
-  overfittingWarning: string | null
-  aggregate: {
-    recall: number
-    precision: number
-    fpPerCrewDay: number
-    triageAccuracy: number
-  }
-  scenarios: ScenarioValidationRow[]
-  sensitivity: SensitivityRow[]
-  limitations: string[]
-  assumptions: string[]
 }
 
 export const GROUND_REPLY_TEMPLATE_IDS = [
@@ -447,64 +408,5 @@ export function buildMockBehavioralTrends(
       passiveProxyScore,
       moodTrendSlope,
     },
-  }
-}
-
-export function buildMockValidationReport(quick: boolean): UiValidationReport {
-  const scenarios: ScenarioValidationRow[] = BUILTIN_SCENARIO_IDS.map((scenarioId: ScenarioId) => {
-    const isNominal = scenarioId === 'nominal'
-    const isNewCrew = scenarioId === 'new_crew_member'
-    const recall = isNominal ? 1 : isNewCrew ? 0.84 : 0.92
-    const precision = isNominal ? 0.96 : 0.89
-    const fpPerCrewDay = isNominal ? 0.03 : 0.08
-    const medianDelayMin = scenarioId === 'solar_particle_event' ? 15 : 45
-    const p90DelayMin = scenarioId === 'solar_particle_event' ? 30 : 120
-    const triageAccuracy = scenarioId === 'comm_blackout' ? 0.95 : 0.98
-
-    return {
-      scenarioId,
-      recall,
-      precision,
-      fpPerCrewDay,
-      medianDelayMin,
-      p90DelayMin,
-      triageAccuracy,
-      recallTargetMet: recall >= 0.85,
-      fpTargetMet: fpPerCrewDay <= 0.1,
-      triageTargetMet: triageAccuracy >= 0.95,
-    }
-  })
-
-  return {
-    mode: quick ? 'quick' : 'full',
-    evidenceFingerprint: computeEvidenceFingerprint(),
-    tuningSeeds: quick ? '1–2 (quick)' : '1–5',
-    reportSeeds: quick ? '100–102 (quick)' : '100–119',
-    overfittingWarning: quick
-      ? 'Quick preview mode uses reduced seed count (3 seeds); run full suite before final reporting.'
-      : null,
-    aggregate: {
-      recall: 0.91,
-      precision: 0.9,
-      fpPerCrewDay: 0.07,
-      triageAccuracy: 0.97,
-    },
-    scenarios,
-    sensitivity: [
-      { paramId: 'det.z.warning', deltaPct: 10, recallDelta: -0.03, fpDelta: -0.02 },
-      { paramId: 'det.z.warning', deltaPct: -10, recallDelta: 0.02, fpDelta: 0.04 },
-      { paramId: 'det.persist.minFrames.vitals', deltaPct: 25, recallDelta: -0.02, fpDelta: -0.03 },
-      { paramId: 'rad.spe.detect.ratio', deltaPct: 15, recallDelta: 0, fpDelta: -0.01 },
-    ],
-    limitations: [
-      'Synthetic telemetry only: physiological signals are generated from seeded deterministic models, not human flight data.',
-      'Bone mineral density loss is an indicative estimate from resistive exercise compliance; real measurement requires pre/post-flight DXA scans.',
-      'New crew members (< 7 days baseline) intentionally cap automated severity at ADVISORY until baseline confidence reaches threshold.',
-      'Parameters marked DEMO_PARAMETER are unverified heuristics tuned on seeds 1–5 and evaluated on held-out seeds 100–119.',
-    ],
-    assumptions: [
-      'Wearable vitals cadence is fixed at 15 simulated minutes; daily check-in and sleep metrics update once per simulated day.',
-      'Earth Link one-way delay presets assume deterministic store-and-forward queuing without packet corruption.',
-    ],
   }
 }

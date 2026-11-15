@@ -1,8 +1,12 @@
 // FAZ 9 — Kişi profilleri, senaryo üstverileri ve deterministik backfill yardımcıları (mock modunda).
 // Gerçek kişi adı yoktur (FAZ_02 §3.4 kurgusal adları); Math.random kullanılmaz (PROJECT_MEMORY §10).
+import { median } from '@/core/baseline/robustStats'
 import { getMid, getNumber } from '@/core/evidence/registry'
 import type { CrewId, CrewProfile, MetricId, ScenarioId } from '@/core/types'
 import { MIN_PER_DAY, minToMs, msToMin, MS_PER_DAY, VITALS_INTERVAL_MIN } from '@/core/units'
+import { getCalibrationData } from '@/sim/calibration'
+import { generateCrew } from '@/sim/crew'
+import { getScenario } from '@/sim/scenarios'
 import type { I18nKey } from '@/ui/i18n'
 import type { SeriesPoint } from './decimate'
 
@@ -20,64 +24,29 @@ export interface BookmarkMeta {
   day: number
 }
 
-export const UI_SCENARIOS: readonly ScenarioMeta[] = [
-  {
-    id: 'demo_main',
-    titleKey: 'scenario.demo_main.title',
-    backfillDays: 14,
-    durationDays: 3,
-    defaultOneWayDelaySec: getNumber('earth.oneWayDelaySec.mars_min'),
-  },
-  {
-    id: 'nominal',
-    titleKey: 'scenario.nominal.title',
-    backfillDays: 14,
-    durationDays: 30,
-    defaultOneWayDelaySec: getNumber('earth.oneWayDelaySec.mars_min'),
-  },
-  {
-    id: 'solar_particle_event',
-    titleKey: 'scenario.solar_particle_event.title',
-    backfillDays: 14,
-    durationDays: 7,
-    defaultOneWayDelaySec: 840,
-  },
-  {
-    id: 'sleep_debt',
-    titleKey: 'scenario.sleep_debt.title',
-    backfillDays: 14,
-    durationDays: 12,
-    defaultOneWayDelaySec: getNumber('earth.oneWayDelaySec.mars_min'),
-  },
-  {
-    id: 'isolation_low_mood',
-    titleKey: 'scenario.isolation_low_mood.title',
-    backfillDays: 14,
-    durationDays: 14,
-    defaultOneWayDelaySec: getNumber('earth.oneWayDelaySec.mars_max'),
-  },
-  {
-    id: 'dehydration_co2',
-    titleKey: 'scenario.dehydration_co2.title',
-    backfillDays: 14,
-    durationDays: 10,
-    defaultOneWayDelaySec: getNumber('earth.oneWayDelaySec.mars_min'),
-  },
-  {
-    id: 'comm_blackout',
-    titleKey: 'scenario.comm_blackout.title',
-    backfillDays: 14,
-    durationDays: 7,
-    defaultOneWayDelaySec: getNumber('earth.oneWayDelaySec.mars_max'),
-  },
-  {
-    id: 'new_crew_member',
-    titleKey: 'scenario.new_crew_member.title',
-    backfillDays: getNumber('baseline.window.days.min'),
-    durationDays: 3,
-    defaultOneWayDelaySec: getNumber('earth.oneWayDelaySec.moon'),
-  },
-] as const
+// Senaryo üst verisi simülatör tanımından türetilir (elle yazılmış süre/gecikme motorla çelişiyordu).
+const UI_SCENARIO_ORDER: readonly ScenarioId[] = [
+  'demo_main',
+  'nominal',
+  'solar_particle_event',
+  'sleep_debt',
+  'isolation_low_mood',
+  'dehydration_co2',
+  'comm_blackout',
+  'new_crew_member',
+]
+
+export const UI_SCENARIOS: readonly ScenarioMeta[] = UI_SCENARIO_ORDER.map((id) => {
+  const s = getScenario(id)
+  return {
+    id,
+    titleKey: `scenario.${id}.title` as I18nKey,
+    backfillDays: s.backfillDays,
+    durationDays: s.durationDays,
+    defaultOneWayDelaySec:
+      s.earthLinkPreset?.oneWayDelaySec ?? getNumber('earth.oneWayDelaySec.mars_min'),
+  }
+})
 
 export const DEMO_MAIN_BOOKMARKS: readonly BookmarkMeta[] = [
   { index: 0, labelKey: 'bookmark.demo_main.0', day: 0 },
@@ -216,9 +185,10 @@ export interface CrewRadiationSummary {
 
 export interface CrewBoneSummary {
   crewId: CrewId
-  estimatedMonthlyLossPct: number
-  estimatedCumulativeLossPct: number
-  resistiveAdherence7d: number
+  /** null: henüz günlük direnç egzersizi verisi yok (uydurma değer gösterilmez). */
+  estimatedMonthlyLossPct: number | null
+  estimatedCumulativeLossPct: number | null
+  resistiveAdherence7d: number | null
   isEstimate: true
 }
 
@@ -236,9 +206,7 @@ export interface CrewMetricBaseline {
 export const deterministicWobble = (t: number, phase: number): number => {
   const m = msToMin(t)
   return (
-    0.6 * Math.sin(m / 37 + phase) +
-    0.3 * Math.sin(m / 11.3 + 2 * phase) +
-    0.1 * Math.sin(m / 3.7)
+    0.6 * Math.sin(m / 37 + phase) + 0.3 * Math.sin(m / 11.3 + 2 * phase) + 0.1 * Math.sin(m / 3.7)
   )
 }
 
@@ -248,12 +216,44 @@ export const deterministicCircadian = (t: number, phase: number): number => {
   return Math.sin((2 * Math.PI * modMin) / MIN_PER_DAY + phase)
 }
 
-export function getCrewProfile(crewId: CrewId): (CrewProfile & { phase: number }) {
+export function getCrewProfile(crewId: CrewId): CrewProfile & { phase: number } {
   return CREW_PROFILES.find((c) => c.id === crewId) ?? CREW_PROFILES[0]!
 }
 
 export function getScenarioMeta(scenarioId: ScenarioId): ScenarioMeta {
   return UI_SCENARIOS.find((s) => s.id === scenarioId) ?? UI_SCENARIOS[0]!
+}
+
+// Motorun gerçekten simüle ettiği mürettebat: Simulator ile aynı çağrı (senaryo seed'i + kalibrasyon).
+// UI'daki elle yazılmış CREW_PROFILES görünen ad/rol içindir; fizyolojik pencereler buradan okunur.
+const simCrewCache = new Map<ScenarioId, readonly CrewProfile[]>()
+
+export function getSimulatedCrew(scenarioId: ScenarioId): readonly CrewProfile[] {
+  let crew = simCrewCache.get(scenarioId)
+  if (!crew) {
+    const scenario = getScenario(scenarioId)
+    crew = generateCrew(scenario.seed, scenario.crewCount, getCalibrationData())
+    simCrewCache.set(scenarioId, crew)
+  }
+  return crew
+}
+
+export function getSimulatedSleepWindow(
+  scenarioId: ScenarioId,
+  crewId: CrewId,
+): CrewProfile['sleepWindow'] {
+  const sim = getSimulatedCrew(scenarioId).find((c) => c.id === crewId)
+  return sim?.sleepWindow ?? getCrewProfile(crewId).sleepWindow
+}
+
+/** Sim-zamanı `t` kişinin uyku penceresinde mi (gece yarısını aşan pencereler dahil). */
+export function isWithinSleepWindow(tMs: number, window: CrewProfile['sleepWindow']): boolean {
+  const minuteOfDay = ((msToMin(tMs) % MIN_PER_DAY) + MIN_PER_DAY) % MIN_PER_DAY
+  const start = window.startMin % MIN_PER_DAY
+  const end = (window.startMin + window.durationMin) % MIN_PER_DAY
+  return start <= end
+    ? minuteOfDay >= start && minuteOfDay < end
+    : minuteOfDay >= start || minuteOfDay < end
 }
 
 /**
@@ -317,16 +317,15 @@ export function buildSleepHistory(
   for (let d = startDay; d <= currentSimDay; d++) {
     const w = Math.sin(d * 1.3 + crew.phase) * 0.35 + Math.cos(d * 0.7 + crew.phase) * 0.2
     const isSleepDeficitEvent =
-      crew.id === 'cdr' &&
-      (scenarioId === 'demo_main' || scenarioId === 'sleep_debt') &&
-      d >= 0
+      crew.id === 'cdr' && (scenarioId === 'demo_main' || scenarioId === 'sleep_debt') && d >= 0
     const durationH = Number(
       Math.max(3.8, baseSleep + w - (isSleepDeficitEvent ? 2.1 : 0)).toFixed(2),
     )
     runningDebt = Math.max(0, runningDebt * decay + (baseSleep - durationH))
     const exerciseMin = Math.round(Math.max(20, baseEx + Math.sin(d + crew.phase) * 12))
     const resistiveMin = Math.round(Math.max(15, baseRes + Math.cos(d + crew.phase) * 8))
-    const label = d >= 0 ? `D+${String(d).padStart(2, '0')}` : `D-${String(Math.abs(d)).padStart(2, '0')}`
+    const label =
+      d >= 0 ? `D+${String(d).padStart(2, '0')}` : `D-${String(Math.abs(d)).padStart(2, '0')}`
 
     entries.push({
       day: d,
@@ -342,26 +341,39 @@ export function buildSleepHistory(
 }
 
 /**
- * Kemik kaybı TAHMİNİ (FAZ 6 §4.3 formülü: mid(bone.loss.pct_month) * (1 - efficacy * adherence)).
+ * Kemik kaybı TAHMİNİ (FAZ 6 §4.3): mid(bone.loss.pct_month) × (1 − bone.estimate.efficacy × uyum).
+ * Uyum (FAZ 6): son `behavior.windowDays` günlük `activity.resistiveMin` toplamı / kişinin baseline toplamı
+ * (motorun kişisel baseline medyanı; yoksa serideki backfill günlerinin medyanı) × gün sayısı, [0,1]'e kırpılır.
+ * Günlük çerçeve gelmeden sayı üretilmez (null).
  */
 export function computeBoneSummary(
-  crew: CrewProfile & { phase: number },
+  crewId: CrewId,
   simDay: number,
+  resistiveSeries: readonly SeriesPoint[] | undefined,
+  engineBaselineDaily?: number | null,
 ): CrewBoneSummary {
-  const baseLossMonth = getMid('bone.loss.pct_month')
-  const efficacy = getNumber('bone.estimate.efficacy')
-  const adherence = Math.min(
-    1,
-    Math.max(0.55, 0.88 - 0.08 * Math.abs(Math.sin(crew.phase + Math.max(0, simDay) * 0.2))),
-  )
-  const monthlyLoss = baseLossMonth * (1 - efficacy * adherence)
-  const missionDaysElapsed = Math.max(1, simDay + 1)
-  const cumulativeLoss = (monthlyLoss * missionDaysElapsed) / 30
+  const empty: CrewBoneSummary = {
+    crewId,
+    estimatedMonthlyLossPct: null,
+    estimatedCumulativeLossPct: null,
+    resistiveAdherence7d: null,
+    isEstimate: true,
+  }
+  const points = resistiveSeries ?? []
+  const baselineDaily =
+    engineBaselineDaily ?? median(points.filter((p) => p.t < 0).map((p) => p.value))
+  const recent = points.slice(-getNumber('behavior.windowDays'))
+  if (baselineDaily === undefined || baselineDaily <= 0 || recent.length === 0) return empty
 
+  const adherence = recent.reduce((sum, p) => sum + p.value, 0) / (recent.length * baselineDaily)
+  const clamped = Math.min(1, Math.max(0, adherence))
+  const monthlyLoss =
+    getMid('bone.loss.pct_month') * (1 - getNumber('bone.estimate.efficacy') * clamped)
+  const missionDaysElapsed = Math.max(1, simDay + 1)
   return {
-    crewId: crew.id,
+    crewId,
     estimatedMonthlyLossPct: Number(monthlyLoss.toFixed(2)),
-    estimatedCumulativeLossPct: Number(cumulativeLoss.toFixed(3)),
+    estimatedCumulativeLossPct: Number(((monthlyLoss * missionDaysElapsed) / 30).toFixed(3)),
     resistiveAdherence7d: Number(adherence.toFixed(2)),
     isEstimate: true,
   }

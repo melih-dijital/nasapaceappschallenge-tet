@@ -2,10 +2,12 @@
 import { act, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import App from '@/App'
+import { parseValidationSnapshot, VALIDATION_SNAPSHOT } from '@/ui/data/validationReport'
 import { en } from '@/ui/i18n/en'
 import { tr } from '@/ui/i18n/tr'
 import { MockEngine, type MockScheduler } from '@/ui/mock/mockEngine'
 import { actions, bindEngineClient, useEarthLinkStore } from '@/ui/store'
+import publishedReportRaw from '../../docs/demo/validation-report.json?raw'
 
 function createFakeScheduler() {
   let cb: (() => void) | null = null
@@ -192,19 +194,53 @@ describe('FAZ 10 /evidence ve /validation sayfaları', () => {
     expect(screen.getByTestId('evidence-table')).toBeInTheDocument()
   })
 
-  it('/validation sayfasında sınırlılık kutusu her zaman görünür ve hızlı doğrulama sonuç tablosu üretir', async () => {
+  it('/validation yalnızca npm run validate raporunu gösterir: sınırlamalar, hedefler, senaryolar, tarih; çalıştırma düğmesi yok', async () => {
     navigateTo('/validation')
     render(<App />)
 
     expect(await screen.findByTestId('validation-page')).toBeInTheDocument()
-    expect(screen.getByTestId('validation-limitations-box')).toBeInTheDocument()
+    expect(VALIDATION_SNAPSHOT.ok).toBe(true)
+    if (!VALIDATION_SNAPSHOT.ok) return
+    const { report, command } = VALIDATION_SNAPSHOT.snapshot
 
-    fireEvent.click(screen.getByTestId('validation-run-quick-btn'))
+    // Sınırlamalar rapordan, her zaman görünür
+    const limits = screen.getByTestId('validation-limitations-box')
+    for (const l of report.limitations) expect(limits).toHaveTextContent(l)
 
-    expect(screen.getByTestId('validation-results-table')).toBeInTheDocument()
+    // Kaynak notu: komut + tarih; parmak izi rapordan ve güncel parametrelerle aynı (eski rapor uyarısı yok)
+    expect(screen.getByTestId('validation-source-note')).toHaveTextContent(command)
+    expect(screen.getByTestId('validation-fingerprint-badge')).toHaveTextContent(
+      report.params.evidenceFingerprint,
+    )
+    expect(screen.queryByTestId('validation-fingerprint-stale')).toBeNull()
+
+    // Hedefler ve senaryo satırları rapordaki sayı kadar
+    expect(
+      screen.getByTestId('validation-targets-table').querySelectorAll('tbody tr'),
+    ).toHaveLength(report.targetChecks.length)
+    expect(
+      screen.getByTestId('validation-results-table').querySelectorAll('tbody tr'),
+    ).toHaveLength(report.scenarios.length)
+    // Rapordaki gerçek değer görünür (ör. demo_main TP/FN)
+    const demo = report.scenarios.find((s) => s.scenarioId === 'demo_main')!
+    expect(screen.getByTestId('replay-scenario-demo_main').closest('tr')).toHaveTextContent(
+      `${demo.tp} / ${demo.fn}`,
+    )
+
+    // Tarayıcıda doğrulama çalıştırılamaz → düğmeler yok
+    expect(screen.queryByTestId('validation-run-quick-btn')).toBeNull()
+    expect(screen.queryByTestId('validation-run-full-btn')).toBeNull()
     expect(screen.getByTestId('validation-download-json')).toBeInTheDocument()
     expect(screen.getByTestId('validation-download-md')).toBeInTheDocument()
-    expect(screen.getByTestId('replay-scenario-demo_main')).toBeInTheDocument()
+  })
+
+  it('UI anlık görüntüsü yayınlanan docs/demo raporuyla aynı; bozuk dosya hata durumuna düşer', () => {
+    expect(VALIDATION_SNAPSHOT.ok).toBe(true)
+    if (!VALIDATION_SNAPSHOT.ok) return
+    const published = JSON.parse(publishedReportRaw) as unknown
+    expect(VALIDATION_SNAPSHOT.snapshot.report).toEqual(published)
+    expect(parseValidationSnapshot('{').ok).toBe(false)
+    expect(parseValidationSnapshot('{"generatedAt":"x","command":"y","report":{}}').ok).toBe(false)
   })
 })
 

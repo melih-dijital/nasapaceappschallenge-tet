@@ -1,7 +1,7 @@
 // FAZ 10 §3.3 — Davranışsal Sağlık Sayfası (/behavioral):
 // Günlük check-in, 60 sn PVT-benzeri reaksiyon testi, 14 günlük eğilimler, pasif proxy ve tanı koymayan dil.
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Brain, CheckCircle2, Lock, Play, Square, Timer } from 'lucide-react'
+import { Brain, CheckCircle2, FlaskConical, Lock, Play, Square, Timer } from 'lucide-react'
 import {
   CartesianGrid,
   Legend,
@@ -339,7 +339,10 @@ export function BehavioralPage() {
                 </span>
               )}
               {pvtPhase === 'DONE' && pvtSummary && (
-                <span data-testid="pvt-summary-text" className="font-mono font-semibold text-primary">
+                <span
+                  data-testid="pvt-summary-text"
+                  className="font-mono font-semibold text-primary"
+                >
                   {t('behavioral.pvtResult', {
                     median: pvtSummary.medianMs,
                     lapses: pvtSummary.lapses,
@@ -376,12 +379,7 @@ export function BehavioralPage() {
                   <span>{t('behavioral.pvtStop')}</span>
                 </Button>
               ) : (
-                <Button
-                  type="button"
-                  size="sm"
-                  onClick={startPvtTest}
-                  data-testid="pvt-start-btn"
-                >
+                <Button type="button" size="sm" onClick={startPvtTest} data-testid="pvt-start-btn">
                   <Play aria-hidden="true" className="size-3.5" />
                   <span>{t('behavioral.pvtStart')}</span>
                 </Button>
@@ -407,6 +405,17 @@ export function BehavioralPage() {
               proxies
                 ? t('behavioral.moodSlope', { slope: formatNumber(proxies.moodTrendSlope, 2) })
                 : undefined
+            }
+            headerRight={
+              // Motorda davranış modülü (FAZ_06 §4.4) yok: 14 günlük eğilim ve pasif proxy UI'da üretilen örnek veridir.
+              <span
+                data-testid="behavioral-sample-data-badge"
+                title={t('behavioral.sampleDataHint')}
+                className="inline-flex items-center gap-1 rounded border border-status-advisory/50 bg-status-advisory/15 px-2 py-0.5 font-mono text-[11px] font-semibold text-status-advisory"
+              >
+                <FlaskConical aria-hidden="true" className="size-3" />
+                <span>{t('behavioral.sampleDataBadge')}</span>
+              </span>
             }
           >
             <div className="space-y-4">
@@ -512,10 +521,7 @@ export function BehavioralPage() {
 
         {/* Davranışsal Durum Çipleri */}
         <div className="lg:col-span-4">
-          <SectionCard
-            title={t('behavioral.statesTitle')}
-            subtitle={t('behavioral.statesNote')}
-          >
+          <SectionCard title={t('behavioral.statesTitle')} subtitle={t('behavioral.statesNote')}>
             <div className="space-y-3">
               {behavioralStates.map((st) => (
                 <div

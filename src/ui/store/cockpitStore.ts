@@ -24,6 +24,7 @@ import {
   type StateEstimate,
   type StateId,
 } from '@/core/types'
+import type { ModuleReport } from '@/core/modules/types'
 import { MIN_PER_DAY, MS_PER_HOUR, msToDays, VITALS_INTERVAL_MIN } from '@/core/units'
 import { createEngineClient, type EngineClient } from '@/store/engineClient'
 import {
@@ -48,6 +49,7 @@ import {
   CREW_PROFILES,
   getCrewProfile,
   getScenarioMeta,
+  getSimulatedCrew,
   type CrewBoneSummary,
   type CrewMetricBaseline,
   type CrewRadiationSummary,
@@ -56,14 +58,12 @@ import {
 import { decimate, MAX_CHART_POINTS, type SeriesPoint } from './decimate'
 import {
   buildMockBehavioralTrends,
-  buildMockValidationReport,
   loadLocalJournals,
   saveLocalJournalEntry,
   type CheckInRecord,
   type GroundReplyTemplateId,
   type PassiveProxySummary,
   type PvtRecord,
-  type UiValidationReport,
 } from './phase10Data'
 
 export type WorkerLifecycleStatus = 'IDLE' | 'READY' | 'RUNNING' | 'PAUSED' | 'ERROR'
@@ -150,13 +150,6 @@ export interface BehavioralStoreState {
   journalsByCrew: Record<CrewId, JournalEntry[]>
 }
 
-export interface ValidationStoreState {
-  running: boolean
-  mode: 'quick' | 'full'
-  progress: { done: number; total: number } | null
-  report: UiValidationReport | null
-}
-
 function computeRoundTripMin(config: EarthLinkConfig): number {
   if (config.blackout) return Number.POSITIVE_INFINITY
   const groundMin = getNumber('earth.groundProcessingMin')
@@ -210,7 +203,7 @@ function buildInitialTelemetryState(
       const k = latestKey(crew.id, metric)
       const pts = vitalsSeries[metric]
       series[k] = pts
-      latestValues[k] = pts[pts.length - 1]?.value ?? (crew.baselines[metric]?.mean ?? 0)
+      latestValues[k] = pts[pts.length - 1]?.value ?? crew.baselines[metric]?.mean ?? 0
     }
 
     const sleepEntries = buildSleepHistory(crew, simDay, scenarioId)
@@ -218,15 +211,15 @@ function buildInitialTelemetryState(
     const lastSleep = sleepEntries[sleepEntries.length - 1]
 
     latestValues[latestKey(crew.id, 'sleep.durationH')] =
-      lastSleep?.durationH ?? (crew.baselines['sleep.durationH']?.mean ?? 6.8)
+      lastSleep?.durationH ?? crew.baselines['sleep.durationH']?.mean ?? 6.8
     latestValues[latestKey(crew.id, 'sleep.efficiency')] =
       crew.baselines['sleep.efficiency']?.mean ?? 0.88
     latestValues[latestKey(crew.id, 'sleep.midpointShiftMin')] =
       crew.baselines['sleep.midpointShiftMin']?.mean ?? 8
     latestValues[latestKey(crew.id, 'activity.exerciseMin')] =
-      lastSleep?.exerciseMin ?? (crew.baselines['activity.exerciseMin']?.mean ?? 75)
+      lastSleep?.exerciseMin ?? crew.baselines['activity.exerciseMin']?.mean ?? 75
     latestValues[latestKey(crew.id, 'activity.resistiveMin')] =
-      lastSleep?.resistiveMin ?? (crew.baselines['activity.resistiveMin']?.mean ?? 45)
+      lastSleep?.resistiveMin ?? crew.baselines['activity.resistiveMin']?.mean ?? 45
     latestValues[latestKey(crew.id, 'hydrationL')] = crew.baselines.hydrationL?.mean ?? 2.6
     latestValues[latestKey(crew.id, 'cabinCo2ppm')] = 1150
     latestValues[latestKey(crew.id, 'mood.stress')] = crew.baselines['mood.stress']?.mean ?? 3.2
@@ -259,11 +252,15 @@ function buildInitialTelemetryState(
     }
 
     const baseRate = crew.baselines['rad.doseRateMsvDay']?.mean ?? 0.35
-    const initialMissionDose = Number((baseRate * 0.5).toFixed(2))
-    const careerMsv = Number((crew.priorCareerDoseMsv + initialMissionDose).toFixed(2))
+    // Görev başında (motor raporu gelmeden) görev dozu 0; önceki kariyer dozu simüle edilen mürettebattan.
+    const priorCareerDoseMsv =
+      getSimulatedCrew(scenarioId).find((c) => c.id === crew.id)?.priorCareerDoseMsv ??
+      crew.priorCareerDoseMsv
+    const initialMissionDose = 0
+    const careerMsv = Number((priorCareerDoseMsv + initialMissionDose).toFixed(2))
     radiationSummary[crew.id] = {
       crewId: crew.id,
-      priorCareerDoseMsv: crew.priorCareerDoseMsv,
+      priorCareerDoseMsv,
       cumulativeMissionMsv: initialMissionDose,
       careerMsv,
       careerLimitMsv,
@@ -276,7 +273,7 @@ function buildInitialTelemetryState(
       speFractionOfLimit: 0,
     }
 
-    boneSummary[crew.id] = computeBoneSummary(crew, simDay)
+    boneSummary[crew.id] = computeBoneSummary(crew.id, simDay, undefined)
   }
 
   return {
@@ -376,10 +373,7 @@ function buildInitialStates(
   return result
 }
 
-function buildInitialBehavioralState(
-  scenarioId: ScenarioId,
-  simDay = 0,
-): BehavioralStoreState {
+function buildInitialBehavioralState(scenarioId: ScenarioId, simDay = 0): BehavioralStoreState {
   const checkInsByCrew: Record<CrewId, CheckInRecord[]> = {}
   const pvtByCrew: Record<CrewId, PvtRecord[]> = {}
   const proxiesByCrew: Record<CrewId, PassiveProxySummary> = {}
@@ -472,13 +466,6 @@ export const useBehavioralStore = create<BehavioralStoreState>(() =>
   buildInitialBehavioralState(initialScenarioId, 0),
 )
 
-export const useValidationStore = create<ValidationStoreState>(() => ({
-  running: false,
-  mode: 'quick',
-  progress: null,
-  report: null,
-}))
-
 // Dil değişikliklerini sessionStore ile senkron tut
 subscribeLanguage(() => {
   const lang = getLanguage()
@@ -522,10 +509,7 @@ export function selectBaseline(
   return state.baselines[latestKey(crewId, metric)]
 }
 
-export function selectCrewConfidence(
-  state: TelemetryState,
-  crewId: CrewId,
-): CrewConfidenceInfo {
+export function selectCrewConfidence(state: TelemetryState, crewId: CrewId): CrewConfidenceInfo {
   return (
     state.crewConfidence[crewId] ?? {
       crewId,
@@ -563,11 +547,7 @@ export function selectRecentAlerts(state: AlertState, crewId?: CrewId, limit = 5
  * FAZ 10 §3.1: Aktif + son 24 sim-saat içinde çözülmüş uyarılar;
  * sıralama: severity (CRITICAL önce) -> earthDelayClass (ACT_NOW önce) -> zaman (yeni önce).
  */
-export function selectAlertsSorted(
-  state: AlertState,
-  simT: SimTimeMs,
-  crewId?: CrewId,
-): Alert[] {
+export function selectAlertsSorted(state: AlertState, simT: SimTimeMs, crewId?: CrewId): Alert[] {
   const cutoffT = simT - 24 * MS_PER_HOUR
   const filtered = state.alerts.filter((a) => {
     if (crewId !== undefined && a.crewId !== crewId) return false
@@ -625,6 +605,41 @@ export function selectPriorityCards(
 let activeClient: EngineClient | null = null
 let unsubscribeClient: (() => void) | null = null
 let hasEngineDecisionState = false
+/** Motorun RadiationModule raporu geldiyse UI radyasyon özetini kendisi hesaplamaz (tek kaynak motor). */
+let hasEngineRadiationReports = false
+/** Motorun kişisel baseline medyanı (activity.resistiveMin, günlük) — SNAPSHOT telemetri sıfırlamasından etkilenmez. */
+const engineResistiveBaseline = new Map<CrewId, number>()
+
+function applyRadiationReports(reports: readonly ModuleReport[]): void {
+  const radiation = reports.filter((r) => r.module === 'radiation')
+  if (radiation.length === 0) return
+  hasEngineRadiationReports = true
+  const careerLimitMsv = getNumber('rad.career.limit.msv')
+  const speTargetMsv = getNumber('rad.spe.limit.msv')
+  useTelemetryStore.setState((prev) => {
+    const nextRad = { ...prev.radiationSummary }
+    for (const { crewId, payload: p } of radiation) {
+      nextRad[crewId] = {
+        crewId,
+        priorCareerDoseMsv: Number((p.careerMsv - p.cumulativeMissionMsv).toFixed(2)),
+        cumulativeMissionMsv: p.cumulativeMissionMsv,
+        careerMsv: p.careerMsv,
+        careerLimitMsv,
+        careerFraction: p.careerFraction,
+        currentRateMsvDay: p.currentRateMsvDay,
+        baselineRateMsvDay:
+          p.baselineRate ??
+          prev.radiationSummary[crewId]?.baselineRateMsvDay ??
+          p.currentRateMsvDay,
+        speState: p.speState,
+        speDoseMsv: p.speDoseMsv,
+        speTargetMsv,
+        speFractionOfLimit: p.speFractionOfLimit,
+      }
+    }
+    return { ...prev, radiationSummary: nextRad }
+  })
+}
 
 function applyFramesBatch(frames: ChartFrame[]): void {
   if (frames.length === 0) return
@@ -641,15 +656,14 @@ function applyFramesBatch(frames: ChartFrame[]): void {
       const existing = nextSeries[k] ?? []
       const lastPoint = existing[existing.length - 1]
       const baseSeries =
-        lastPoint !== undefined && f.t <= lastPoint.t
-          ? existing.filter((p) => p.t < f.t)
-          : existing
+        lastPoint !== undefined && f.t <= lastPoint.t ? existing.filter((p) => p.t < f.t) : existing
       const appended = [...baseSeries, { t: f.t, value: Number(f.value.toFixed(3)) }]
-      nextSeries[k] = appended.length > MAX_CHART_POINTS ? decimate(appended, MAX_CHART_POINTS) : appended
+      nextSeries[k] =
+        appended.length > MAX_CHART_POINTS ? decimate(appended, MAX_CHART_POINTS) : appended
       nextLatest[k] = Number(f.value.toFixed(2))
 
       // PROJECT_MEMORY §3.8: t < 0 backfill çerçeveleri doz birikimine katılmaz
-      if (f.metric === 'rad.doseRateMsvDay' && f.t >= 0) {
+      if (f.metric === 'rad.doseRateMsvDay' && f.t >= 0 && !hasEngineRadiationReports) {
         const curRad = nextRad[f.crewId]
         if (curRad) {
           const addedMsv = Math.max(0, f.value * dtDays)
@@ -663,8 +677,8 @@ function applyFramesBatch(frames: ChartFrame[]): void {
 
           if (ratio >= speDetectRatio) {
             speState = curRad.speState === 'IDLE' ? 'SUSPECTED' : 'CONFIRMED'
-            // SPE sırasında olay dozu birikimi
-            speDoseMsv = Number((Math.max(curRad.speDoseMsv, 18.5) + addedMsv * 12).toFixed(2))
+            // Mock modu: olay dozu = olay sırasında biriken gerçek doz (çarpan/taban yok)
+            speDoseMsv = Number((curRad.speDoseMsv + addedMsv).toFixed(3))
           } else if (
             (curRad.speState === 'CONFIRMED' || curRad.speState === 'SUSPECTED') &&
             ratio >= speDecayRatio
@@ -692,11 +706,26 @@ function applyFramesBatch(frames: ChartFrame[]): void {
       }
     }
 
+    // Yeni günlük direnç egzersizi çerçevesi gelen kişilerin kemik tahmini gerçek seriden yenilenir.
+    const nextBone = { ...prev.boneSummary }
+    const day = useSessionStore.getState().day
+    for (const crewId of new Set(
+      frames.filter((f) => f.metric === 'activity.resistiveMin').map((f) => f.crewId),
+    )) {
+      nextBone[crewId] = computeBoneSummary(
+        crewId,
+        day,
+        nextSeries[latestKey(crewId, 'activity.resistiveMin')],
+        engineResistiveBaseline.get(crewId),
+      )
+    }
+
     return {
       ...prev,
       series: nextSeries,
       latestValues: nextLatest,
       radiationSummary: nextRad,
+      boneSummary: nextBone,
     }
   })
 }
@@ -824,8 +853,12 @@ function applyAlertEvents(events: AlertEvent[], fromEngineDecision = false): voi
 
   useEarthLinkStore.setState((prev) => ({
     ...prev,
-    outbox: newOutboxMessages.length > 0 ? [...newOutboxMessages, ...prev.outbox].slice(0, 30) : prev.outbox,
-    inbox: newInboxReplies.length > 0 ? [...newInboxReplies, ...prev.inbox].slice(0, 30) : prev.inbox,
+    outbox:
+      newOutboxMessages.length > 0
+        ? [...newOutboxMessages, ...prev.outbox].slice(0, 30)
+        : prev.outbox,
+    inbox:
+      newInboxReplies.length > 0 ? [...newInboxReplies, ...prev.inbox].slice(0, 30) : prev.inbox,
     pendingReplyCount: activeWarnOrCrit.length,
     nextReplyEtaSec:
       activeWarnOrCrit.length > 0
@@ -893,7 +926,12 @@ function tickEarthLinkPackets(simT: SimTimeMs): void {
         ? earth.nextReplyEtaSec
         : null
 
-  if (outboxChanged || inboxChanged || newlyDeliveredToGround || nextEtaSec !== earth.nextReplyEtaSec) {
+  if (
+    outboxChanged ||
+    inboxChanged ||
+    newlyDeliveredToGround ||
+    nextEtaSec !== earth.nextReplyEtaSec
+  ) {
     const currentStates = useStateStore.getState().byCrew
     const currentAlerts = useAlertStore.getState().alerts
     const consents = earth.consents
@@ -957,20 +995,18 @@ function applyDecisionSnapshot(
   const config = earth.config
   const roundTripMin = computeRoundTripMin(config)
   const pendingReplyCount = earth.pending.length
-  const finiteEtas = earth.pending
-    .map((p) => p.remainingMs)
-    .filter((ms) => Number.isFinite(ms))
+  const finiteEtas = earth.pending.map((p) => p.remainingMs).filter((ms) => Number.isFinite(ms))
   const earliestRemainingMs = finiteEtas.length > 0 ? Math.min(...finiteEtas) : null
   const nextReplyEtaSec =
-    earliestRemainingMs !== null
-      ? Math.max(0, Math.round(earliestRemainingMs / 1000))
-      : null
+    earliestRemainingMs !== null ? Math.max(0, Math.round(earliestRemainingMs / 1000)) : null
 
   const currentStates = useStateStore.getState().byCrew
   const currentAlerts = useAlertStore.getState().alerts
 
   useEarthLinkStore.setState((prev) => {
-    const prevInboxIds = new Set(prev.inbox.filter((m) => m.status === 'DELIVERED').map((m) => m.id))
+    const prevInboxIds = new Set(
+      prev.inbox.filter((m) => m.status === 'DELIVERED').map((m) => m.id),
+    )
     const newlyDeliveredReply = earth.inbox.find((m) => !prevInboxIds.has(m.id))
     const lastReplyReceivedToast = newlyDeliveredReply
       ? {
@@ -1066,7 +1102,12 @@ function handleWorkerMessage(msg: WorkerToUiMessage): void {
             if (latestSleep) {
               nextLatest[latestKey(crew.id, 'sleep.durationH')] = latestSleep.durationH
             }
-            nextBone[crew.id] = computeBoneSummary(crew, nextDay)
+            nextBone[crew.id] = computeBoneSummary(
+              crew.id,
+              nextDay,
+              prev.series[latestKey(crew.id, 'activity.resistiveMin')],
+              engineResistiveBaseline.get(crew.id),
+            )
           }
 
           for (const key of Object.keys(nextBaselines)) {
@@ -1100,7 +1141,28 @@ function handleWorkerMessage(msg: WorkerToUiMessage): void {
       applyFramesBatch(msg.frames)
       return
     case 'ENGINE_OUTPUT': {
-      const { alertEvents, states, cards, decisions, dataQualityCount, t } = msg.output
+      const { alertEvents, states, cards, decisions, dataQualityCount, t, moduleReports } =
+        msg.output
+      if (moduleReports && moduleReports.length > 0) applyRadiationReports(moduleReports)
+      const resistiveBaselines = (msg.output.baselines ?? []).filter(
+        (b) => b.metric === 'activity.resistiveMin' && b.baselineMedian !== null,
+      )
+      if (resistiveBaselines.length > 0) {
+        for (const b of resistiveBaselines) engineResistiveBaseline.set(b.crewId, b.baselineMedian!)
+        const day = useSessionStore.getState().day
+        useTelemetryStore.setState((prev) => {
+          const nextBone = { ...prev.boneSummary }
+          for (const crewId of new Set(resistiveBaselines.map((b) => b.crewId))) {
+            nextBone[crewId] = computeBoneSummary(
+              crewId,
+              day,
+              prev.series[latestKey(crewId, 'activity.resistiveMin')],
+              engineResistiveBaseline.get(crewId),
+            )
+          }
+          return { ...prev, boneSummary: nextBone }
+        })
+      }
       const lastDecision = decisions?.at(-1)
       if (alertEvents && alertEvents.length > 0) {
         applyAlertEvents(alertEvents, Boolean(lastDecision))
@@ -1137,6 +1199,9 @@ function handleWorkerMessage(msg: WorkerToUiMessage): void {
 
       useTelemetryStore.setState((prev) => ({
         ...seeded,
+        // Motor raporları varsa SNAPSHOT bunları UI başlangıç değerleriyle ezmez (tek kaynak motor).
+        ...(hasEngineRadiationReports ? { radiationSummary: prev.radiationSummary } : {}),
+        ...(engineResistiveBaseline.size > 0 ? { boneSummary: prev.boneSummary } : {}),
         dataQuality: prev.dataQuality,
         dataQualityCount: msg.snapshot.dataQualityCount,
       }))
@@ -1159,21 +1224,8 @@ function handleWorkerMessage(msg: WorkerToUiMessage): void {
       })
       return
     case 'VALIDATION_PROGRESS':
-      useValidationStore.setState({
-        running: true,
-        progress: { done: msg.done, total: msg.total },
-      })
-      return
     case 'VALIDATION_RESULT':
-      useValidationStore.setState((prev) => ({
-        ...prev,
-        running: false,
-        progress: null,
-        report:
-          typeof msg.report === 'object' && msg.report !== null && 'scenarios' in msg.report
-            ? (msg.report as UiValidationReport)
-            : buildMockValidationReport(prev.mode === 'quick'),
-      }))
+      // Doğrulama yalnızca `npm run validate` ile (CLI); UI raporu src/ui/data/validation-report.json'dan okur.
       return
   }
 }
@@ -1237,6 +1289,8 @@ export function bindEngineClient(
   unsubscribeClient?.()
   activeClient?.dispose()
   hasEngineDecisionState = false
+  hasEngineRadiationReports = false
+  engineResistiveBaseline.clear()
 
   activeClient = client
   unsubscribeClient = client.subscribe(handleWorkerMessage)
@@ -1576,7 +1630,9 @@ export const actions = {
         moodTrendSlope: 0,
       }
       const firstMood = nextCheckIns[0]?.mood ?? mood.mood
-      const slope = Number(((mood.mood - firstMood) / Math.max(1, nextCheckIns.length - 1)).toFixed(2))
+      const slope = Number(
+        ((mood.mood - firstMood) / Math.max(1, nextCheckIns.length - 1)).toFixed(2),
+      )
 
       return {
         ...prev,
@@ -1638,31 +1694,6 @@ export const actions = {
       medianMs: Math.round(medianMs),
       lapses,
     })
-  },
-
-  /** FAZ 10 §3.5: Doğrulama koşucusunu başlatır (quick/full). */
-  requestValidation(quick = true): void {
-    useValidationStore.setState({
-      running: true,
-      mode: quick ? 'quick' : 'full',
-      progress: { done: 0, total: quick ? 24 : 160 },
-    })
-    getActiveEngineClient().send({ type: 'REQUEST_VALIDATION', quick })
-    // MockEngine validation yanıtı üretmediğinde UI için deterministik fallback raporu üret
-    if (isMockEngineRequested() || !realEngineClientFactory) {
-      const report = buildMockValidationReport(quick)
-      useValidationStore.setState({
-        running: false,
-        mode: quick ? 'quick' : 'full',
-        progress: null,
-        report,
-      })
-    }
-  },
-
-  cancelValidation(): void {
-    useValidationStore.setState({ running: false, progress: null })
-    getActiveEngineClient().send({ type: 'CANCEL_VALIDATION' })
   },
 
   /** FAZ 11 §3.4: İsteğe bağlı yerel WebSocket yer istasyonuna bağlanır (`INIT {source:'ws', wsUrl}`). */

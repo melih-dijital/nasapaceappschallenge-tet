@@ -29,6 +29,7 @@ import type {
   DailySleepEntry,
   SeriesPoint,
 } from '@/ui/store'
+import { getSimulatedSleepWindow, isWithinSleepWindow, useSessionStore } from '@/ui/store'
 import { Gauge } from './Gauge'
 import { ProvenanceTag } from './ProvenanceTag'
 import { SectionCard } from './SectionCard'
@@ -95,6 +96,7 @@ export interface HrTelemetryChartProps {
 }
 
 export const HrTelemetryChart = memo(function HrTelemetryChart({
+  crewId,
   points,
   baseline,
   confidenceInfo,
@@ -107,13 +109,18 @@ export const HrTelemetryChart = memo(function HrTelemetryChart({
   const sigma = baseline?.sigma ?? getNumber('minScale.hr')
   const bandLow = Number((median - zWarn * sigma).toFixed(1))
   const bandHigh = Number((median + zWarn * sigma).toFixed(1))
+  // Uyku gölgesi: seçili kişinin simüle edilen CrewProfile.sleepWindow'u (sabit 22–06 değil).
+  const scenarioId = useSessionStore((s) => s.scenarioId)
+  const sleepWindow = useMemo(
+    () => getSimulatedSleepWindow(scenarioId, crewId),
+    [scenarioId, crewId],
+  )
 
   const chartData = useMemo(
     () =>
       points.map((pt) => {
         const z = Number(((pt.value - median) / Math.max(0.1, sigma)).toFixed(2))
-        const hourOfDay = (((msToHours(pt.t) % 24) + 24) % 24)
-        const isNight = hourOfDay >= 22 || hourOfDay < 6
+        const isNight = isWithinSleepWindow(pt.t, sleepWindow)
         return {
           t: pt.t,
           timeLabel: formatSimHourLabel(pt.t),
@@ -126,7 +133,7 @@ export const HrTelemetryChart = memo(function HrTelemetryChart({
           isNight,
         }
       }),
-    [points, median, sigma, bandLow, bandHigh, confidenceInfo.isLearning],
+    [points, median, sigma, bandLow, bandHigh, confidenceInfo.isLearning, sleepWindow],
   )
 
   // Gece/uyku bloklarını belirle
@@ -194,10 +201,7 @@ export const HrTelemetryChart = memo(function HrTelemetryChart({
 
         {/* Uyarı İşaretçileri Özeti */}
         {alerts.length > 0 && (
-          <div
-            data-testid="hr-alert-markers"
-            className="flex flex-wrap items-center gap-1"
-          >
+          <div data-testid="hr-alert-markers" className="flex flex-wrap items-center gap-1">
             {alerts.slice(0, 2).map((al) => (
               <span
                 key={al.id}
@@ -217,7 +221,11 @@ export const HrTelemetryChart = memo(function HrTelemetryChart({
         data-testid="hr-chart-container"
         className="h-48 w-full rounded-lg focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
       >
-        <ResponsiveContainer width="100%" height="100%" initialDimension={{ width: 620, height: 185 }}>
+        <ResponsiveContainer
+          width="100%"
+          height="100%"
+          initialDimension={{ width: 620, height: 185 }}
+        >
           <ComposedChart data={chartData} margin={{ top: 8, right: 12, left: 0, bottom: 4 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="rgba(148, 163, 184, 0.14)" />
             <XAxis
@@ -361,7 +369,11 @@ export const Spo2TelemetryChart = memo(function Spo2TelemetryChart({
         data-testid="spo2-chart-container"
         className="h-40 w-full rounded-lg focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
       >
-        <ResponsiveContainer width="100%" height="100%" initialDimension={{ width: 620, height: 155 }}>
+        <ResponsiveContainer
+          width="100%"
+          height="100%"
+          initialDimension={{ width: 620, height: 155 }}
+        >
           <ComposedChart data={chartData} margin={{ top: 8, right: 12, left: 0, bottom: 4 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="rgba(148, 163, 184, 0.14)" />
             <XAxis
@@ -393,12 +405,7 @@ export const Spo2TelemetryChart = memo(function Spo2TelemetryChart({
               strokeDasharray="4 3"
               strokeWidth={1.75}
             />
-            <ReferenceLine
-              y={median}
-              stroke="#34d399"
-              strokeDasharray="2 4"
-              strokeOpacity={0.5}
-            />
+            <ReferenceLine y={median} stroke="#34d399" strokeDasharray="2 4" strokeOpacity={0.5} />
             <Line
               type="monotone"
               dataKey="spo2"
@@ -455,7 +462,11 @@ export const SleepActivityChart = memo(function SleepActivityChart({
         data-testid="sleep-chart-container"
         className="h-44 w-full rounded-lg focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
       >
-        <ResponsiveContainer width="100%" height="100%" initialDimension={{ width: 620, height: 170 }}>
+        <ResponsiveContainer
+          width="100%"
+          height="100%"
+          initialDimension={{ width: 620, height: 170 }}
+        >
           <ComposedChart data={[...entries]} margin={{ top: 8, right: 12, left: 0, bottom: 4 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="rgba(148, 163, 184, 0.14)" />
             <XAxis dataKey="label" tick={{ fontSize: 10, fill: '#94a3b8' }} />
@@ -605,7 +616,11 @@ export const RadiationPanel = memo(function RadiationPanel({
               data-testid="radiation-rate-chart"
               className="h-28 w-full rounded focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
             >
-              <ResponsiveContainer width="100%" height="100%" initialDimension={{ width: 380, height: 110 }}>
+              <ResponsiveContainer
+                width="100%"
+                height="100%"
+                initialDimension={{ width: 380, height: 110 }}
+              >
                 <ComposedChart
                   data={rateChartData}
                   margin={{ top: 4, right: 8, left: 0, bottom: 2 }}
@@ -638,12 +653,7 @@ export const RadiationPanel = memo(function RadiationPanel({
                     }}
                   />
                   {/* Beklenen ISS/referans aralık bandı */}
-                  <ReferenceArea
-                    y1={issLow}
-                    y2={issHigh}
-                    fill="#38bdf8"
-                    fillOpacity={0.14}
-                  />
+                  <ReferenceArea y1={issLow} y2={issHigh} fill="#38bdf8" fillOpacity={0.14} />
                   {/* SPE gölgeli aralıkları */}
                   {speShadedBlocks.map((b, idx) => (
                     <ReferenceArea
@@ -727,9 +737,9 @@ export const RadiationPanel = memo(function RadiationPanel({
                 <div
                   className={cn(
                     'h-full transition-all',
-                    summary.speFractionOfLimit >= 0.8
+                    summary.speFractionOfLimit >= getNumber('rad.spe.critical.fraction')
                       ? 'bg-status-critical'
-                      : summary.speFractionOfLimit >= 0.5
+                      : summary.speFractionOfLimit >= getNumber('rad.spe.warn.fraction')
                         ? 'bg-status-warning'
                         : 'bg-primary',
                   )}
@@ -777,7 +787,9 @@ export const BoneEstimateCard = memo(function BoneEstimateCard({ bone }: BoneEst
             <span>{t('bone.monthlyLoss')}</span>
           </div>
           <div className="mt-1 font-mono text-base font-bold text-foreground tabular-nums">
-            −{formatNumber(bone.estimatedMonthlyLossPct, 2)}%{' '}
+            {bone.estimatedMonthlyLossPct === null
+              ? '—'
+              : `−${formatNumber(bone.estimatedMonthlyLossPct, 2)}%`}{' '}
             <span className="text-xs font-normal text-muted-foreground">/ mo</span>
           </div>
         </div>
@@ -785,14 +797,18 @@ export const BoneEstimateCard = memo(function BoneEstimateCard({ bone }: BoneEst
         <div className="rounded-lg border border-border/70 bg-background/60 p-2.5">
           <div className="text-[11px] text-muted-foreground">{t('bone.cumulativeLoss')}</div>
           <div className="mt-1 font-mono text-base font-bold text-foreground tabular-nums">
-            −{formatNumber(bone.estimatedCumulativeLossPct, 3)}%
+            {bone.estimatedCumulativeLossPct === null
+              ? '—'
+              : `−${formatNumber(bone.estimatedCumulativeLossPct, 3)}%`}
           </div>
         </div>
 
         <div className="rounded-lg border border-border/70 bg-background/60 p-2.5">
           <div className="text-[11px] text-muted-foreground">{t('bone.resistiveAdherence')}</div>
           <div className="mt-1 font-mono text-base font-bold text-primary tabular-nums">
-            {Math.round(bone.resistiveAdherence7d * 100)}%
+            {bone.resistiveAdherence7d === null
+              ? '—'
+              : `${Math.round(bone.resistiveAdherence7d * 100)}%`}
           </div>
         </div>
       </div>
