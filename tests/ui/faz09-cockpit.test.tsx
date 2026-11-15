@@ -10,6 +10,7 @@ import {
   createDefaultEngineClient,
   isMockEngineRequested,
   registerRealEngineClientFactory,
+  useTelemetryStore,
 } from '@/ui/store'
 
 function createFakeScheduler() {
@@ -169,6 +170,24 @@ describe('CockpitPage & AppShell (FAZ 9 §3.3–§3.6)', () => {
   })
 
   it('erişilebilirlik kontrol listesi: tüm düğmelerin erişilebilir adı ve tüm grafiklerin aria-label özeti vardır', () => {
+    // Uyku grafiği yalnızca motorun günlük verisi gelince çizilir; burada bir günlük kayıt veriliyor.
+    useTelemetryStore.setState((s) => ({
+      ...s,
+      sleepHistory: {
+        ...s.sleepHistory,
+        cdr: [
+          {
+            day: 0,
+            label: 'D+00',
+            durationH: 6.5,
+            baselineH: 7,
+            debtH: 0.5,
+            exerciseMin: 60,
+            resistiveMin: 40,
+          },
+        ],
+      },
+    }))
     const { container } = render(<App />)
 
     const buttons = Array.from(container.querySelectorAll('button'))
@@ -178,7 +197,10 @@ describe('CockpitPage & AppShell (FAZ 9 §3.3–§3.6)', () => {
         (btn.getAttribute('aria-label') ?? '').trim() ||
         (btn.textContent ?? '').trim() ||
         (btn.getAttribute('title') ?? '').trim()
-      expect(accessibleName.length, `Erişilebilir adı olmayan düğme: ${btn.outerHTML}`).toBeGreaterThan(0)
+      expect(
+        accessibleName.length,
+        `Erişilebilir adı olmayan düğme: ${btn.outerHTML}`,
+      ).toBeGreaterThan(0)
     }
 
     const charts = [

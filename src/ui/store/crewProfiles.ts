@@ -164,8 +164,8 @@ export interface DailySleepEntry {
   durationH: number
   baselineH: number
   debtH: number
-  exerciseMin: number
-  resistiveMin: number
+  exerciseMin: number | null
+  resistiveMin: number | null
 }
 
 export interface CrewRadiationSummary {
@@ -296,48 +296,58 @@ export function buildInitialVitalsSeries(
   }
 }
 
+export interface DailyMetricSeries {
+  sleepDurationH?: readonly SeriesPoint[]
+  exerciseMin?: readonly SeriesPoint[]
+  resistiveMin?: readonly SeriesPoint[]
+}
+
 /**
- * Son 14 gün için uyku + aktivite geçmişini üretir (FAZ 6 §4.2 uyku borcu formülüyle).
+ * Uyku geçmişi MOTORUN günlük çerçevelerinden (`sleep.durationH`, `activity.*` serileri); UI'da veri üretilmez.
+ * Gün = floor(t / MS_PER_DAY) (günlük çerçeve gün sonunda, backfill günleri t < 0). Son
+ * `baseline.window.days.target` gün gösterilir. Baseline: motorun kişisel baseline medyanı (ZSnapshot), yoksa
+ * backfill günlerinin medyanı. Borç (FAZ 6 §4.2): borç = max(0, borç × sleep.debt.decay + (baseline − süre)),
+ * mevcut tüm günler üzerinden güncel baseline ile birikir. Veri yoksa boş liste (grafik boş durum gösterir).
  */
-export function buildSleepHistory(
-  crew: CrewProfile & { phase: number },
-  currentSimDay: number,
-  scenarioId: ScenarioId,
+export function buildSleepHistoryFromSeries(
+  input: DailyMetricSeries,
+  engineBaselineH?: number | null,
 ): DailySleepEntry[] {
-  const targetDays = getNumber('baseline.window.days.target')
+  const sleep = input.sleepDurationH ?? []
+  if (sleep.length === 0) return []
+  const dayOfPoint = (t: number) => Math.floor(t / MS_PER_DAY)
+  const byDay = (pts: readonly SeriesPoint[] | undefined) =>
+    new Map((pts ?? []).map((p) => [dayOfPoint(p.t), p.value] as const))
+  const sleepByDay = byDay(sleep)
+  const exerciseByDay = byDay(input.exerciseMin)
+  const resistiveByDay = byDay(input.resistiveMin)
+
+  const baselineH =
+    engineBaselineH ??
+    median(sleep.filter((p) => p.t < 0).map((p) => p.value)) ??
+    median(sleep.map((p) => p.value))
+  if (baselineH === undefined) return []
+
   const decay = getNumber('sleep.debt.decay')
-  const baseSleep = crew.baselines['sleep.durationH']?.mean ?? 6.8
-  const baseEx = crew.baselines['activity.exerciseMin']?.mean ?? 75
-  const baseRes = crew.baselines['activity.resistiveMin']?.mean ?? 45
-
+  let debt = 0
   const entries: DailySleepEntry[] = []
-  let runningDebt = 0
-
-  const startDay = currentSimDay - (targetDays - 1)
-  for (let d = startDay; d <= currentSimDay; d++) {
-    const w = Math.sin(d * 1.3 + crew.phase) * 0.35 + Math.cos(d * 0.7 + crew.phase) * 0.2
-    const isSleepDeficitEvent =
-      crew.id === 'cdr' && (scenarioId === 'demo_main' || scenarioId === 'sleep_debt') && d >= 0
-    const durationH = Number(
-      Math.max(3.8, baseSleep + w - (isSleepDeficitEvent ? 2.1 : 0)).toFixed(2),
-    )
-    runningDebt = Math.max(0, runningDebt * decay + (baseSleep - durationH))
-    const exerciseMin = Math.round(Math.max(20, baseEx + Math.sin(d + crew.phase) * 12))
-    const resistiveMin = Math.round(Math.max(15, baseRes + Math.cos(d + crew.phase) * 8))
-    const label =
-      d >= 0 ? `D+${String(d).padStart(2, '0')}` : `D-${String(Math.abs(d)).padStart(2, '0')}`
-
+  for (const day of [...sleepByDay.keys()].sort((a, b) => a - b)) {
+    const durationH = sleepByDay.get(day)!
+    debt = Math.max(0, debt * decay + (baselineH - durationH))
     entries.push({
-      day: d,
-      label,
-      durationH,
-      baselineH: baseSleep,
-      debtH: Number(runningDebt.toFixed(2)),
-      exerciseMin,
-      resistiveMin,
+      day,
+      label:
+        day >= 0
+          ? `D+${String(day).padStart(2, '0')}`
+          : `D-${String(Math.abs(day)).padStart(2, '0')}`,
+      durationH: Number(durationH.toFixed(2)),
+      baselineH: Number(baselineH.toFixed(2)),
+      debtH: Number(debt.toFixed(2)),
+      exerciseMin: exerciseByDay.get(day) ?? null,
+      resistiveMin: resistiveByDay.get(day) ?? null,
     })
   }
-  return entries
+  return entries.slice(-getNumber('baseline.window.days.target'))
 }
 
 /**

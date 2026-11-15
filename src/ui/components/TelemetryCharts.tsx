@@ -30,6 +30,7 @@ import type {
   SeriesPoint,
 } from '@/ui/store'
 import { getSimulatedSleepWindow, isWithinSleepWindow, useSessionStore } from '@/ui/store'
+import { EmptyState } from './EmptyState'
 import { Gauge } from './Gauge'
 import { ProvenanceTag } from './ProvenanceTag'
 import { SectionCard } from './SectionCard'
@@ -431,7 +432,7 @@ export const SleepActivityChart = memo(function SleepActivityChart({
   confidenceInfo,
 }: SleepActivityChartProps) {
   const { t, formatNumber } = useT()
-  const baselineH = entries[0]?.baselineH ?? 6.8
+  const baselineH = entries.at(-1)?.baselineH ?? null
 
   return (
     <SectionCard
@@ -447,7 +448,7 @@ export const SleepActivityChart = memo(function SleepActivityChart({
         </span>
         <span className="inline-flex items-center gap-1.5 font-mono">
           <span className="inline-block h-0.5 w-3 border-b border-dashed border-sky-300" />
-          <span>Baseline {formatNumber(baselineH, 1)} h</span>
+          <span>Baseline {baselineH === null ? '—' : `${formatNumber(baselineH, 1)} h`}</span>
         </span>
         <span className="inline-flex items-center gap-1.5">
           <span className="inline-block size-2.5 rounded-xs bg-status-warning/50" />
@@ -455,57 +456,66 @@ export const SleepActivityChart = memo(function SleepActivityChart({
         </span>
       </div>
 
-      <div
-        tabIndex={0}
-        role="img"
-        aria-label={t('cockpit.sleepChartAria')}
-        data-testid="sleep-chart-container"
-        className="h-44 w-full rounded-lg focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
-      >
-        <ResponsiveContainer
-          width="100%"
-          height="100%"
-          initialDimension={{ width: 620, height: 170 }}
+      {entries.length === 0 ? (
+        <EmptyState title={t('cockpit.sleepChartEmpty')} className="h-44" />
+      ) : (
+        <div
+          tabIndex={0}
+          role="img"
+          aria-label={t('cockpit.sleepChartAria')}
+          data-testid="sleep-chart-container"
+          className="h-44 w-full rounded-lg focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
         >
-          <ComposedChart data={[...entries]} margin={{ top: 8, right: 12, left: 0, bottom: 4 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="rgba(148, 163, 184, 0.14)" />
-            <XAxis dataKey="label" tick={{ fontSize: 10, fill: '#94a3b8' }} />
-            <YAxis unit=" h" domain={[0, 10]} tick={{ fontSize: 10, fill: '#94a3b8' }} width={44} />
-            <Tooltip
-              isAnimationActive={false}
-              contentStyle={{
-                backgroundColor: '#0f172a',
-                borderColor: '#334155',
-                fontSize: '11px',
-              }}
-            />
-            <Area
-              type="monotone"
-              dataKey="debtH"
-              fill="#f59e0b"
-              fillOpacity={0.22}
-              stroke="#f59e0b"
-              strokeWidth={1.5}
-              isAnimationActive={false}
-            />
-            <Bar
-              dataKey="durationH"
-              fill="#38bdf8"
-              radius={[3, 3, 0, 0]}
-              barSize={16}
-              isAnimationActive={false}
-            />
-            {!confidenceInfo.isLearning && (
-              <ReferenceLine
-                y={baselineH}
-                stroke="#e0f2fe"
-                strokeDasharray="4 4"
-                strokeWidth={1.5}
+          <ResponsiveContainer
+            width="100%"
+            height="100%"
+            initialDimension={{ width: 620, height: 170 }}
+          >
+            <ComposedChart data={[...entries]} margin={{ top: 8, right: 12, left: 0, bottom: 4 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(148, 163, 184, 0.14)" />
+              <XAxis dataKey="label" tick={{ fontSize: 10, fill: '#94a3b8' }} />
+              <YAxis
+                unit=" h"
+                domain={[0, (max: number) => Math.max(10, Math.ceil(max))]}
+                tick={{ fontSize: 10, fill: '#94a3b8' }}
+                width={44}
               />
-            )}
-          </ComposedChart>
-        </ResponsiveContainer>
-      </div>
+              <Tooltip
+                isAnimationActive={false}
+                contentStyle={{
+                  backgroundColor: '#0f172a',
+                  borderColor: '#334155',
+                  fontSize: '11px',
+                }}
+              />
+              <Area
+                type="monotone"
+                dataKey="debtH"
+                fill="#f59e0b"
+                fillOpacity={0.22}
+                stroke="#f59e0b"
+                strokeWidth={1.5}
+                isAnimationActive={false}
+              />
+              <Bar
+                dataKey="durationH"
+                fill="#38bdf8"
+                radius={[3, 3, 0, 0]}
+                barSize={16}
+                isAnimationActive={false}
+              />
+              {!confidenceInfo.isLearning && baselineH !== null && (
+                <ReferenceLine
+                  y={baselineH}
+                  stroke="#e0f2fe"
+                  strokeDasharray="4 4"
+                  strokeWidth={1.5}
+                />
+              )}
+            </ComposedChart>
+          </ResponsiveContainer>
+        </div>
+      )}
     </SectionCard>
   )
 })

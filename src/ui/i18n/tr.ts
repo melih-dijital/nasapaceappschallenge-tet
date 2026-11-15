@@ -124,13 +124,14 @@ export const tr: I18nDictionary = {
   'cockpit.spo2ChartTitle': 'SpO₂ Satürasyonu (Son 24 Sim-Saat)',
   'cockpit.spo2ChartSubtitle': '15 dk kadans · Mutlak klinik eşik referansı',
   'cockpit.spo2ChartAria': 'Kritik eşik çizgisi ile son 24 simüle saatlik kan oksijen satürasyonu grafiği',
-  'cockpit.sleepChartTitle': 'Uyku ve Aktivite Geçmişi (Son 14 Sim-Gün)',
+  'cockpit.sleepChartTitle': 'Uyku Geçmişi (Son 14 Sim-Gün)',
   'cockpit.sleepChartSubtitle': 'Günlük uyku sütunları, kişisel baseline medyanı ve birikimli uyku borcu',
   'cockpit.sleepChartAria': 'Günlük uyku süresi, baseline medyanı ve uyku borcunu gösteren 14 günlük sütun ve alan grafiği',
   'cockpit.nightSleepBlock': 'Uyku bloğu',
   'cockpit.baselineBandLabel': 'Baseline bandı (±{z}σ)',
   'cockpit.criticalThresholdLabel': 'Kritik eşik ({value}{unit})',
   'cockpit.sleepDebtLabel': 'Uyku borcu (sa)',
+  'cockpit.sleepChartEmpty': 'Günlük telemetri bekleniyor: motor günlük çerçeveleri gönderince uyku geçmişi görünür (Başlat\'a basın).',
 
   // Kokpit — Radyasyon paneli
   'radiation.panelTitle': 'Radyasyon ve Güneş Parçacık Olayı (SPE) İzleyici',

@@ -6,6 +6,8 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import App from '@/App'
 import { all as allEvidence, getMid, getNumber } from '@/core/evidence/registry'
 import type { ModuleReport, RadiationReport } from '@/core/modules/types'
+import { extractChartFrames } from '@/core/pipeline'
+import type { DailyFrame } from '@/core/types'
 import { MS_PER_DAY, MS_PER_HOUR, MS_PER_MIN } from '@/core/units'
 import { getScenario } from '@/sim/scenarios'
 import { Simulator } from '@/sim/simulator'
@@ -13,9 +15,11 @@ import type { EngineClient } from '@/store/engineClient'
 import {
   actions,
   bindEngineClient,
+  buildSleepHistoryFromSeries,
   computeBoneSummary,
   getSimulatedSleepWindow,
   isWithinSleepWindow,
+  selectSeries,
   useTelemetryStore,
 } from '@/ui/store'
 import type { WorkerToUiMessage } from '@/workers/protocol'
@@ -213,6 +217,90 @@ describe('Motor baseline ile kemik uyumu; SNAPSHOT motor değerlerini ezmez', ()
     expect(rad.priorCareerDoseMsv).toBe(simCdr.priorCareerDoseMsv)
     expect(rad.cumulativeMissionMsv).toBe(0)
     expect(rad.speDoseMsv).toBe(0)
+  })
+})
+
+describe('Uyku geçmişi motorun günlük çerçevelerinden', () => {
+  const day = (d: number, value: number) => ({ t: (d + 1) * MS_PER_DAY - MS_PER_MIN, value })
+
+  it('veri yokken boş; borç = max(0, borç·sleep.debt.decay + (baseline − süre)); son baseline.window.days.target gün', () => {
+    expect(buildSleepHistoryFromSeries({})).toEqual([])
+    const decay = getNumber('sleep.debt.decay')
+    const sleep = [
+      ...Array.from({ length: 14 }, (_, i) => day(i - 14, 7)),
+      day(0, 5),
+      day(1, 6),
+      day(2, 8),
+    ]
+    const h = buildSleepHistoryFromSeries({ sleepDurationH: sleep }) // baseline = backfill medyanı = 7
+    expect(h).toHaveLength(getNumber('baseline.window.days.target'))
+    expect(h.map((e) => e.label).slice(-3)).toEqual(['D+00', 'D+01', 'D+02'])
+    const d0 = 2
+    const d1 = d0 * decay + 1
+    const d2 = Math.max(0, d1 * decay - 1)
+    expect(h.slice(-3).map((e) => e.debtH)).toEqual([d0, d1, d2].map((v) => Number(v.toFixed(2))))
+    expect(h.every((e) => e.baselineH === 7)).toBe(true)
+    // Motor baseline'ı verilirse o kullanılır
+    expect(buildSleepHistoryFromSeries({ sleepDurationH: sleep }, 6).at(-1)!.baselineH).toBe(6)
+  })
+
+  it("demo_main: grafik simülatörün gerçek günlük uyku değerlerini gösterir (UI'da üretilmiş −2,1 sa yok)", () => {
+    const spy = spyClient()
+    bindEngineClient(spy.client, { scenarioId: 'demo_main', speed: 1 })
+    expect(useTelemetryStore.getState().sleepHistory.cdr).toEqual([])
+
+    const sim = new Simulator(getScenario('demo_main'))
+    const raw = [...sim.backfill(), ...sim.advanceTo(4 * MS_PER_DAY)]
+    spy.emit({ type: 'FRAMES_BATCH', frames: extractChartFrames(raw) })
+
+    const shown = useTelemetryStore.getState().sleepHistory.cdr!
+    const truth = raw
+      .filter((f): f is DailyFrame => f.kind === 'daily' && f.crewId === 'cdr')
+      .map((f) => ({ day: f.day, durationH: Number(f.sleep.durationH.toFixed(2)) }))
+      .slice(-getNumber('baseline.window.days.target'))
+    expect(shown.map((e) => ({ day: e.day, durationH: e.durationH }))).toEqual(truth)
+    expect(shown.at(-1)!.day).toBe(3)
+    // CDR'de görev başından uyku açığı (senaryo olayı) → borç birikir
+    expect(shown.at(-1)!.debtH).toBeGreaterThan(0)
+  })
+
+  it('HR grafiği: uzun geçmişte (14 g backfill + görev) son 24 saat tam çözünürlükte kalır', () => {
+    const spy = spyClient()
+    bindEngineClient(spy.client, { scenarioId: 'demo_main', speed: 1 })
+    const sim = new Simulator(getScenario('demo_main'))
+    spy.emit({ type: 'FRAMES_BATCH', frames: extractChartFrames(sim.backfill()) })
+    // canlı akış gibi birçok küçük batch
+    for (let t = 6 * MS_PER_HOUR; t <= 3.5 * MS_PER_DAY; t += 6 * MS_PER_HOUR) {
+      spy.emit({ type: 'FRAMES_BATCH', frames: extractChartFrames(sim.advanceTo(t)) })
+    }
+    const window = selectSeries(useTelemetryStore.getState(), 'cdr', 'hr', MS_PER_DAY)
+    expect(window.length).toBeGreaterThanOrEqual(96) // 15 dk kadans × 24 sa
+    expect(useTelemetryStore.getState().series['cdr|hr']!.length).toBeLessThanOrEqual(600)
+  })
+
+  it('SNAPSHOT: koşu ortası (t > 0, ör. bookmark) geçmişi korur; reset (t = 0) temizler', () => {
+    const spy = spyClient()
+    bindEngineClient(spy.client, { scenarioId: 'demo_main', speed: 1 })
+    const sim = new Simulator(getScenario('demo_main'))
+    spy.emit({
+      type: 'FRAMES_BATCH',
+      frames: extractChartFrames([...sim.backfill(), ...sim.advanceTo(2 * MS_PER_DAY)]),
+    })
+    const before = useTelemetryStore.getState().sleepHistory.cdr!
+    expect(before.length).toBeGreaterThan(0)
+    const snap = (t: number) => ({
+      t,
+      latest: {},
+      activeAlerts: [],
+      states: [],
+      cards: [],
+      dataQualityCount: 0,
+    })
+
+    spy.emit({ type: 'SNAPSHOT', snapshot: snap(2 * MS_PER_DAY) })
+    expect(useTelemetryStore.getState().sleepHistory.cdr).toEqual(before)
+    spy.emit({ type: 'SNAPSHOT', snapshot: snap(0) })
+    expect(useTelemetryStore.getState().sleepHistory.cdr).toEqual([])
   })
 })
 

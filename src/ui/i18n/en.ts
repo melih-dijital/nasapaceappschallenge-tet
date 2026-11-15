@@ -123,13 +123,14 @@ export const en = {
   'cockpit.spo2ChartTitle': 'SpO₂ Saturation (24h Sim Window)',
   'cockpit.spo2ChartSubtitle': '15-min cadence · Absolute clinical threshold reference',
   'cockpit.spo2ChartAria': 'Blood oxygen saturation chart over the last 24 simulated hours with critical threshold line',
-  'cockpit.sleepChartTitle': 'Sleep & Exercise History (14 Sim Days)',
+  'cockpit.sleepChartTitle': 'Sleep History (Last 14 Sim Days)',
   'cockpit.sleepChartSubtitle': 'Daily sleep duration bars, personal baseline median, and cumulative sleep debt',
   'cockpit.sleepChartAria': '14-day bar and area chart showing daily sleep duration, baseline median, and cumulative sleep debt',
   'cockpit.nightSleepBlock': 'Sleep window',
   'cockpit.baselineBandLabel': 'Baseline band (±{z}σ)',
   'cockpit.criticalThresholdLabel': 'Critical threshold ({value}{unit})',
   'cockpit.sleepDebtLabel': 'Sleep debt (h)',
+  'cockpit.sleepChartEmpty': 'Waiting for daily telemetry: sleep history appears once the engine streams daily frames (press Start).',
 
   // Kokpit — Radyasyon paneli
   'radiation.panelTitle': 'Radiation & Solar Particle Event Monitor',

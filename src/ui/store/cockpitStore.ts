@@ -44,7 +44,7 @@ import {
 } from '@/workers/protocol'
 import {
   buildInitialVitalsSeries,
-  buildSleepHistory,
+  buildSleepHistoryFromSeries,
   computeBoneSummary,
   CREW_PROFILES,
   getCrewProfile,
@@ -206,20 +206,19 @@ function buildInitialTelemetryState(
       latestValues[k] = pts[pts.length - 1]?.value ?? crew.baselines[metric]?.mean ?? 0
     }
 
-    const sleepEntries = buildSleepHistory(crew, simDay, scenarioId)
-    sleepHistory[crew.id] = sleepEntries
-    const lastSleep = sleepEntries[sleepEntries.length - 1]
+    // Uyku geçmişi yalnızca motorun günlük çerçevelerinden kurulur (FRAMES_BATCH); başlangıçta boş.
+    sleepHistory[crew.id] = []
 
     latestValues[latestKey(crew.id, 'sleep.durationH')] =
-      lastSleep?.durationH ?? crew.baselines['sleep.durationH']?.mean ?? 6.8
+      crew.baselines['sleep.durationH']?.mean ?? 6.8
     latestValues[latestKey(crew.id, 'sleep.efficiency')] =
       crew.baselines['sleep.efficiency']?.mean ?? 0.88
     latestValues[latestKey(crew.id, 'sleep.midpointShiftMin')] =
       crew.baselines['sleep.midpointShiftMin']?.mean ?? 8
     latestValues[latestKey(crew.id, 'activity.exerciseMin')] =
-      lastSleep?.exerciseMin ?? crew.baselines['activity.exerciseMin']?.mean ?? 75
+      crew.baselines['activity.exerciseMin']?.mean ?? 75
     latestValues[latestKey(crew.id, 'activity.resistiveMin')] =
-      lastSleep?.resistiveMin ?? crew.baselines['activity.resistiveMin']?.mean ?? 45
+      crew.baselines['activity.resistiveMin']?.mean ?? 45
     latestValues[latestKey(crew.id, 'hydrationL')] = crew.baselines.hydrationL?.mean ?? 2.6
     latestValues[latestKey(crew.id, 'cabinCo2ppm')] = 1150
     latestValues[latestKey(crew.id, 'mood.stress')] = crew.baselines['mood.stress']?.mean ?? 3.2
@@ -607,9 +606,42 @@ let unsubscribeClient: (() => void) | null = null
 let hasEngineDecisionState = false
 /** Motorun RadiationModule raporu geldiyse UI radyasyon özetini kendisi hesaplamaz (tek kaynak motor). */
 let hasEngineRadiationReports = false
-/** Motorun kişisel baseline medyanı (activity.resistiveMin, günlük) — SNAPSHOT telemetri sıfırlamasından etkilenmez. */
-const engineResistiveBaseline = new Map<CrewId, number>()
+/** Motorun kişisel baseline medyanları (günlük: activity.resistiveMin, sleep.durationH), anahtar latestKey. */
+const engineDailyBaseline = new Map<string, number>()
+const BASELINE_TRACKED_METRICS: readonly MetricId[] = ['activity.resistiveMin', 'sleep.durationH']
+const SLEEP_HISTORY_METRICS: readonly MetricId[] = [
+  'sleep.durationH',
+  'activity.exerciseMin',
+  'activity.resistiveMin',
+]
 
+function sleepHistoryFor(series: Record<string, SeriesPoint[]>, crewId: CrewId): DailySleepEntry[] {
+  return buildSleepHistoryFromSeries(
+    {
+      sleepDurationH: series[latestKey(crewId, 'sleep.durationH')],
+      exerciseMin: series[latestKey(crewId, 'activity.exerciseMin')],
+      resistiveMin: series[latestKey(crewId, 'activity.resistiveMin')],
+    },
+    engineDailyBaseline.get(latestKey(crewId, 'sleep.durationH')),
+  )
+}
+
+/** Grafiklerin gösterdiği pencere (son 24 sim-saat; selectSeries çağrıları). */
+const CHART_WINDOW_MS = MS_PER_HOUR * 24
+
+/**
+ * Seri sınırı aşınca: grafik penceresi (son 24 sim-saat) TAM çözünürlükte korunur, yalnızca daha eski kısım
+ * seyreltilir. Tüm geçmişi tek seferde 600 noktaya indirmek (14 gün backfill + görev) son 24 saate birkaç nokta
+ * bırakıyordu; grafik gerçek veriyi neredeyse hiç göstermiyordu.
+ */
+function compactSeries(points: SeriesPoint[]): SeriesPoint[] {
+  const lastT = points[points.length - 1]!.t
+  const cut = lastT - CHART_WINDOW_MS
+  const recent = points.filter((p) => p.t >= cut)
+  if (recent.length >= MAX_CHART_POINTS) return decimate(recent, MAX_CHART_POINTS)
+  const older = points.filter((p) => p.t < cut)
+  return [...decimate(older, Math.max(2, MAX_CHART_POINTS - recent.length)), ...recent]
+}
 function applyRadiationReports(reports: readonly ModuleReport[]): void {
   const radiation = reports.filter((r) => r.module === 'radiation')
   if (radiation.length === 0) return
@@ -658,8 +690,7 @@ function applyFramesBatch(frames: ChartFrame[]): void {
       const baseSeries =
         lastPoint !== undefined && f.t <= lastPoint.t ? existing.filter((p) => p.t < f.t) : existing
       const appended = [...baseSeries, { t: f.t, value: Number(f.value.toFixed(3)) }]
-      nextSeries[k] =
-        appended.length > MAX_CHART_POINTS ? decimate(appended, MAX_CHART_POINTS) : appended
+      nextSeries[k] = appended.length > MAX_CHART_POINTS ? compactSeries(appended) : appended
       nextLatest[k] = Number(f.value.toFixed(2))
 
       // PROJECT_MEMORY §3.8: t < 0 backfill çerçeveleri doz birikimine katılmaz
@@ -716,8 +747,15 @@ function applyFramesBatch(frames: ChartFrame[]): void {
         crewId,
         day,
         nextSeries[latestKey(crewId, 'activity.resistiveMin')],
-        engineResistiveBaseline.get(crewId),
+        engineDailyBaseline.get(latestKey(crewId, 'activity.resistiveMin')),
       )
+    }
+
+    const nextSleep = { ...prev.sleepHistory }
+    for (const crewId of new Set(
+      frames.filter((f) => SLEEP_HISTORY_METRICS.includes(f.metric)).map((f) => f.crewId),
+    )) {
+      nextSleep[crewId] = sleepHistoryFor(nextSeries, crewId)
     }
 
     return {
@@ -726,6 +764,7 @@ function applyFramesBatch(frames: ChartFrame[]): void {
       latestValues: nextLatest,
       radiationSummary: nextRad,
       boneSummary: nextBone,
+      sleepHistory: nextSleep,
     }
   })
 }
@@ -1083,7 +1122,6 @@ function handleWorkerMessage(msg: WorkerToUiMessage): void {
 
         useTelemetryStore.setState((prev) => {
           const nextConf = { ...prev.crewConfidence }
-          const nextSleep = { ...prev.sleepHistory }
           const nextBone = { ...prev.boneSummary }
           const nextBaselines = { ...prev.baselines }
           const nextLatest = { ...prev.latestValues }
@@ -1096,17 +1134,11 @@ function handleWorkerMessage(msg: WorkerToUiMessage): void {
               targetDays,
               isLearning,
             }
-            const sleepEntries = buildSleepHistory(crew, nextDay, nextScenario)
-            nextSleep[crew.id] = sleepEntries
-            const latestSleep = sleepEntries[sleepEntries.length - 1]
-            if (latestSleep) {
-              nextLatest[latestKey(crew.id, 'sleep.durationH')] = latestSleep.durationH
-            }
             nextBone[crew.id] = computeBoneSummary(
               crew.id,
               nextDay,
               prev.series[latestKey(crew.id, 'activity.resistiveMin')],
-              engineResistiveBaseline.get(crew.id),
+              engineDailyBaseline.get(latestKey(crew.id, 'activity.resistiveMin')),
             )
           }
 
@@ -1125,7 +1157,6 @@ function handleWorkerMessage(msg: WorkerToUiMessage): void {
           return {
             ...prev,
             crewConfidence: nextConf,
-            sleepHistory: nextSleep,
             boneSummary: nextBone,
             baselines: nextBaselines,
             latestValues: nextLatest,
@@ -1144,23 +1175,27 @@ function handleWorkerMessage(msg: WorkerToUiMessage): void {
       const { alertEvents, states, cards, decisions, dataQualityCount, t, moduleReports } =
         msg.output
       if (moduleReports && moduleReports.length > 0) applyRadiationReports(moduleReports)
-      const resistiveBaselines = (msg.output.baselines ?? []).filter(
-        (b) => b.metric === 'activity.resistiveMin' && b.baselineMedian !== null,
+      const dailyBaselines = (msg.output.baselines ?? []).filter(
+        (b) => BASELINE_TRACKED_METRICS.includes(b.metric) && b.baselineMedian !== null,
       )
-      if (resistiveBaselines.length > 0) {
-        for (const b of resistiveBaselines) engineResistiveBaseline.set(b.crewId, b.baselineMedian!)
+      if (dailyBaselines.length > 0) {
+        for (const b of dailyBaselines) {
+          engineDailyBaseline.set(latestKey(b.crewId, b.metric), b.baselineMedian!)
+        }
         const day = useSessionStore.getState().day
         useTelemetryStore.setState((prev) => {
           const nextBone = { ...prev.boneSummary }
-          for (const crewId of new Set(resistiveBaselines.map((b) => b.crewId))) {
+          const nextSleep = { ...prev.sleepHistory }
+          for (const crewId of new Set(dailyBaselines.map((b) => b.crewId))) {
             nextBone[crewId] = computeBoneSummary(
               crewId,
               day,
               prev.series[latestKey(crewId, 'activity.resistiveMin')],
-              engineResistiveBaseline.get(crewId),
+              engineDailyBaseline.get(latestKey(crewId, 'activity.resistiveMin')),
             )
+            nextSleep[crewId] = sleepHistoryFor(prev.series, crewId)
           }
-          return { ...prev, boneSummary: nextBone }
+          return { ...prev, boneSummary: nextBone, sleepHistory: nextSleep }
         })
       }
       const lastDecision = decisions?.at(-1)
@@ -1197,11 +1232,29 @@ function handleWorkerMessage(msg: WorkerToUiMessage): void {
         seeded.latestValues[k] = Number(v.toFixed(2))
       }
 
+      // t > 0: koşu ortası anlık görüntü (ör. bookmark) — motordan gelmiş seriler, uyku geçmişi, radyasyon ve kemik
+      // özetleri korunur (önceki FRAMES_BATCH/ENGINE_OUTPUT bunları zaten getirdi). t = 0: reset / senaryo / init —
+      // önceki koşunun motor değerleri de temizlenir, yeni koşunun kareleri gelene kadar başlangıç durumu gösterilir.
+      const midRun = msg.snapshot.t > 0
+      if (!midRun) {
+        hasEngineRadiationReports = false
+        engineDailyBaseline.clear()
+      }
       useTelemetryStore.setState((prev) => ({
         ...seeded,
-        // Motor raporları varsa SNAPSHOT bunları UI başlangıç değerleriyle ezmez (tek kaynak motor).
-        ...(hasEngineRadiationReports ? { radiationSummary: prev.radiationSummary } : {}),
-        ...(engineResistiveBaseline.size > 0 ? { boneSummary: prev.boneSummary } : {}),
+        ...(midRun
+          ? {
+              series: prev.series,
+              latestValues: {
+                ...prev.latestValues,
+                ...seeded.latestValues,
+                ...msg.snapshot.latest,
+              },
+              sleepHistory: prev.sleepHistory,
+              boneSummary: prev.boneSummary,
+            }
+          : {}),
+        ...(midRun && hasEngineRadiationReports ? { radiationSummary: prev.radiationSummary } : {}),
         dataQuality: prev.dataQuality,
         dataQualityCount: msg.snapshot.dataQualityCount,
       }))
@@ -1290,7 +1343,7 @@ export function bindEngineClient(
   activeClient?.dispose()
   hasEngineDecisionState = false
   hasEngineRadiationReports = false
-  engineResistiveBaseline.clear()
+  engineDailyBaseline.clear()
 
   activeClient = client
   unsubscribeClient = client.subscribe(handleWorkerMessage)
