@@ -56,6 +56,7 @@ import {
   type DailySleepEntry,
 } from './crewProfiles'
 import { decimate, MAX_CHART_POINTS, type SeriesPoint } from './decimate'
+import { readGroundMirror, type GroundMirrorSnapshot } from './groundMirror'
 import {
   buildMockBehavioralTrends,
   loadLocalJournals,
@@ -141,6 +142,8 @@ export interface EarthLinkStoreState {
   groundDeliveredAlerts: Alert[]
   groundDeliveredAt: SimTimeMs | null
   lastReplyReceivedToast: { id: string; templateId: string; arrivedAt: SimTimeMs } | null
+  /** Earth view: motorun gecikmeli Mission Control kopyası; gelmezse null (UI üretmez). */
+  groundMirror: GroundMirrorSnapshot | null
 }
 
 export interface BehavioralStoreState {
@@ -459,6 +462,7 @@ export const useEarthLinkStore = create<EarthLinkStoreState>(() => ({
   groundDeliveredAlerts: [],
   groundDeliveredAt: null,
   lastReplyReceivedToast: null,
+  groundMirror: null,
 }))
 
 export const useBehavioralStore = create<BehavioralStoreState>(() =>
@@ -1001,6 +1005,10 @@ function applyDecisionSnapshot(
   simT: SimTimeMs,
 ): void {
   hasEngineDecisionState = true
+  const groundMirror = readGroundMirror(decision)
+  if (groundMirror || useEarthLinkStore.getState().groundMirror) {
+    useEarthLinkStore.setState({ groundMirror })
+  }
   useDecisionStore.setState({
     cards: [...decision.cards],
     schedulesByCrew: decision.schedulesByCrew,

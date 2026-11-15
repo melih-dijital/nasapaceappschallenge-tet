@@ -192,3 +192,77 @@ Bu bölüm, `src/core/detection/i18nKeys.ts` içindeki `DETECTION_I18N_KEYS` lis
 | `metric.pvt.medianMs` | `—` | PVT Median Reaction Time (ms) | PVT Medyan Tepki Süresi (ms) | `METRIC_META.labelKey` |
 | `metric.pvt.lapses` | `—` | PVT Lapses (count) | PVT Dikkat Boşluğu (adet) | `METRIC_META.labelKey` |
 | `metric.rad.doseRateMsvDay` | `—` | Radiation Dose Rate (mSv/day) | Radyasyon Doz Hızı (mSv/gün) | `METRIC_META.labelKey` |
+
+---
+
+## UI — Konsol tasarımı (src/ui)
+
+Kokpit konsol yeniden tasarımında eklenen arayüz anahtarları (üst çubuk, kanıt ikonu, Earth link özeti, Earth view, sunum kontrolleri, kanıt durum sözlüğü). Değiştirilen değerler: `app.title`, `app.disclaimer`, `nav.ground` ("Earth view"), `controls.*` (ana ekranda "Simulation" yok), grafik başlıkları, `radiation.speState.*`, `earth.status.*` (büyük harf yok).
+
+| Anahtar | İngilizce (`en`) | Türkçe (`tr`) |
+|---|---|---|
+| `presenter.key.drawer` | Open or close presenter controls | Sunum kontrollerini aç/kapat |
+| `topbar.earthLink` | Earth link: nominal · one-way {delay} | Dünya bağlantısı: normal · tek yön {delay} |
+| `topbar.earthLinkBlackout` | Earth link: blackout | Dünya bağlantısı: kesinti |
+| `environment.LEO` | Low Earth orbit | Alçak Dünya yörüngesi |
+| `environment.MARS_TRANSIT` | Mars transit | Mars transferi |
+| `environment.LUNAR_ORBIT` | Lunar orbit | Ay yörüngesi |
+| `environment.LUNAR_SURFACE` | Lunar surface | Ay yüzeyi |
+| `environment.MARS_SURFACE` | Mars surface | Mars yüzeyi |
+| `provenance.tooltip` | {label}: {value} · {source} · {status} | {label}: {value} · {source} · {status} |
+| `provenance.thresholdLabel` | Threshold | Eşik |
+| `provenance.openInEvidence` | Open evidence record | Kanıt kaydını aç |
+| `provenance.sourceName.NASA_STD` | NASA standard | NASA standardı |
+| `provenance.sourceName.NASA_HRP` | NASA HRP | NASA HRP |
+| `provenance.sourceName.PEER_REVIEWED` | Peer-reviewed | Hakemli yayın |
+| `provenance.sourceName.CLINICAL_CONVENTION` | Clinical convention | Klinik konvansiyon |
+| `provenance.sourceName.DEMO_PARAMETER` | Demo parameter | Demo parametresi |
+| `provenance.statusShort.VERIFIED` | Verified | Doğrulandı |
+| `provenance.statusShort.PARTIAL` | Partial | Kısmi |
+| `provenance.statusShort.CONFLICTING` | Conflicting | Çelişkili |
+| `provenance.statusShort.UNVERIFIED` | Unverified | Doğrulanmadı |
+| `cockpit.dataGap` | Data gap | Veri boşluğu |
+| `cockpit.crewStatusTitle` | Crew status | Mürettebat durumu |
+| `cockpit.lowConfidenceNote` | Low confidence ({pct} %) | Düşük güven (%{pct}) |
+| `cockpit.latestReadingsTitle` | Latest readings | Son ölçümler |
+| `cockpit.activeAlertsTitle` | Active alerts | Aktif uyarılar |
+| `cockpit.viewAll` | View all | Tümünü gör |
+| `cockpit.recommendedActionsTitle` | Recommended actions | Önerilen eylemler |
+| `radiation.careerPctOfLimit` | {pct} % of the {limit} mSv career limit |  |
+| `earthSummary.title` | Earth link | Dünya bağlantısı |
+| `earthSummary.status` | Status | Durum |
+| `earthSummary.nominal` | Nominal | Normal |
+| `earthSummary.blackout` | Blackout | Kesinti |
+| `earthSummary.oneWay` | One-way delay | Tek yön gecikme |
+| `earthSummary.roundTrip` | Round trip + ground | Gidiş-dönüş + yer |
+| `earthSummary.earthSees` | Earth is seeing |  |
+| `earthSummary.earthSeesValue` | data from {time} ({ago} ago) | {time} verisi ({ago} önce) |
+| `earthSummary.noDownlink` | No downlink during blackout | Kesinti süresince downlink yok |
+| `earthSummary.queue` | Queued | Kuyrukta |
+| `earthSummary.downlink` | Downlink | Downlink |
+| `earthSummary.inFlight` | In flight | Yolda |
+| `earthSummary.delivered` | Delivered | Ulaştı |
+| `earthSummary.pendingReplies` | Replies on the way ({count}) | Yoldaki yanıtlar ({count}) |
+| `earthView.pageTitle` | Earth view | Dünya görünümü |
+| `earthView.stripTitle` | Mission Control view | Görev Kontrol görünümü |
+| `earthView.stripAge` | data as of {time} · {behind} behind the spacecraft | {time} itibarıyla veri · aracın {behind} gerisinde |
+| `earthView.crewTitle` | Crew status (delayed) | Mürettebat durumu (gecikmeli) |
+| `earthView.alertsTitle` | Alerts received | Ulaşan uyarılar |
+| `earthView.seriesTitle` | Latest received values | Son ulaşan değerler |
+| `earthView.compareLabel` | Compare onboard and Earth view | Araç içi ve Dünya görünümünü karşılaştır |
+| `earthView.onboard` | Onboard | Araç içi |
+| `earthView.earth` | Earth view | Dünya görünümü |
+| `presenterControls.title` | Presenter controls | Sunum kontrolleri |
+| `presenterControls.playback` | Playback | Oynatma |
+| `presenterControls.earthDelay` | Earth delay | Dünya gecikmesi |
+| `presenterControls.blackout` | Comm blackout | İletişim kesintisi |
+| `presenterControls.dataGap` | Simulate data gap | Veri boşluğu oluştur |
+| `presenterControls.presenterMode` | Presenter mode | Sunum modu |
+| `presenterControls.presenterOn` | Turn on | Aç |
+| `presenterControls.presenterOff` | Turn off | Kapat |
+| `evidence.statusHelp.VERIFIED.term` | Verified | Doğrulandı |
+| `evidence.statusHelp.VERIFIED.text` | value checked against the cited primary source. | değer atıf yapılan birincil kaynakla karşılaştırıldı. |
+| `evidence.statusHelp.PARTIAL.term` | Partial | Kısmi |
+| `evidence.statusHelp.CONFLICTING.term` | Conflicting | Çelişkili |
+| `evidence.statusHelp.UNVERIFIED.term` | Unverified / demo | Doğrulanmamış / demo |
+| `evidence.statusHelp.CLINICAL_CONVENTION.term` | Clinical convention | Klinik konvansiyon |

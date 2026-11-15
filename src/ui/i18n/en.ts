@@ -3,9 +3,10 @@
 
 export const en = {
   // Uygulama & Kabuk
-  'app.title': 'ASTRO HEALTH COCKPIT',
+  'app.title': 'Astro Health Cockpit',
   'app.subtitle': 'Autonomous Crew Health Decision Support',
-  'app.disclaimer': 'Decision support prototype · synthetic data · not a medical device',
+  'app.disclaimer':
+    'Synthetic telemetry · Decision-support prototype, not a medical device · Thresholds labelled by evidence status',
   'app.placeholderHint': 'Faz 9–10’da doldurulacak · Module route ready for Phase 10 integration',
 
   // Navigasyon
@@ -16,24 +17,24 @@ export const en = {
   'nav.behavioral': 'Behavioral',
   'nav.evidence': 'Evidence',
   'nav.validation': 'Validation',
-  'nav.ground': 'Ground',
+  'nav.ground': 'Earth view',
   'nav.comingSoon': 'Phase 10',
 
   // Üst çubuk & Sim kontrolleri
   'controls.missionClock': 'Mission Elapsed Time',
   'controls.day': 'Day {day}',
   'controls.scenario': 'Scenario',
-  'controls.speed': 'Sim Speed',
-  'controls.speedScale': '1× = 20s / sim-day',
-  'controls.play': 'Start simulation',
-  'controls.pause': 'Pause simulation',
-  'controls.reset': 'Reset simulation',
+  'controls.speed': 'Playback speed',
+  'controls.speedScale': '1× = 20 s per mission day',
+  'controls.play': 'Start',
+  'controls.pause': 'Pause',
+  'controls.reset': 'Reset',
   'controls.bookmarks': 'Jump to bookmark',
   'controls.bookmarkSelect': 'Bookmark…',
   'controls.language': 'Language',
   'controls.timeCompressed': 'time compressed',
-  'controls.running': 'LIVE',
-  'controls.paused': 'PAUSED',
+  'controls.running': 'Running',
+  'controls.paused': 'Paused',
 
   // Senaryolar (Faz 2 & Mock)
   'scenario.demo_main.title': 'Demo Main (Curated 6-Day Mission)',
@@ -72,7 +73,8 @@ export const en = {
   'earthDelay.ACT_THEN_REPORT': 'Act, then report',
   'earthDelay.CAN_WAIT_FOR_EARTH': 'Can wait for Earth',
   'earthDelay.ACT_NOW.desc': 'Time-to-harm is shorter than Earth round-trip telemetry delay.',
-  'earthDelay.ACT_THEN_REPORT.desc': 'Initiate onboard protocol now and queue telemetry report for Earth.',
+  'earthDelay.ACT_THEN_REPORT.desc':
+    'Initiate onboard protocol now and queue telemetry report for Earth.',
   'earthDelay.CAN_WAIT_FOR_EARTH.desc': 'Safe to wait for Earth Flight Surgeon review.',
 
   // Metrikler (METRIC_META.labelKey ile birebir)
@@ -117,44 +119,52 @@ export const en = {
   'cockpit.simulateSensorFault': 'Toggle sensor fault test',
 
   // Kokpit — Orta sütun (telemetri grafikleri)
-  'cockpit.hrChartTitle': 'Heart Rate (24h Sim Window)',
-  'cockpit.hrChartSubtitle': '15-min cadence · Personal 6h-block median ± warning z-band & sleep window',
-  'cockpit.hrChartAria': 'Heart rate chart over the last 24 simulated hours with personal baseline band and sleep shading',
-  'cockpit.spo2ChartTitle': 'SpO₂ Saturation (24h Sim Window)',
+  'cockpit.hrChartTitle': 'Heart rate · 24 h',
+  'cockpit.hrChartSubtitle':
+    '15-min cadence · Personal 6h-block median ± warning z-band & sleep window',
+  'cockpit.hrChartAria':
+    'Heart rate over the last 24 hours with personal baseline band and sleep window',
+  'cockpit.spo2ChartTitle': 'SpO₂ · 24 h',
   'cockpit.spo2ChartSubtitle': '15-min cadence · Absolute clinical threshold reference',
-  'cockpit.spo2ChartAria': 'Blood oxygen saturation chart over the last 24 simulated hours with critical threshold line',
-  'cockpit.sleepChartTitle': 'Sleep History (Last 14 Sim Days)',
-  'cockpit.sleepChartSubtitle': 'Daily sleep duration bars, personal baseline median, and cumulative sleep debt',
-  'cockpit.sleepChartAria': '14-day bar and area chart showing daily sleep duration, baseline median, and cumulative sleep debt',
+  'cockpit.spo2ChartAria':
+    'Blood oxygen saturation over the last 24 hours with the critical threshold line',
+  'cockpit.sleepChartTitle': 'Sleep and sleep debt · 14 days',
+  'cockpit.sleepChartSubtitle':
+    'Daily sleep duration bars, personal baseline median, and cumulative sleep debt',
+  'cockpit.sleepChartAria':
+    '14-day bar and area chart showing daily sleep duration, baseline median, and cumulative sleep debt',
   'cockpit.nightSleepBlock': 'Sleep window',
   'cockpit.baselineBandLabel': 'Baseline band (±{z}σ)',
   'cockpit.criticalThresholdLabel': 'Critical threshold ({value}{unit})',
   'cockpit.sleepDebtLabel': 'Sleep debt (h)',
-  'cockpit.sleepChartEmpty': 'Waiting for daily telemetry: sleep history appears once the engine streams daily frames (press Start).',
+  'cockpit.sleepChartEmpty': 'Waiting for daily telemetry.',
 
   // Kokpit — Radyasyon paneli
-  'radiation.panelTitle': 'Radiation & Solar Particle Event Monitor',
+  'radiation.panelTitle': 'Radiation',
   'radiation.panelSubtitle': 'Cumulative career effective dose, live flux rate & SPE state machine',
   'radiation.careerGaugeLabel': 'NASA-STD-3001 career limit (verified)',
   'radiation.careerDoseTitle': 'Cumulative Career Effective Dose',
   'radiation.priorDose': 'Prior career: {value} mSv',
   'radiation.missionDose': 'Mission: +{value} mSv',
   'radiation.rateChartTitle': 'Radiation Dose Rate (mSv/day)',
-  'radiation.rateChartAria': 'Radiation dose rate chart showing nominal GCR/ISS band and solar particle event spikes',
+  'radiation.rateChartAria':
+    'Radiation dose rate chart showing nominal GCR/ISS band and solar particle event spikes',
   'radiation.expectedBand': 'Expected reference band',
   'radiation.speStateLabel': 'SPE Status',
-  'radiation.speState.IDLE': 'IDLE',
-  'radiation.speState.SUSPECTED': 'SUSPECTED',
-  'radiation.speState.CONFIRMED': 'CONFIRMED',
-  'radiation.speState.DECAYING': 'DECAYING',
+  'radiation.speState.IDLE': 'Quiet',
+  'radiation.speState.SUSPECTED': 'Suspected',
+  'radiation.speState.CONFIRMED': 'Confirmed',
+  'radiation.speState.DECAYING': 'Decaying',
   'radiation.speTargetLabel': 'design reference SPE protection target',
-  'radiation.speTargetNote': 'Crew protection target for design reference SPE (Oct 1989 sum, 250 mSv); not a personal per-event limit.',
+  'radiation.speTargetNote':
+    'Crew protection target for design reference SPE (Oct 1989 sum, 250 mSv); not a personal per-event limit.',
   'radiation.speEventDose': 'Event dose: {dose} / {target} mSv',
 
   // Kokpit — Kemik tahmini kartı
-  'bone.cardTitle': 'Bone Mineral Density Loss Projection',
+  'bone.cardTitle': 'Bone loss estimate',
   'bone.indicativeBadge': 'Indicative estimate',
-  'bone.estimate.disclaimer': 'Indicative estimate — bone density is measured by scans before/after flight',
+  'bone.estimate.disclaimer':
+    'Indicative estimate — bone density is measured by scans before/after flight',
   'bone.monthlyLoss': 'Est. Monthly Loss',
   'bone.cumulativeLoss': 'Est. Mission Cumulative',
   'bone.resistiveAdherence': '7d Resistive Adherence',
@@ -162,7 +172,8 @@ export const en = {
   // Kokpit — Sağ sütun (uyarılar, eylem kartları, Earth Link)
   'cockpit.recentAlertsTitle': 'Recent Alerts (Top 5)',
   'cockpit.noActiveAlerts': 'No active anomalies detected',
-  'cockpit.noActiveAlertsDesc': 'All monitored metrics remain within personal baseline and L1 bounds.',
+  'cockpit.noActiveAlertsDesc':
+    'All monitored metrics remain within personal baseline and L1 bounds.',
   'cockpit.ackAlert': 'Acknowledge',
   'cockpit.acked': 'Acked',
   'cockpit.priorityActionsTitle': 'Priority Decision Cards (Top 2)',
@@ -186,12 +197,13 @@ export const en = {
   'earth.preset.MARS_MIN': 'Mars min (3m)',
   'earth.preset.MARS_MAX': 'Mars max (22m)',
   'earth.preset.CUSTOM': 'Custom',
-  'earth.status.connected': 'LINK NOMINAL',
-  'earth.status.blackout': 'COMM BLACKOUT',
+  'earth.status.connected': 'Link nominal',
+  'earth.status.blackout': 'Comm blackout',
   'earth.pendingReplies': '{count} pending reply',
   'earth.replyEta': 'Earth reply ETA: {eta}',
   'earth.noPendingReply': 'No pending ground queries · Outbox synced',
-  'earth.triageRule': 'If time-to-harm ≤ round-trip ({rt} min), crew must act autonomously onboard.',
+  'earth.triageRule':
+    'If time-to-harm ≤ round-trip ({rt} min), crew must act autonomously onboard.',
 
   // Kanıt & ProvenanceTag
   'provenance.source.NASA_STD': 'NASA_STD',
@@ -204,7 +216,8 @@ export const en = {
   'provenance.status.CONFLICTING': 'Conflicting sources',
   'provenance.status.UNVERIFIED': 'Unverified / demo parameter',
   'provenance.sheetTitle': 'Evidence & Parameter Provenance',
-  'provenance.sheetDescription': 'Every threshold and model parameter is tracked in the Evidence Registry.',
+  'provenance.sheetDescription':
+    'Every threshold and model parameter is tracked in the Evidence Registry.',
   'provenance.parameterId': 'Parameter ID',
   'provenance.valueUnit': 'Value & Unit',
   'provenance.sourceType': 'Source Category',
@@ -218,7 +231,7 @@ export const en = {
   // Motor / Worker hata ve durumlar
   'worker.errorTitle': 'Telemetry Engine Error',
   'worker.restartButton': 'Restart engine',
-  'worker.loading': 'Initializing mission telemetry engine…',
+  'worker.loading': 'Connecting to onboard health engine…',
   'cockpit.criticalLiveAnnouncement': 'Critical alert for {crew}: {title}. {triage}.',
 
   // Uyarı başlıkları ve nedenleri (Mock + Faz 5–6)
@@ -233,7 +246,8 @@ export const en = {
   'alert.co2_high.title': 'Elevated Cabin CO₂ Concentration',
   'alert.career_dose.title': 'Approaching Career Radiation Dose Limit',
 
-  'why.sleep.belowBaseline': 'Sleep duration {valueH} h vs personal baseline {baselineH} h (z = {z})',
+  'why.sleep.belowBaseline':
+    'Sleep duration {valueH} h vs personal baseline {baselineH} h (z = {z})',
   'why.radiation.rateRatio': 'Dose rate is {ratio}× above personal baseline rate',
   'why.l1.threshold': 'Metric crossed absolute L1 threshold ({value} vs {limit})',
   'why.l2.deviation': 'Sustained personal baseline deviation (z = {z})',
@@ -244,19 +258,26 @@ export const en = {
 
   // Eylem Kataloğu (Faz 7 §3.1 — 13 ActionId + Mock)
   'action.ACT_REST_BLOCK.title': 'Insert Recovery Rest Block',
-  'action.ACT_REST_BLOCK.step1': 'Consider scheduling a 45-minute low-stimulation rest block before next work task.',
-  'action.ACT_REST_BLOCK.step2': 'Postpone non-critical maintenance activities per mission timeline rules.',
+  'action.ACT_REST_BLOCK.step1':
+    'Consider scheduling a 45-minute low-stimulation rest block before next work task.',
+  'action.ACT_REST_BLOCK.step2':
+    'Postpone non-critical maintenance activities per mission timeline rules.',
 
   'action.ACT_REDUCE_WORKLOAD.title': 'Reduce High-Intensity Workload',
-  'action.ACT_REDUCE_WORKLOAD.step1': 'Shift high-cognitive tasks to secondary window and keep resistive exercise at low intensity.',
-  'action.ACT_REDUCE_WORKLOAD.step2': 'Log workload adjustment in onboard schedule diff for Flight Surgeon review.',
+  'action.ACT_REDUCE_WORKLOAD.step1':
+    'Shift high-cognitive tasks to secondary window and keep resistive exercise at low intensity.',
+  'action.ACT_REDUCE_WORKLOAD.step2':
+    'Log workload adjustment in onboard schedule diff for Flight Surgeon review.',
 
   'action.ACT_BREATHING.title': 'Guided Autonomic Paced Breathing',
-  'action.ACT_BREATHING.step1': 'Consider a 10-minute paced breathing and recovery session in crew quarters.',
-  'action.ACT_BREATHING.step2': 'Re-check resting heart rate and HRV in the next 6-hour baseline block.',
+  'action.ACT_BREATHING.step1':
+    'Consider a 10-minute paced breathing and recovery session in crew quarters.',
+  'action.ACT_BREATHING.step2':
+    'Re-check resting heart rate and HRV in the next 6-hour baseline block.',
 
   'action.ACT_COMMS_FAMILY.title': 'Schedule Private Family / Support Comms',
-  'action.ACT_COMMS_FAMILY.step1': 'Prioritize store-and-forward private family video message in Earth Link outbox.',
+  'action.ACT_COMMS_FAMILY.step1':
+    'Prioritize store-and-forward private family video message in Earth Link outbox.',
   'action.ACT_COMMS_FAMILY.step2': 'Protect unscheduled personal downtime window.',
 
   'action.ACT_HYDRATE.title': 'Structured Hydration Protocol',
@@ -264,40 +285,56 @@ export const en = {
   'action.ACT_HYDRATE.step2': 'Monitor daily hydration total against personal baseline.',
 
   'action.ACT_SLEEP_SHIFT.title': 'Advance Sleep Window & Protect Recovery',
-  'action.ACT_SLEEP_SHIFT.step1': 'Advance sleep block start by 30 minutes and protect full 8-hour sleep window.',
-  'action.ACT_SLEEP_SHIFT.step2': 'Avoid high-intensity work during the 90 minutes preceding sleep.',
+  'action.ACT_SLEEP_SHIFT.step1':
+    'Advance sleep block start by 30 minutes and protect full 8-hour sleep window.',
+  'action.ACT_SLEEP_SHIFT.step2':
+    'Avoid high-intensity work during the 90 minutes preceding sleep.',
 
   'action.ACT_LIGHT_CONTROL.title': 'Circadian Cabin Lighting Adjustment',
-  'action.ACT_LIGHT_CONTROL.step1': 'Dim blue-enriched cabin lighting 2 hours prior to scheduled sleep window.',
-  'action.ACT_LIGHT_CONTROL.step2': 'Apply high-melanopic light exposure upon wake to stabilize midpoint shift.',
+  'action.ACT_LIGHT_CONTROL.step1':
+    'Dim blue-enriched cabin lighting 2 hours prior to scheduled sleep window.',
+  'action.ACT_LIGHT_CONTROL.step2':
+    'Apply high-melanopic light exposure upon wake to stabilize midpoint shift.',
 
   'action.ACT_SHELTER.title': 'Move to Storm Shelter Per Mission Protocol',
-  'action.ACT_SHELTER.step1': 'Move to the most shielded area of the vehicle per mission radiation protocol.',
-  'action.ACT_SHELTER.step2': 'Suspend EVA and unshielded exercise blocks until dose rate decays below threshold.',
+  'action.ACT_SHELTER.step1':
+    'Move to the most shielded area of the vehicle per mission radiation protocol.',
+  'action.ACT_SHELTER.step2':
+    'Suspend EVA and unshielded exercise blocks until dose rate decays below threshold.',
 
   'action.ACT_DOSE_CHECK.title': 'Verify Personal Dosimeter & Shielding',
-  'action.ACT_DOSE_CHECK.step1': 'Cross-check active personal dosimeter reading with vehicle area radiation monitor.',
-  'action.ACT_DOSE_CHECK.step2': 'Transmit high-priority radiation telemetry packet via Earth Link.',
+  'action.ACT_DOSE_CHECK.step1':
+    'Cross-check active personal dosimeter reading with vehicle area radiation monitor.',
+  'action.ACT_DOSE_CHECK.step2':
+    'Transmit high-priority radiation telemetry packet via Earth Link.',
 
   'action.ACT_CARDIO_CHECK.title': 'Cardiovascular & Exercise Load Check',
-  'action.ACT_CARDIO_CHECK.step1': 'Review resting heart rate trend and cabin environmental parameters.',
-  'action.ACT_CARDIO_CHECK.step2': 'Maintain low-intensity resistive countermeasure without exceeding strain limits.',
+  'action.ACT_CARDIO_CHECK.step1':
+    'Review resting heart rate trend and cabin environmental parameters.',
+  'action.ACT_CARDIO_CHECK.step2':
+    'Maintain low-intensity resistive countermeasure without exceeding strain limits.',
 
   'action.ACT_JOURNAL.title': 'Private Onboard Reflective Journal',
-  'action.ACT_JOURNAL.step1': 'Consider recording a brief private reflection entry (remains strictly on this device).',
+  'action.ACT_JOURNAL.step1':
+    'Consider recording a brief private reflection entry (remains strictly on this device).',
   'action.ACT_JOURNAL.step2': 'Review sleep regularity and daily check-in trends.',
 
   'action.ACT_PSYCH_CHECKIN.title': 'Behavioral & Readiness Check-In',
-  'action.ACT_PSYCH_CHECKIN.step1': 'Complete the 30-second daily mood/stress check-in and 60-second reaction test.',
-  'action.ACT_PSYCH_CHECKIN.step2': 'Share summary metrics with ground only if behavioral consent category is enabled.',
+  'action.ACT_PSYCH_CHECKIN.step1':
+    'Complete the 30-second daily mood/stress check-in and 60-second reaction test.',
+  'action.ACT_PSYCH_CHECKIN.step2':
+    'Share summary metrics with ground only if behavioral consent category is enabled.',
 
   'action.ACT_PRELANDING_FLUIDS.title': 'Pre-Landing Orthostatic Fluid Loading',
-  'action.ACT_PRELANDING_FLUIDS.step1': 'Follow mission fluid-loading countermeasure schedule prior to gravity transition.',
-  'action.ACT_PRELANDING_FLUIDS.step2': 'Verify cardiovascular tolerance during upright posture checks.',
+  'action.ACT_PRELANDING_FLUIDS.step1':
+    'Follow mission fluid-loading countermeasure schedule prior to gravity transition.',
+  'action.ACT_PRELANDING_FLUIDS.step2':
+    'Verify cardiovascular tolerance during upright posture checks.',
 
   // FAZ 10: Uyarılar, "Why?" çekmecesi, Görev Takvimi ve Sesli Uyarı
   'alerts.pageTitle': 'Alerts, Triage & Action Plan',
-  'alerts.pageSubtitle': 'Delay-aware prioritization, explainable drivers, and onboard schedule adjustments',
+  'alerts.pageSubtitle':
+    'Delay-aware prioritization, explainable drivers, and onboard schedule adjustments',
   'alerts.filterAll': 'All crew',
   'alerts.filterSelected': 'Selected crew',
   'alerts.empty': 'No active or recent (24h) alerts for the selected filter.',
@@ -306,7 +343,8 @@ export const en = {
   'alerts.ackedLabel': 'Acknowledged',
   'alerts.resolvedLabel': 'Resolved',
   'alerts.confidence': 'Confidence {pct}%',
-  'alerts.criticalBanner': 'Radiation event confirmed — act now (time-to-harm shorter than Earth link)',
+  'alerts.criticalBanner':
+    'Radiation event confirmed — act now (time-to-harm shorter than Earth link)',
   'alerts.audioMute': 'Mute alert tone',
   'alerts.audioUnmute': 'Enable alert tone',
   'alerts.audioMuted': 'Audio muted',
@@ -364,7 +402,7 @@ export const en = {
 
   // FAZ 10: Earth Link Genişletilmiş Panel
   'earth.customDelay': 'Custom one-way delay (1s – 30m)',
-  'earth.blackoutToggle': 'Simulate Comm Blackout',
+  'earth.blackoutToggle': 'Comm blackout',
   'earth.linkDown': 'LINK DOWN — BLACKOUT',
   'earth.meanwhileAdvises': 'Meanwhile, cockpit advises:',
   'earth.replyReceivedToast': 'Ground reply received',
@@ -381,7 +419,8 @@ export const en = {
 
   // FAZ 10: Davranışsal Sağlık (/behavioral)
   'behavioral.pageTitle': 'Behavioral Health & Readiness',
-  'behavioral.pageSubtitle': 'Non-diagnostic self-check-in, 60-second reaction test, and passive behavioral proxies',
+  'behavioral.pageSubtitle':
+    'Non-diagnostic self-check-in, 60-second reaction test, and passive behavioral proxies',
   'behavioral.checkinTitle': 'Daily Check-In (≤ 30 s)',
   'behavioral.checkinSubmittedToday': 'Submitted for today — editable',
   'behavioral.checkinSubmit': 'Save Check-In',
@@ -395,24 +434,31 @@ export const en = {
   'behavioral.pvtWait': 'Wait for visual stimulus…',
   'behavioral.pvtTapNow': 'TAP / SPACE NOW!',
   'behavioral.pvtFalseStart': 'False start — wait for cue',
-  'behavioral.pvtResult': 'Median {median} ms · Lapses (>500ms): {lapses} · False starts: {falseStarts}',
+  'behavioral.pvtResult':
+    'Median {median} ms · Lapses (>500ms): {lapses} · False starts: {falseStarts}',
   'behavioral.trendsTitle': '14-Day Behavioral & Passive Proxy Trends',
   'behavioral.sampleDataBadge': 'Sample data',
-  'behavioral.sampleDataHint': 'Generated in the UI for illustration: the engine has no behavioral module yet. Your own check-ins and PVT results are real and are added on top.',
+  'behavioral.sampleDataHint':
+    'Generated in the UI for illustration: the engine has no behavioral module yet. Your own check-ins and PVT results are real and are added on top.',
   'behavioral.moodSlope': 'Mood trend slope: {slope}/day',
   'behavioral.sleepRegularity': 'Sleep regularity index',
   'behavioral.missedExercise': 'Missed exercise sessions',
   'behavioral.checkinCompliance': 'Check-in compliance',
   'behavioral.passiveProxyScore': 'Passive behavioral proxy score',
-  'behavioral.passiveProxyHint': 'Derived from sleep regularity, exercise adherence, and check-in consistency; may indicate fatigue or isolation stress.',
+  'behavioral.passiveProxyHint':
+    'Derived from sleep regularity, exercise adherence, and check-in consistency; may indicate fatigue or isolation stress.',
   'behavioral.statesTitle': 'Behavioral State Indicators',
-  'behavioral.statesNote': 'Values may indicate elevated load; consider supportive recovery actions.',
+  'behavioral.statesNote':
+    'Values may indicate elevated load; consider supportive recovery actions.',
 
   // FAZ 10: Kanıt Kayıt Defteri (/evidence)
   'evidence.pageTitle': 'Evidence & Threshold Transparency Registry',
-  'evidence.pageSubtitle': 'Every threshold and parameter carries explicit provenance and verification status',
-  'evidence.honestyBanner': 'Parameters labeled DEMO are illustrative; they are not NASA medical limits.',
-  'evidence.summaryCounts': '{total} thresholds · {verified} verified · {partial} partial · {conflicting} conflicting · {unverified} unverified',
+  'evidence.pageSubtitle':
+    'Every threshold and parameter carries explicit provenance and verification status',
+  'evidence.honestyBanner':
+    'Parameters labeled DEMO are illustrative; they are not NASA medical limits.',
+  'evidence.summaryCounts':
+    '{total} thresholds · {verified} verified · {partial} partial · {conflicting} conflicting · {unverified} unverified',
   'evidence.searchPlaceholder': 'Search by id, source, or note…',
   'evidence.filterAll': 'All types',
   'evidence.filterUnverified': 'Unverified only',
@@ -427,19 +473,24 @@ export const en = {
   'evidence.radSpe': 'Design Reference SPE Protection Target (not a personal per-event limit)',
   'evidence.radIss': 'ISS Typical Daily Dose Rate',
   'evidence.calCardTitle': 'Simulator Calibration Provenance',
-  'evidence.calNote': 'Calibration values marked DEMO_PARAMETER are synthetic generator parameters.',
+  'evidence.calNote':
+    'Calibration values marked DEMO_PARAMETER are synthetic generator parameters.',
   'evidence.calDemoDefault': 'Simulator default — no calibration file (docs/calibration/ is empty)',
   'evidence.calFromFile': 'From {file} (evidence {id})',
-  'evidence.calCalibrated': 'CALIBRATED',
+  'evidence.calCalibrated': 'Calibrated',
 
   // FAZ 10: Doğrulama Sayfası (/validation)
   'validation.pageTitle': 'Algorithm Validation & Sensitivity',
-  'validation.pageSubtitle': 'Seeded synthetic benchmark across all scenarios: held-out report seeds, ADVISORY kept separate from false positives, explicit limitations.',
-  'validation.sourceNote': 'This report was produced by `{command}` on {date}. Validation does not run in the browser; rerun the command to refresh it.',
+  'validation.pageSubtitle':
+    'Seeded synthetic benchmark across all scenarios: held-out report seeds, ADVISORY kept separate from false positives, explicit limitations.',
+  'validation.sourceNote':
+    'This report was produced by `{command}` on {date}. Validation does not run in the browser; rerun the command to refresh it.',
   'validation.fingerprint': 'parameters {value}',
   'validation.quickBadge': 'Quick run (reduced seeds)',
-  'validation.fingerprintStale': 'Evidence parameters changed since this report (report {report} · current {current}). Run npm run validate to refresh it.',
-  'validation.loadError': 'Validation report could not be loaded ({error}). Run npm run validate to regenerate it.',
+  'validation.fingerprintStale':
+    'Evidence parameters changed since this report (report {report} · current {current}). Run npm run validate to refresh it.',
+  'validation.loadError':
+    'Validation report could not be loaded ({error}). Run npm run validate to regenerate it.',
   'validation.limitationsTitle': 'Known Limitations (Always Visible)',
   'validation.targetsTitle': 'Targets (held-out report seeds)',
   'validation.colMetric': 'Metric',
@@ -460,11 +511,13 @@ export const en = {
   'validation.metric.speP90': 'SPE detection delay, P90',
   'validation.metric.triage': 'Triage class accuracy',
   'validation.metric.advisory': 'ADVISORY / crew-day (not counted as FP)',
-  'validation.overfit': 'Overfitting check: tuning recall {tuning} vs report recall {report}, gap {gap} (limit {limit}): {status}',
+  'validation.overfit':
+    'Overfitting check: tuning recall {tuning} vs report recall {report}, gap {gap} (limit {limit}): {status}',
   'validation.overfitOk': 'not detected',
-  'validation.overfitDetected': 'DETECTED',
+  'validation.overfitDetected': 'Detected',
   'validation.scenariosTitle': 'Scenarios (held-out report seeds)',
-  'validation.advisoryNote': 'FP counts only unmatched WARNING/CRITICAL episodes; ADVISORY alerts are reported separately.',
+  'validation.advisoryNote':
+    'FP counts only unmatched WARNING/CRITICAL episodes; ADVISORY alerts are reported separately.',
   'validation.downloadJson': 'Download JSON',
   'validation.downloadMd': 'Download Markdown',
   'validation.replayCockpit': 'Replay in Cockpit',
@@ -476,11 +529,12 @@ export const en = {
   'validation.colSpecificity': 'Specificity',
   'validation.colFpCount': 'FP (WARNING+)',
   'validation.colFp': 'FP / crew-day',
-  'validation.colAdvisory': 'ADVISORY',
+  'validation.colAdvisory': 'Advisory',
   'validation.colDelay': 'Median / P90 delay',
   'validation.colTriage': 'Triage accuracy',
   'validation.sensitivityTitle': 'Parameter Sensitivity Analysis',
-  'validation.sensitivityNote': 'Each parameter is shifted temporarily (−/base/+) on the report seeds; values in the report are not tuned on these runs.',
+  'validation.sensitivityNote':
+    'Each parameter is shifted temporarily (−/base/+) on the report seeds; values in the report are not tuned on these runs.',
   'validation.colParameter': 'Evidence ID',
   'validation.colDelta': 'Shift (base value)',
   'validation.colRecallRange': 'Recall (− / base / +)',
@@ -489,8 +543,10 @@ export const en = {
 
   // FAZ 10: Yer İstasyonu Görünümü (/ground)
   'ground.pageTitle': 'Earth Ground Support View',
-  'ground.pageSubtitle': 'Delayed & consent-restricted downlink only — contrast with real-time onboard cockpit',
-  'ground.contrastBanner': 'Earth view is delayed and consent-restricted; onboard cockpit operates in real time.',
+  'ground.pageSubtitle':
+    'Delayed & consent-restricted downlink only — contrast with real-time onboard cockpit',
+  'ground.contrastBanner':
+    'Earth view is delayed and consent-restricted; onboard cockpit operates in real time.',
   'ground.dataAge': 'Latest delivered packet age: {age}',
   'ground.noDataYet': 'No downlink telemetry delivered yet (awaiting Earth Link arrival).',
   'ground.replyFormTitle': 'Send Ground Support Reply',
@@ -509,7 +565,8 @@ export const en = {
 
   // FAZ 10: Hata Sınırı
   'errorBoundary.title': 'Module Render Error',
-  'errorBoundary.desc': 'An isolated rendering issue occurred in this view. Telemetry worker remains active.',
+  'errorBoundary.desc':
+    'An isolated rendering issue occurred in this view. Telemetry worker remains active.',
   'errorBoundary.retry': 'Reload Module',
 
   // FAZ 11: PWA Çevrimdışı Rozeti, Demo Modu & İsteğe Bağlı Yer İstasyonu
@@ -520,15 +577,17 @@ export const en = {
   'pwa.update.later': 'Later',
   'network.badge.online': 'Online · no network dependency',
   'network.badge.offline': 'Offline mode — fully operational',
-  'network.badge.title': 'Zero external network dependency; detection and worker run locally in browser.',
+  'network.badge.title':
+    'Zero external network dependency; detection and worker run locally in browser.',
   'demo.modeBadge': 'Presenter mode · updates paused',
   'groundStation.toggleTitle': 'Ground station (optional)',
-  'groundStation.hint': 'Optional local WebSocket stream for dev/demo only (default off). Falls back to local simulator if unavailable.',
+  'groundStation.hint':
+    'Optional local WebSocket stream for dev/demo only (default off). Falls back to local simulator if unavailable.',
   'groundStation.urlLabel': 'WebSocket Server URL',
   'groundStation.urlPlaceholder': 'ws://localhost:8787',
   'groundStation.connect': 'Connect WS',
   'groundStation.disconnect': 'Use Local Sim',
-  'groundStation.status.local': 'Local simulator',
+  'groundStation.status.local': 'Onboard engine',
   'groundStation.status.connecting': 'WS Connecting / Fallback',
   'groundStation.status.connected': 'WS Connected',
   'groundStation.invalidUrl': 'Enter a valid ws:// or wss:// URL.',
@@ -536,11 +595,13 @@ export const en = {
   'a11y.skipToContent': 'Skip to main content',
   'route.loading': 'Loading view…',
   'notFound.title': 'View not found',
-  'notFound.desc': 'This route does not exist in the cockpit. Telemetry keeps running in the background.',
+  'notFound.desc':
+    'This route does not exist in the cockpit. Telemetry keeps running in the background.',
   'notFound.back': 'Back to cockpit',
   'presenter.help.open': 'Presenter shortcuts (?)',
   'presenter.help.title': 'Presenter shortcuts',
-  'presenter.help.desc': 'Shortcuts work only in presenter mode (D toggles it). Esc closes this panel.',
+  'presenter.help.desc':
+    'Shortcuts work only in presenter mode (D toggles it). Esc closes this panel.',
   'presenter.help.colKey': 'Key',
   'presenter.help.colAction': 'Action',
   'presenter.key.toggle': 'Toggle presenter mode',
@@ -548,6 +609,7 @@ export const en = {
   'presenter.key.reset': 'Full reset (same seed, local storage cleared)',
   'presenter.key.earthDelay': 'Cycle Earth one-way delay: {values}',
   'presenter.key.help': 'Show / hide this help',
+  'presenter.key.drawer': 'Open or close presenter controls',
   'presenter.delay.seconds': '{value} s',
   'presenter.delay.minutes': '{value} min',
   'presenter.announce.on': 'Presenter mode on',
@@ -563,43 +625,150 @@ export const en = {
   'why.l1.SPO2_LOW': 'SpO2 reading ({value}%) fell below reference threshold ({threshold}%).',
   'why.l1.CO2_HIGH': 'Cabin CO2 ({value} ppm) reached advisory threshold ({threshold} ppm).',
   'why.l1.CAREER_DOSE': 'Cumulative career dose ({value} mSv) reached threshold ({threshold} mSv).',
-  'why.l1.SPE_DOSE': 'Event dose ({value} mSv) approached design reference SPE protection target ({threshold} mSv).',
-  'why.baseline.lowConfidence': 'Personal baseline confidence is low ({confidence}); alert severity capped at ADVISORY.',
-  'why.l3.theil_sen': '{metric} trend slope ({slopePerDay}/day, {sameSign} consistent days over {windowDays}d, rise {rise}).',
+  'why.l1.SPE_DOSE':
+    'Event dose ({value} mSv) approached design reference SPE protection target ({threshold} mSv).',
+  'why.baseline.lowConfidence':
+    'Personal baseline confidence is low ({confidence}); alert severity capped at ADVISORY.',
+  'why.l3.theil_sen':
+    '{metric} trend slope ({slopePerDay}/day, {sameSign} consistent days over {windowDays}d, rise {rise}).',
   'why.state.score': 'Composite {state} score reached {score} (baseline confidence {confidence}).',
   'why.state.contributor': '{metric} contributed {contribution} (z={z}, weight {weightPct}%).',
-  'advice.radiation.shelter': 'Solar particle event condition active — move to shielded shelter area and monitor dosimetry.',
-  'action.ACT_REST_BLOCK.step3': 'Re-check vital trend after the rest block before resuming scheduled work.',
-  'action.ACT_REDUCE_WORKLOAD.step3': 'Review workload adjustment impact at the next daily check-in.',
+  'advice.radiation.shelter':
+    'Solar particle event condition active — move to shielded shelter area and monitor dosimetry.',
+  'action.ACT_REST_BLOCK.step3':
+    'Re-check vital trend after the rest block before resuming scheduled work.',
+  'action.ACT_REDUCE_WORKLOAD.step3':
+    'Review workload adjustment impact at the next daily check-in.',
   'action.ACT_BREATHING.step3': 'Log post-session perceived stress score if symptoms persist.',
   'action.ACT_HYDRATE.step3': 'Continue regular fluid intake across the remainder of the shift.',
   'action.ACT_SLEEP_SHIFT.step3': 'Keep wake time anchored to maintain circadian alignment.',
   'action.ACT_LIGHT_CONTROL.step3': 'Switch to warm dim cabin lighting 60 minutes before sleep.',
-  'action.ACT_SHELTER.step3': 'Remain in shielded zone until dose rate returns below threshold and all-clear is confirmed.',
+  'action.ACT_SHELTER.step3':
+    'Remain in shielded zone until dose rate returns below threshold and all-clear is confirmed.',
   'action.ACT_CARDIO_CHECK.step3': 'Record seated recovery heart rate after 5 minutes of rest.',
-  'ground.reply.REPLY_GENERIC_ACK.body': 'Ground telemetry review complete. Onboard autonomous posture confirmed; continue monitoring.',
+  'ground.reply.REPLY_GENERIC_ACK.body':
+    'Ground telemetry review complete. Onboard autonomous posture confirmed; continue monitoring.',
   'ground.reply.REPLY_GENERIC_ACK.followUp': 'Next scheduled telemetry sync at next orbital pass.',
-  'ground.reply.REPLY_SPE_ACK.body': 'Solar particle event profile confirmed by ground space weather desk. Maintain shelter posture until proton flux decays.',
-  'ground.reply.REPLY_SPE_ACK.followUp': 'Updated radiation decay forecast will follow in the next uplink window.',
-  'ground.reply.REPLY_SPO2_ACK.body': 'SpO2 deviation logged by flight surgeon console. Verify sensor placement and cabin gas mix.',
-  'ground.reply.REPLY_SPO2_ACK.followUp': 'Repeat pulse oximetry check after 15 minutes of seated rest.',
-  'ground.reply.REPLY_SLEEP_ACK.body': 'Cumulative sleep debt trend reviewed. Ground concurs with sleep extension and morning light alignment.',
+  'ground.reply.REPLY_SPE_ACK.body':
+    'Solar particle event profile confirmed by ground space weather desk. Maintain shelter posture until proton flux decays.',
+  'ground.reply.REPLY_SPE_ACK.followUp':
+    'Updated radiation decay forecast will follow in the next uplink window.',
+  'ground.reply.REPLY_SPO2_ACK.body':
+    'SpO2 deviation logged by flight surgeon console. Verify sensor placement and cabin gas mix.',
+  'ground.reply.REPLY_SPO2_ACK.followUp':
+    'Repeat pulse oximetry check after 15 minutes of seated rest.',
+  'ground.reply.REPLY_SLEEP_ACK.body':
+    'Cumulative sleep debt trend reviewed. Ground concurs with sleep extension and morning light alignment.',
   'ground.reply.REPLY_SLEEP_ACK.followUp': 'Protect core sleep window for the next 48 hours.',
-  'ground.reply.REPLY_FATIGUE_ACK.body': 'Fatigue pattern acknowledged by mission support. Defer non-essential high-load tasks.',
+  'ground.reply.REPLY_FATIGUE_ACK.body':
+    'Fatigue pattern acknowledged by mission support. Defer non-essential high-load tasks.',
   'ground.reply.REPLY_FATIGUE_ACK.followUp': 'Complete evening PVT check to track recovery trend.',
-  'ground.reply.REPLY_STRESS_ACK.body': 'Elevated stress indicators noted. Ground recommends scheduled recovery block and reduced task density.',
-  'ground.reply.REPLY_STRESS_ACK.followUp': 'Optional crew support check-in available on private channel.',
-  'ground.reply.REPLY_DEHYDRATION_ACK.body': 'Hydration deficit trend confirmed. Follow staged oral intake protocol over the next 2 hours.',
-  'ground.reply.REPLY_DEHYDRATION_ACK.followUp': 'Log total fluid volume before end-of-day summary.',
-  'ground.reply.REPLY_CARDIO_ACK.body': 'Cardiovascular strain trend reviewed. Replace high-intensity aerobic block with light recovery protocol today.',
+  'ground.reply.REPLY_STRESS_ACK.body':
+    'Elevated stress indicators noted. Ground recommends scheduled recovery block and reduced task density.',
+  'ground.reply.REPLY_STRESS_ACK.followUp':
+    'Optional crew support check-in available on private channel.',
+  'ground.reply.REPLY_DEHYDRATION_ACK.body':
+    'Hydration deficit trend confirmed. Follow staged oral intake protocol over the next 2 hours.',
+  'ground.reply.REPLY_DEHYDRATION_ACK.followUp':
+    'Log total fluid volume before end-of-day summary.',
+  'ground.reply.REPLY_CARDIO_ACK.body':
+    'Cardiovascular strain trend reviewed. Replace high-intensity aerobic block with light recovery protocol today.',
   'ground.reply.REPLY_CARDIO_ACK.followUp': 'Continue continuous HR/HRV trend observation.',
-  'ground.reply.REPLY_MOOD_ACK.body': 'Behavioral trend summary received. Ground supports protected rest time and light schedule adjustment.',
-  'ground.reply.REPLY_MOOD_ACK.followUp': 'Daily check-in notes remain private on the vehicle unless explicitly shared.',
-  'triage.reason.criticalRadiation': 'Critical radiation event requires immediate onboard shelter action before round-trip Earth communication ({roundTripMin} min).',
-  'triage.reason.lowSeverity': 'Advisory/info level pattern can be managed locally while awaiting routine ground sync ({roundTripMin} min round-trip).',
-  'triage.reason.blackout': 'Communication blackout active — autonomous onboard execution required (time to harm ~{timeToHarmMin} min).',
-  'triage.reason.delayExceedsTimeToHarm': 'Round-trip communication delay ({roundTripMin} min) reaches or exceeds estimated time to harm ({timeToHarmMin} min); act locally now.',
-  'triage.reason.withinSafeDelayWindow': 'Estimated time to harm ({timeToHarmMin} min) exceeds round-trip delay ({roundTripMin} min); safe to sync with Earth while monitoring.',
+  'ground.reply.REPLY_MOOD_ACK.body':
+    'Behavioral trend summary received. Ground supports protected rest time and light schedule adjustment.',
+  'ground.reply.REPLY_MOOD_ACK.followUp':
+    'Daily check-in notes remain private on the vehicle unless explicitly shared.',
+  'triage.reason.criticalRadiation':
+    'Critical radiation event requires immediate onboard shelter action before round-trip Earth communication ({roundTripMin} min).',
+  'triage.reason.lowSeverity':
+    'Advisory/info level pattern can be managed locally while awaiting routine ground sync ({roundTripMin} min round-trip).',
+  'triage.reason.blackout':
+    'Communication blackout active — autonomous onboard execution required (time to harm ~{timeToHarmMin} min).',
+  'triage.reason.delayExceedsTimeToHarm':
+    'Round-trip communication delay ({roundTripMin} min) reaches or exceeds estimated time to harm ({timeToHarmMin} min); act locally now.',
+  'triage.reason.withinSafeDelayWindow':
+    'Estimated time to harm ({timeToHarmMin} min) exceeds round-trip delay ({roundTripMin} min); safe to sync with Earth while monitoring.',
+  // UI yeniden tasarım (konsol görünümü)
+  'topbar.earthLink': 'Earth link: nominal · one-way {delay}',
+  'topbar.earthLinkBlackout': 'Earth link: blackout',
+  'environment.LEO': 'Low Earth orbit',
+  'environment.MARS_TRANSIT': 'Mars transit',
+  'environment.LUNAR_ORBIT': 'Lunar orbit',
+  'environment.LUNAR_SURFACE': 'Lunar surface',
+  'environment.MARS_SURFACE': 'Mars surface',
+  'provenance.tooltip': '{label}: {value} · {source} · {status}',
+  'provenance.thresholdLabel': 'Threshold',
+  'provenance.openInEvidence': 'Open evidence record',
+  'provenance.sourceName.NASA_STD': 'NASA standard',
+  'provenance.sourceName.NASA_HRP': 'NASA HRP',
+  'provenance.sourceName.PEER_REVIEWED': 'Peer-reviewed',
+  'provenance.sourceName.CLINICAL_CONVENTION': 'Clinical convention',
+  'provenance.sourceName.DEMO_PARAMETER': 'Demo parameter',
+  'provenance.statusShort.VERIFIED': 'Verified',
+  'provenance.statusShort.PARTIAL': 'Partial',
+  'provenance.statusShort.CONFLICTING': 'Conflicting',
+  'provenance.statusShort.UNVERIFIED': 'Unverified',
+  'cockpit.dataGap': 'Data gap',
+  'cockpit.crewStatusTitle': 'Crew status',
+  'cockpit.lowConfidenceNote': 'Low confidence ({pct} %)',
+  'cockpit.latestReadingsTitle': 'Latest readings',
+  'cockpit.activeAlertsTitle': 'Active alerts',
+  'cockpit.viewAll': 'View all',
+  'cockpit.recommendedActionsTitle': 'Recommended actions',
+  'radiation.careerPctOfLimit': '{pct} % of the {limit} mSv career limit',
+  'earthSummary.title': 'Earth link',
+  'earthSummary.tooltip':
+    'Light-time delay between the spacecraft and Mission Control. Messages are queued and sent store-and-forward.',
+  'earthSummary.status': 'Status',
+  'earthSummary.nominal': 'Nominal',
+  'earthSummary.blackout': 'Blackout',
+  'earthSummary.oneWay': 'One-way delay',
+  'earthSummary.roundTrip': 'Round trip + ground',
+  'earthSummary.earthSees': 'Earth is seeing',
+  'earthSummary.earthSeesValue': 'data from {time} ({ago} ago)',
+  'earthSummary.noDownlink': 'No downlink during blackout',
+  'earthSummary.queue': 'Queued',
+  'earthSummary.downlink': 'Downlink',
+  'earthSummary.inFlight': 'In flight',
+  'earthSummary.delivered': 'Delivered',
+  'earthSummary.pendingReplies': 'Replies on the way ({count})',
+  'earthSummary.onboardNote':
+    'Decisions are made on board. Earth monitors with a delay; no action waits for a reply.',
+  'earthView.pageTitle': 'Earth view',
+  'earthView.stripTitle': 'Mission Control view',
+  'earthView.stripAge': 'data as of {time} · {behind} behind the spacecraft',
+  'earthView.mirrorUnavailable':
+    'The delayed Earth-side snapshot is not available from the engine yet.',
+  'earthView.crewTitle': 'Crew status (delayed)',
+  'earthView.alertsTitle': 'Alerts received',
+  'earthView.seriesTitle': 'Latest received values',
+  'earthView.compareLabel': 'Compare onboard and Earth view',
+  'earthView.onboard': 'Onboard',
+  'earthView.earth': 'Earth view',
+  'presenterControls.title': 'Presenter controls',
+  'presenterControls.desc':
+    'Playback, scenario and link controls for demonstrations. Shortcuts: 1–4, Space, R, E · Shift+P toggles this panel.',
+  'presenterControls.playback': 'Playback',
+  'presenterControls.earthDelay': 'Earth delay',
+  'presenterControls.blackout': 'Comm blackout',
+  'presenterControls.dataGap': 'Inject data gap',
+  'presenterControls.presenterMode': 'Presenter mode',
+  'presenterControls.presenterOn': 'Turn on',
+  'presenterControls.presenterOff': 'Turn off',
+  'evidence.statusHelp.VERIFIED.term': 'Verified',
+  'evidence.statusHelp.VERIFIED.text': 'value checked against the cited primary source.',
+  'evidence.statusHelp.PARTIAL.term': 'Partial',
+  'evidence.statusHelp.PARTIAL.text':
+    'source supports the order of magnitude or a design reference, not the exact number.',
+  'evidence.statusHelp.CONFLICTING.term': 'Conflicting',
+  'evidence.statusHelp.CONFLICTING.text':
+    'sources disagree; the value shown is one documented choice.',
+  'evidence.statusHelp.UNVERIFIED.term': 'Unverified / demo',
+  'evidence.statusHelp.UNVERIFIED.text':
+    'illustrative parameter chosen for the prototype; not a NASA limit.',
+  'evidence.statusHelp.CLINICAL_CONVENTION.term': 'Clinical convention',
+  'evidence.statusHelp.CLINICAL_CONVENTION.text':
+    'widely used clinical reference value (source type), not a spaceflight-specific standard.',
 } as const
 
 export type I18nKey = keyof typeof en

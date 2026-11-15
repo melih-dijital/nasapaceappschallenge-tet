@@ -2,7 +2,8 @@ import { fireEvent, render, screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 import App from '@/App'
 
-const DISCLAIMER = 'Decision support prototype · synthetic data · not a medical device'
+const DISCLAIMER =
+  'Synthetic telemetry · Decision-support prototype, not a medical device · Thresholds labelled by evidence status'
 
 describe('App (jsdom ortamı)', () => {
   it('render olur; disclaimer bandı ve 4 nav bağlantısı görünür', () => {
@@ -13,7 +14,7 @@ describe('App (jsdom ortamı)', () => {
     expect(screen.getByRole('heading', { level: 1, name: 'Cockpit' })).toBeInTheDocument()
   })
 
-  it.each(['Evidence', 'Validation', 'Ground', 'Cockpit'])(
+  it.each(['Evidence', 'Validation', 'Earth view', 'Cockpit'])(
     '%s rotası gezilebilir (lazy sayfalar dahil) ve bant her sayfada kalır',
     async (label) => {
       render(<App />)

@@ -50,12 +50,15 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
       <div
         role="alert"
         data-testid="module-error-boundary"
-        className="mx-auto max-w-xl rounded-xl border border-status-warning/50 bg-status-warning/10 p-6 text-sm"
+        className="mx-auto max-w-xl rounded-lg border border-status-warning/50 bg-status-warning/10 p-6 text-sm"
       >
         <div className="flex items-start gap-3">
-          <AlertTriangle aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-status-warning" />
+          <AlertTriangle
+            aria-hidden="true"
+            className="mt-0.5 size-5 shrink-0 text-status-warning"
+          />
           <div className="space-y-2">
-            <h2 className="font-semibold text-foreground">{translate('errorBoundary.title')}</h2>
+            <h2 className="font-medium text-foreground">{translate('errorBoundary.title')}</h2>
             <p className="text-xs text-muted-foreground">{translate('errorBoundary.desc')}</p>
             {this.state.errorMessage && (
               <p className="rounded bg-background/70 px-2 py-1 font-mono text-[11px] text-status-warning">

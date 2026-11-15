@@ -21,6 +21,15 @@ import { useT } from '@/ui/i18n'
 
 type SortField = 'id' | 'sourceType' | 'verified'
 
+// Durum sözlüğü (Evidence sayfası açıklaması): doğrulama durumları + kaynak türü "klinik konvansiyon".
+const EVIDENCE_STATUS_HELP = [
+  'VERIFIED',
+  'PARTIAL',
+  'CONFLICTING',
+  'UNVERIFIED',
+  'CLINICAL_CONVENTION',
+] as const
+
 function formatEvidenceValue(entry: EvidenceEntry): string {
   const val = Array.isArray(entry.value)
     ? `${entry.value[0]}–${entry.value[1]}`
@@ -100,9 +109,7 @@ export function EvidencePage() {
   return (
     <div className="mx-auto max-w-[1440px] space-y-4" data-testid="evidence-page">
       <div>
-        <h1 className="text-lg font-bold tracking-tight text-foreground">
-          {t('evidence.pageTitle')}
-        </h1>
+        <h1 className="text-base font-medium text-foreground">{t('evidence.pageTitle')}</h1>
         <p className="text-xs text-muted-foreground">{t('evidence.pageSubtitle')}</p>
       </div>
 
@@ -110,18 +117,36 @@ export function EvidencePage() {
       <div
         role="note"
         data-testid="evidence-honesty-banner"
-        className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-status-warning/50 bg-status-warning/10 px-4 py-3 text-xs"
+        className="space-y-3 rounded-lg border border-border bg-card px-4 py-3 text-[13px]"
       >
-        <div className="flex items-center gap-2 font-semibold text-status-warning">
-          <AlertTriangle aria-hidden="true" className="size-4 shrink-0" />
-          <span>{t('evidence.honestyBanner')}</span>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex items-center gap-2 text-foreground">
+            <AlertTriangle aria-hidden="true" className="size-4 shrink-0 text-status-advisory" />
+            <span>{t('evidence.honestyBanner')}</span>
+          </div>
+          <span
+            data-testid="evidence-summary-counts"
+            className="tabular-nums text-xs text-muted-foreground"
+          >
+            {t('evidence.summaryCounts', counts)}
+          </span>
         </div>
-        <span
-          data-testid="evidence-summary-counts"
-          className="font-mono text-[11px] text-foreground"
+        <dl
+          className="grid gap-x-6 gap-y-1.5 text-xs sm:grid-cols-2 xl:grid-cols-3"
+          data-testid="evidence-status-help"
         >
-          {t('evidence.summaryCounts', counts)}
-        </span>
+          {EVIDENCE_STATUS_HELP.map((key) => (
+            <div key={key}>
+              <dt className="inline font-medium text-foreground">
+                {t(`evidence.statusHelp.${key}.term`)}
+              </dt>
+              <dd className="inline text-muted-foreground">
+                {' '}
+                — {t(`evidence.statusHelp.${key}.text`)}
+              </dd>
+            </div>
+          ))}
+        </dl>
       </div>
 
       {/* Radyasyon Limitleri / Hedefleri & Kalibrasyon Provenance */}
@@ -138,8 +163,8 @@ export function EvidencePage() {
                 className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border/70 bg-background/60 p-2.5"
               >
                 <div className="space-y-0.5">
-                  <div className="font-semibold text-foreground">{item.label}</div>
-                  <div className="font-mono text-[11px] text-muted-foreground">
+                  <div className="font-medium text-foreground">{item.label}</div>
+                  <div className="tabular-nums text-[11px] text-muted-foreground">
                     {formatEvidenceValue(item.entry)} · {item.entry.sourceTitle}
                   </div>
                 </div>
@@ -171,7 +196,7 @@ export function EvidencePage() {
                 className="flex items-center justify-between gap-2 rounded-lg border border-border/70 bg-background/60 px-3 py-2"
               >
                 <div>
-                  <span className="font-mono font-semibold text-foreground">{row.metric}</span>
+                  <span className="tabular-nums font-medium text-foreground">{row.metric}</span>
                   <span className="ml-2 text-[11px] text-muted-foreground">
                     {row.demo
                       ? t('evidence.calDemoDefault')
@@ -183,13 +208,15 @@ export function EvidencePage() {
                 </div>
                 <span
                   className={cn(
-                    'rounded px-1.5 py-0.5 font-mono text-[10px] font-semibold',
+                    'shrink-0 rounded-md border px-1.5 py-0.5 text-[11px]',
                     row.demo
-                      ? 'bg-status-warning/20 text-status-warning'
-                      : 'bg-primary/20 text-primary',
+                      ? 'border-border text-muted-foreground'
+                      : 'border-status-nominal/40 text-status-nominal',
                   )}
                 >
-                  {row.demo ? 'DEMO_PARAMETER' : t('evidence.calCalibrated')}
+                  {row.demo
+                    ? t('provenance.sourceName.DEMO_PARAMETER')
+                    : t('evidence.calCalibrated')}
                 </span>
               </div>
             ))}
@@ -252,7 +279,7 @@ export function EvidencePage() {
 
         <div className="overflow-x-auto rounded-lg border border-border/70">
           <table className="w-full border-collapse text-left text-xs" data-testid="evidence-table">
-            <thead className="bg-secondary/60 font-mono text-[11px] text-muted-foreground">
+            <thead className="bg-secondary/60 tabular-nums text-[11px] text-muted-foreground">
               <tr>
                 <th className="p-2.5">
                   <button
@@ -296,12 +323,10 @@ export function EvidencePage() {
                   data-testid={`evidence-row-${entry.id}`}
                   className="hover:bg-secondary/20"
                 >
-                  <td className="p-2.5 font-mono text-[11px] font-semibold text-foreground">
+                  <td className="p-2.5 tabular-nums text-[11px] font-medium text-foreground">
                     {entry.id}
                   </td>
-                  <td className="p-2.5 font-mono text-[11px] tabular-nums">
-                    {formatEvidenceValue(entry)}
-                  </td>
+                  <td className="p-2.5 tabular-nums text-[11px]">{formatEvidenceValue(entry)}</td>
                   <td className="p-2.5">
                     <ProvenanceTag evidenceId={entry.id} />
                   </td>
@@ -309,7 +334,7 @@ export function EvidencePage() {
                     {entry.verified ? (
                       <span
                         data-testid={`evidence-verified-${entry.id}`}
-                        className="inline-flex items-center gap-1 font-mono text-[11px] text-primary"
+                        className="inline-flex items-center gap-1 tabular-nums text-[11px] text-primary"
                       >
                         <CheckCircle2 aria-hidden="true" className="size-3.5" />
                         <span>✓</span>
@@ -317,7 +342,7 @@ export function EvidencePage() {
                     ) : (
                       <span
                         data-testid={`evidence-unverified-${entry.id}`}
-                        className="inline-flex items-center gap-1 font-mono text-[11px] text-status-warning"
+                        className="inline-flex items-center gap-1 tabular-nums text-[11px] text-status-warning"
                       >
                         <ShieldAlert aria-hidden="true" className="size-3.5" />
                         <span>⚠ {entry.verificationStatus}</span>

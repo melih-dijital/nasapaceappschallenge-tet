@@ -6,12 +6,7 @@ import { Switch } from '@/components/ui/switch'
 import type { EarthLinkPreset } from '@/core/types'
 import { cn } from '@/lib/utils'
 import { useT } from '@/ui/i18n'
-import {
-  actions,
-  selectPriorityCards,
-  useDecisionStore,
-  useEarthLinkStore,
-} from '@/ui/store'
+import { actions, selectPriorityCards, useDecisionStore, useEarthLinkStore } from '@/ui/store'
 import { CONSENT_CATEGORIES, type ConsentCategory } from '@/workers/protocol'
 import { SectionCard } from './SectionCard'
 
@@ -36,9 +31,7 @@ export function EarthLinkPanel({ compact = false }: { compact?: boolean }) {
 
   const toggleConsent = (cat: ConsentCategory) => {
     const exists = earthLink.consents.includes(cat)
-    const next = exists
-      ? earthLink.consents.filter((c) => c !== cat)
-      : [...earthLink.consents, cat]
+    const next = exists ? earthLink.consents.filter((c) => c !== cat) : [...earthLink.consents, cat]
     actions.setConsentCategories(next)
   }
 
@@ -61,7 +54,7 @@ export function EarthLinkPanel({ compact = false }: { compact?: boolean }) {
         earthLink.config.blackout ? (
           <span
             data-testid="earth-link-down-badge"
-            className="inline-flex items-center gap-1 rounded bg-status-critical/20 px-1.5 py-0.5 font-mono text-[10px] font-bold text-status-critical"
+            className="inline-flex items-center gap-1 rounded bg-status-critical/20 px-1.5 py-0.5 tabular-nums text-[10px] font-medium text-status-critical"
           >
             <ShieldAlert aria-hidden="true" className="size-3" />
             <span>{t('earth.linkDown')}</span>
@@ -80,9 +73,9 @@ export function EarthLinkPanel({ compact = false }: { compact?: boolean }) {
               aria-pressed={earthLink.config.preset === preset}
               data-testid={`earth-preset-${preset}`}
               className={cn(
-                'rounded border px-2 py-1 font-mono text-[11px] transition-colors',
+                'rounded border px-2 py-1 tabular-nums text-[11px] transition-colors',
                 earthLink.config.preset === preset
-                  ? 'border-primary bg-primary/15 font-semibold text-primary'
+                  ? 'border-primary bg-primary/15 font-medium text-primary'
                   : 'border-border/70 bg-background/60 text-muted-foreground hover:text-foreground',
               )}
             >
@@ -96,7 +89,7 @@ export function EarthLinkPanel({ compact = false }: { compact?: boolean }) {
           <div className="space-y-2 rounded-lg border border-border/70 bg-background/60 p-2.5">
             <div className="flex items-center justify-between gap-2">
               <span className="text-[11px] text-muted-foreground">{t('earth.customDelay')}</span>
-              <span className="font-mono text-xs font-semibold tabular-nums">
+              <span className="tabular-nums text-xs font-medium">
                 {earthLink.config.oneWayDelaySec < 60
                   ? `${earthLink.config.oneWayDelaySec} s`
                   : `${formatNumber(earthLink.config.oneWayDelaySec / 60, 1)} min`}
@@ -139,7 +132,7 @@ export function EarthLinkPanel({ compact = false }: { compact?: boolean }) {
             <div className="text-[10px] text-muted-foreground">{t('earth.oneWay')}</div>
             <div
               data-testid="earth-oneway-value"
-              className="mt-0.5 font-mono text-sm font-bold text-foreground tabular-nums"
+              className="mt-0.5 tabular-nums text-sm font-medium text-foreground"
             >
               {earthLink.config.oneWayDelaySec < 60
                 ? `${earthLink.config.oneWayDelaySec} s`
@@ -150,7 +143,7 @@ export function EarthLinkPanel({ compact = false }: { compact?: boolean }) {
             <div className="text-[10px] text-muted-foreground">{t('earth.roundTrip')}</div>
             <div
               data-testid="earth-roundtrip-value"
-              className="mt-0.5 font-mono text-sm font-bold text-primary tabular-nums"
+              className="mt-0.5 tabular-nums text-sm font-medium text-primary"
             >
               {Number.isFinite(earthLink.roundTripMin)
                 ? `${formatNumber(earthLink.roundTripMin, 1)} min`
@@ -163,7 +156,7 @@ export function EarthLinkPanel({ compact = false }: { compact?: boolean }) {
         <div
           data-testid="earth-link-counter-box"
           className={cn(
-            'space-y-1.5 rounded-lg border p-2.5 font-mono text-xs tabular-nums',
+            'space-y-1.5 rounded-lg border p-2.5 tabular-nums text-xs',
             earthLink.config.blackout
               ? 'border-status-critical/60 bg-status-critical/10 text-status-critical'
               : earthLink.pendingReplyCount > 0
@@ -187,7 +180,7 @@ export function EarthLinkPanel({ compact = false }: { compact?: boolean }) {
               </span>
             </div>
             {earthLink.pendingReplyCount > 0 && (
-              <span className="rounded bg-status-warning/20 px-1.5 py-0.5 text-[10px] font-bold">
+              <span className="rounded bg-status-warning/20 px-1.5 py-0.5 text-[10px] font-medium">
                 {earthLink.pendingReplyCount}
               </span>
             )}
@@ -195,11 +188,9 @@ export function EarthLinkPanel({ compact = false }: { compact?: boolean }) {
 
           {localAdviceCards.length > 0 && (
             <div className="border-t border-current/20 pt-1.5 font-sans text-[11px]">
-              <span className="font-semibold">{t('earth.meanwhileAdvises')} </span>
+              <span className="font-medium">{t('earth.meanwhileAdvises')} </span>
               <span>
-                {localAdviceCards
-                  .map((c) => t(c.titleKey as Parameters<typeof t>[0]))
-                  .join(' · ')}
+                {localAdviceCards.map((c) => t(c.titleKey as Parameters<typeof t>[0])).join(' · ')}
               </span>
             </div>
           )}
@@ -214,7 +205,11 @@ export function EarthLinkPanel({ compact = false }: { compact?: boolean }) {
           >
             <span>
               {t('earth.replyReceivedToast')}:{' '}
-              {t(`ground.reply.${earthLink.lastReplyReceivedToast.templateId}.title` as Parameters<typeof t>[0])}
+              {t(
+                `ground.reply.${earthLink.lastReplyReceivedToast.templateId}.title` as Parameters<
+                  typeof t
+                >[0],
+              )}
             </span>
             <Button
               type="button"
@@ -247,7 +242,7 @@ export function EarthLinkPanel({ compact = false }: { compact?: boolean }) {
 
             {/* Onay Kategorileri */}
             <div className="space-y-1.5 rounded-lg border border-border/70 bg-background/60 p-2.5">
-              <div className="font-semibold text-foreground">{t('earth.consentTitle')}</div>
+              <div className="font-medium text-foreground">{t('earth.consentTitle')}</div>
               <div className="grid grid-cols-2 gap-2">
                 {CONSENT_CATEGORIES.map((cat) => {
                   const enabled = earthLink.consents.includes(cat)
@@ -271,7 +266,7 @@ export function EarthLinkPanel({ compact = false }: { compact?: boolean }) {
             {/* Giden / Gelen Kutusu */}
             <div className="grid gap-2 md:grid-cols-2">
               <div className="rounded-lg border border-border/70 bg-background/60 p-2.5">
-                <div className="mb-1.5 flex items-center gap-1.5 font-semibold text-foreground">
+                <div className="mb-1.5 flex items-center gap-1.5 font-medium text-foreground">
                   <Send aria-hidden="true" className="size-3.5 text-primary" />
                   <span>{t('earth.outboxTitle')}</span>
                 </div>
@@ -282,12 +277,12 @@ export function EarthLinkPanel({ compact = false }: { compact?: boolean }) {
                     {earthLink.outbox.slice(0, 5).map((m) => (
                       <li
                         key={m.id}
-                        className="flex items-center justify-between gap-1 rounded border border-border/50 px-2 py-1 font-mono text-[10px]"
+                        className="flex items-center justify-between gap-1 rounded border border-border/50 px-2 py-1 tabular-nums text-[10px]"
                       >
                         <span className="truncate">
                           P{m.priority} · {m.category}
                         </span>
-                        <span className="shrink-0 font-semibold text-primary">
+                        <span className="shrink-0 font-medium text-primary">
                           {m.status}
                           {m.arriveT !== undefined ? ` @ ${formatMissionClock(m.arriveT)}` : ''}
                         </span>
@@ -298,7 +293,7 @@ export function EarthLinkPanel({ compact = false }: { compact?: boolean }) {
               </div>
 
               <div className="rounded-lg border border-border/70 bg-background/60 p-2.5">
-                <div className="mb-1.5 flex items-center gap-1.5 font-semibold text-foreground">
+                <div className="mb-1.5 flex items-center gap-1.5 font-medium text-foreground">
                   <Inbox aria-hidden="true" className="size-3.5 text-primary" />
                   <span>{t('earth.inboxTitle')}</span>
                 </div>
@@ -309,14 +304,14 @@ export function EarthLinkPanel({ compact = false }: { compact?: boolean }) {
                     {earthLink.inbox.slice(0, 5).map((m) => (
                       <li
                         key={m.id}
-                        className="flex items-center justify-between gap-1 rounded border border-border/50 px-2 py-1 font-mono text-[10px]"
+                        className="flex items-center justify-between gap-1 rounded border border-border/50 px-2 py-1 tabular-nums text-[10px]"
                       >
                         <span className="truncate">
-                          {String((m.payload as { templateId?: string } | null)?.templateId ?? m.id)}
+                          {String(
+                            (m.payload as { templateId?: string } | null)?.templateId ?? m.id,
+                          )}
                         </span>
-                        <span className="shrink-0 font-semibold text-primary">
-                          {m.status}
-                        </span>
+                        <span className="shrink-0 font-medium text-primary">{m.status}</span>
                       </li>
                     ))}
                   </ul>
@@ -326,12 +321,12 @@ export function EarthLinkPanel({ compact = false }: { compact?: boolean }) {
 
             {/* Paket Önizleme (JSON) */}
             <details className="rounded-lg border border-border/70 bg-background/60 p-2">
-              <summary className="cursor-pointer font-mono text-[11px] font-semibold text-muted-foreground">
+              <summary className="cursor-pointer tabular-nums text-[11px] font-medium text-muted-foreground">
                 {t('earth.packetPreview')}
               </summary>
               <pre
                 data-testid="earth-packet-preview"
-                className="mt-2 max-h-36 overflow-auto rounded bg-background p-2 font-mono text-[10px] text-foreground"
+                className="mt-2 max-h-36 overflow-auto rounded bg-background p-2 tabular-nums text-[10px] text-foreground"
               >
                 {JSON.stringify(packetPreviewObj, null, 2)}
               </pre>

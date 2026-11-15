@@ -1,5 +1,5 @@
 // FAZ 9 §3.1 & §3.6 — Ortak bileşen testleri (ProvenanceTag varyantları, MetricTile, Gauge oran→açı, StatusBadge).
-import { fireEvent, render, screen } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, expect, it } from 'vitest'
 import { Gauge, fractionToAngle } from '@/ui/components/Gauge'
@@ -7,8 +7,8 @@ import { MetricTile } from '@/ui/components/MetricTile'
 import { ProvenanceTag } from '@/ui/components/ProvenanceTag'
 import { StatusBadge } from '@/ui/components/StatusBadge'
 
-describe('ProvenanceTag varyantları (FAZ 9 §3.1 & §3.6)', () => {
-  it('5 kaynak türünü (NASA_STD, NASA_HRP, PEER, CLINICAL, DEMO) ve ✓/⚠ durumunu doğru gösterir', () => {
+describe('ProvenanceTag kaynak ikonu (FAZ 9 §3.1 & §3.6, konsol tasarımı)', () => {
+  it('5 kaynak türünü ve doğrulama durumunu tooltip/aria metninde gösterir; tıklama Evidence kaydına gider', () => {
     render(
       <MemoryRouter>
         <div>
@@ -21,36 +21,32 @@ describe('ProvenanceTag varyantları (FAZ 9 §3.1 & §3.6)', () => {
       </MemoryRouter>,
     )
 
-    const nasaStd = screen.getByTestId('provenance-tag-rad.career.limit.msv')
-    expect(nasaStd).toHaveTextContent('NASA_STD')
-    expect(nasaStd).toHaveTextContent('✓')
-    expect(nasaStd).toHaveAttribute('data-verified', 'true')
+    const cases = [
+      ['rad.career.limit.msv', 'NASA_STD', /NASA standard/],
+      ['bone.loss.pct_month', 'NASA_HRP', /NASA HRP/],
+      ['rad.iss.rate.msv_day', 'PEER_REVIEWED', /Peer-reviewed/],
+      ['spo2.critical', 'CLINICAL_CONVENTION', /Clinical convention/],
+      ['det.z.warning', 'DEMO_PARAMETER', /Demo parameter · Unverified/],
+    ] as const
+    for (const [id, sourceType, label] of cases) {
+      const tag = screen.getByTestId(`provenance-tag-${id}`)
+      expect(tag).toHaveAttribute('data-source-type', sourceType)
+      expect(tag.getAttribute('aria-label')).toMatch(label)
+      expect(tag.getAttribute('aria-label')).toMatch(/^Threshold: /)
+      expect(tag).toHaveAttribute('href', `/evidence?id=${encodeURIComponent(id)}`)
+      // Rozet metni yok: yalnızca ikon
+      expect(tag.textContent).toBe('')
+    }
 
-    const nasaHrp = screen.getByTestId('provenance-tag-bone.loss.pct_month')
-    expect(nasaHrp).toHaveTextContent('NASA_HRP')
-    expect(nasaHrp).toHaveTextContent('✓')
-
-    const peer = screen.getByTestId('provenance-tag-rad.iss.rate.msv_day')
-    expect(peer).toHaveTextContent('PEER')
-    expect(peer).toHaveTextContent('✓')
-
-    const clinical = screen.getByTestId('provenance-tag-spo2.critical')
-    expect(clinical).toHaveTextContent('CLINICAL')
-    expect(clinical).toHaveTextContent('⚠')
-    expect(clinical).toHaveAttribute('data-verified', 'false')
-
-    const demo = screen.getByTestId('provenance-tag-det.z.warning')
-    expect(demo).toHaveTextContent('DEMO')
-    expect(demo).toHaveTextContent('⚠')
-    expect(demo).toHaveAttribute('data-verified', 'false')
-
-    // Tıklayınca Evidence Sheet açılır
-    fireEvent.click(nasaStd)
-    expect(screen.getByText('rad.career.limit.msv')).toBeInTheDocument()
-    expect(screen.getByText(/600 mSv/)).toBeInTheDocument()
+    const career = screen.getByTestId('provenance-tag-rad.career.limit.msv')
+    expect(career).toHaveAttribute('data-verified', 'true')
+    expect(career.getAttribute('aria-label')).toMatch(/600 mSv/)
+    expect(screen.getByTestId('provenance-tag-det.z.warning')).toHaveAttribute(
+      'data-verified',
+      'false',
+    )
   })
 })
-
 describe('MetricTile (FAZ 9 §3.1 & §3.6)', () => {
   it('değer, birim, z skoru, baseline medyanı ve sensor fault/stale uyarısını gösterir', () => {
     const spark = [
@@ -93,7 +89,9 @@ describe('MetricTile (FAZ 9 §3.1 & §3.6)', () => {
         sensorFault={true}
       />,
     )
-    expect(screen.getByTestId('sensor-fault-hr')).toHaveTextContent('sensor fault/stale')
+    // Teknik FAULT etiketi yok: gri "Data gap" notu, değer gizlenir
+    expect(screen.getByTestId('sensor-fault-hr')).toHaveTextContent('Data gap')
+    expect(screen.getByTestId('metric-tile-hr')).not.toHaveTextContent('72')
   })
 })
 

@@ -80,16 +80,16 @@ function blockColorClass(type: ScheduleBlockType, isChanged: boolean, isConflict
   if (isChanged) return 'border-primary bg-primary/20 text-primary ring-1 ring-primary/50'
   switch (type) {
     case 'SLEEP':
-      return 'border-indigo-500/40 bg-indigo-500/15 text-indigo-200'
+      return 'border-border bg-[var(--chart-band)]/15 text-foreground'
     case 'SHELTER':
       return 'border-status-critical/70 bg-status-critical/20 text-status-critical'
     case 'HYDRATION':
-      return 'border-cyan-500/40 bg-cyan-500/15 text-cyan-200'
+      return 'border-border bg-secondary text-foreground'
     case 'EXERCISE_AERO':
     case 'EXERCISE_RESISTIVE':
-      return 'border-emerald-500/40 bg-emerald-500/15 text-emerald-200'
+      return 'border-border bg-secondary text-foreground'
     case 'EVA':
-      return 'border-amber-500/40 bg-amber-500/15 text-amber-200'
+      return 'border-status-advisory/40 bg-status-advisory/10 text-foreground'
     default:
       return 'border-border/70 bg-secondary/60 text-foreground'
   }
@@ -100,7 +100,7 @@ function MiniSparkline({ crewId, metric }: { crewId: string; metric: MetricId })
   const points = selectSeries(seriesState, crewId, metric, 24 * MS_PER_HOUR)
   if (points.length < 2) {
     return (
-      <div className="rounded border border-border/60 bg-background/60 p-2 font-mono text-[11px] text-muted-foreground">
+      <div className="rounded border border-border/60 bg-background/60 p-2 tabular-nums text-[11px] text-muted-foreground">
         {metric}: —
       </div>
     )
@@ -121,7 +121,7 @@ function MiniSparkline({ crewId, metric }: { crewId: string; metric: MetricId })
 
   return (
     <div className="rounded-lg border border-border/60 bg-background/70 p-2">
-      <div className="mb-1 flex items-center justify-between font-mono text-[10px] text-muted-foreground">
+      <div className="mb-1 flex items-center justify-between tabular-nums text-[10px] text-muted-foreground">
         <span>{metric}</span>
         <span>
           {minVal.toFixed(1)} – {maxVal.toFixed(1)}
@@ -209,13 +209,13 @@ export function AlertsPage() {
     scheduleSectionRef.current?.scrollIntoView({ behavior: 'auto', block: 'nearest' })
   }
 
-  const whyAlertCrewStates = whyAlert ? selectCrewStates({ byCrew: byCrewStates }, whyAlert.crewId) : []
+  const whyAlertCrewStates = whyAlert
+    ? selectCrewStates({ byCrew: byCrewStates }, whyAlert.crewId)
+    : []
   const whyAlertStateEstimate = whyAlert?.state
     ? whyAlertCrewStates.find((s) => s.state === whyAlert.state)
     : undefined
-  const whyAlertConfidence = whyAlert
-    ? selectCrewConfidence(telemetry, whyAlert.crewId)
-    : undefined
+  const whyAlertConfidence = whyAlert ? selectCrewConfidence(telemetry, whyAlert.crewId) : undefined
   const whySparklineMetric: MetricId =
     whyAlert?.metric ??
     (whyAlert?.state === 'radiation_event'
@@ -229,9 +229,7 @@ export function AlertsPage() {
       {/* Başlık + Kapsam Filtresi */}
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <h1 className="text-lg font-bold tracking-tight text-foreground">
-            {t('alerts.pageTitle')}
-          </h1>
+          <h1 className="text-base font-medium text-foreground">{t('alerts.pageTitle')}</h1>
           <p className="text-xs text-muted-foreground">{t('alerts.pageSubtitle')}</p>
         </div>
 
@@ -264,7 +262,7 @@ export function AlertsPage() {
           <SectionCard
             title={t('nav.alerts')}
             headerRight={
-              <span className="rounded-full bg-secondary px-2 py-0.5 font-mono text-[11px] tabular-nums">
+              <span className="rounded-full bg-secondary px-2 py-0.5 tabular-nums text-[11px]">
                 {sortedAlerts.length}
               </span>
             }
@@ -282,7 +280,7 @@ export function AlertsPage() {
                       key={al.id}
                       data-testid={`alerts-page-item-${al.id}`}
                       className={cn(
-                        'space-y-2 rounded-xl border p-3 text-xs',
+                        'space-y-2 rounded-lg border p-3 text-xs',
                         al.status === 'RESOLVED'
                           ? 'border-border/50 bg-background/40 opacity-75'
                           : al.severity === 'CRITICAL'
@@ -296,10 +294,10 @@ export function AlertsPage() {
                         <div className="flex min-w-0 items-start gap-2">
                           <SeverityIcon severity={al.severity} />
                           <div className="min-w-0">
-                            <div className="font-semibold text-foreground">
+                            <div className="font-medium text-foreground">
                               {t(al.titleKey as Parameters<typeof t>[0])}
                             </div>
-                            <div className="mt-0.5 flex flex-wrap items-center gap-2 font-mono text-[11px] text-muted-foreground">
+                            <div className="mt-0.5 flex flex-wrap items-center gap-2 tabular-nums text-[11px] text-muted-foreground">
                               <span>
                                 {crew.role} · {crew.displayName}
                               </span>
@@ -325,7 +323,7 @@ export function AlertsPage() {
 
                       <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
                         <div className="flex flex-wrap items-center gap-1.5">
-                          <span className="rounded bg-secondary px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground">
+                          <span className="rounded bg-secondary px-1.5 py-0.5 tabular-nums text-[10px] text-muted-foreground">
                             {t('alerts.confidence', { pct: confPct })}
                           </span>
                           {al.evidenceIds.slice(0, 2).map((evId) => (
@@ -357,7 +355,7 @@ export function AlertsPage() {
                               <span>{t('alerts.ackButton')}</span>
                             </Button>
                           ) : (
-                            <span className="font-mono text-[10px] text-muted-foreground">
+                            <span className="tabular-nums text-[10px] text-muted-foreground">
                               {al.status === 'ACKED'
                                 ? t('alerts.ackedLabel')
                                 : t('alerts.resolvedLabel')}
@@ -389,21 +387,21 @@ export function AlertsPage() {
                       key={card.id}
                       data-testid={`alerts-card-${card.id}`}
                       className={cn(
-                        'space-y-2 rounded-xl border p-3 text-xs',
+                        'space-y-2 rounded-lg border p-3 text-xs',
                         card.state === 'ACCEPTED'
                           ? 'border-primary/60 bg-primary/10'
                           : 'border-border/70 bg-background/70',
                       )}
                     >
                       <div className="flex items-start justify-between gap-2">
-                        <div className="flex items-center gap-1.5 font-semibold text-foreground">
+                        <div className="flex items-center gap-1.5 font-medium text-foreground">
                           <Sparkles aria-hidden="true" className="size-3.5 shrink-0 text-primary" />
                           <span>{t(card.titleKey as Parameters<typeof t>[0])}</span>
                         </div>
                         <EarthDelayBadge delayClass={card.earthDelayClass} />
                       </div>
 
-                      <div className="flex flex-wrap items-center gap-2 font-mono text-[10px] text-muted-foreground">
+                      <div className="flex flex-wrap items-center gap-2 tabular-nums text-[10px] text-muted-foreground">
                         <span>{crew.role}</span>
                         <span>·</span>
                         <span>{card.state}</span>
@@ -526,11 +524,11 @@ export function AlertsPage() {
                       blockColorClass(block.type, isChanged, isConflict),
                     )}
                   >
-                    <div className="flex items-center gap-1 truncate font-semibold">
+                    <div className="flex items-center gap-1 truncate font-medium">
                       <Icon aria-hidden="true" className="size-3 shrink-0" />
                       <span className="truncate">{t(`schedule.block.${block.type}`)}</span>
                     </div>
-                    <div className="flex items-center justify-between font-mono text-[9px] opacity-80">
+                    <div className="flex items-center justify-between tabular-nums text-[9px] opacity-80">
                       <span>{String(Math.floor(block.startMin / 60)).padStart(2, '0')}:00</span>
                       {isConflict && <AlertTriangle aria-hidden="true" className="size-2.5" />}
                     </div>
@@ -541,7 +539,7 @@ export function AlertsPage() {
 
             {/* Neden Değişti? (ScheduleDiffItem listesi) */}
             <div className="rounded-lg border border-border/70 bg-background/60 p-3 text-xs">
-              <div className="mb-1.5 font-semibold text-foreground">
+              <div className="mb-1.5 font-medium text-foreground">
                 {t('alerts.scheduleWhyChanged')}
               </div>
               {scheduleViews.diffs.length === 0 ? (
@@ -556,7 +554,7 @@ export function AlertsPage() {
                       <div className="flex items-center gap-2">
                         <span
                           className={cn(
-                            'rounded px-1.5 py-0.5 font-mono text-[10px] font-bold',
+                            'rounded px-1.5 py-0.5 tabular-nums text-[10px] font-medium',
                             diff.change === 'CONFLICT'
                               ? 'bg-status-warning/20 text-status-warning'
                               : 'bg-primary/20 text-primary',
@@ -570,7 +568,7 @@ export function AlertsPage() {
                         <button
                           type="button"
                           onClick={() => setWhyAlertId(diff.byAlertId ?? null)}
-                          className="font-mono text-[10px] text-primary underline underline-offset-2"
+                          className="tabular-nums text-[10px] text-primary underline underline-offset-2"
                         >
                           {t('alerts.sourceAlertLink')}
                         </button>
@@ -602,13 +600,14 @@ export function AlertsPage() {
                 <SheetTitle>{t('alerts.whyDrawerTitle')}</SheetTitle>
                 <SheetDescription>
                   {t(whyAlert.titleKey as Parameters<typeof t>[0])} ·{' '}
-                  {getCrewProfile(whyAlert.crewId).displayName} ({formatMissionClock(whyAlert.lastSeenT)})
+                  {getCrewProfile(whyAlert.crewId).displayName} (
+                  {formatMissionClock(whyAlert.lastSeenT)})
                 </SheetDescription>
               </SheetHeader>
 
               {/* Why Keys Madde Madde */}
               <div className="space-y-1.5">
-                <h3 className="text-xs font-semibold text-foreground">{t('alerts.whyDrivers')}</h3>
+                <h3 className="text-xs font-medium text-foreground">{t('alerts.whyDrivers')}</h3>
                 <ul
                   data-testid="why-drivers-list"
                   className="list-disc space-y-1 pl-4 text-xs text-muted-foreground"
@@ -624,7 +623,7 @@ export function AlertsPage() {
               {/* L4 Katkı Çubukları */}
               {whyAlertStateEstimate && whyAlertStateEstimate.contributors.length > 0 && (
                 <div className="space-y-2">
-                  <h3 className="text-xs font-semibold text-foreground">
+                  <h3 className="text-xs font-medium text-foreground">
                     {t('alerts.whyContributors')}
                   </h3>
                   <div className="space-y-1.5" data-testid="why-contributors-list">
@@ -632,7 +631,7 @@ export function AlertsPage() {
                       const barPct = Math.min(100, Math.max(6, Math.round(contrib.weight * 100)))
                       return (
                         <div key={contrib.metric} className="space-y-0.5 text-[11px]">
-                          <div className="flex justify-between font-mono">
+                          <div className="flex justify-between tabular-nums">
                             <span>{t(`metric.${contrib.metric}`)}</span>
                             <span>
                               z={contrib.z.toFixed(1)} · {Math.round(contrib.weight * 100)}%
@@ -654,8 +653,8 @@ export function AlertsPage() {
               {/* Baseline Güveni & Öğrenme Günü */}
               {whyAlertConfidence && (
                 <div className="rounded-lg border border-border/70 bg-background/60 p-2.5 text-xs">
-                  <div className="font-semibold text-foreground">{t('alerts.whyBaseline')}</div>
-                  <div className="mt-1 font-mono text-[11px] text-muted-foreground">
+                  <div className="font-medium text-foreground">{t('alerts.whyBaseline')}</div>
+                  <div className="mt-1 tabular-nums text-[11px] text-muted-foreground">
                     {t('alerts.whyBaselineValue', {
                       pct: Math.round(whyAlertConfidence.confidence * 100),
                       day: whyAlertConfidence.learningDay,
@@ -667,15 +666,13 @@ export function AlertsPage() {
 
               {/* Mini Grafik */}
               <div className="space-y-1.5">
-                <h3 className="text-xs font-semibold text-foreground">
-                  {t('alerts.whySparkline')}
-                </h3>
+                <h3 className="text-xs font-medium text-foreground">{t('alerts.whySparkline')}</h3>
                 <MiniSparkline crewId={whyAlert.crewId} metric={whySparklineMetric} />
               </div>
 
               {/* Kanıt Etiketleri (tıkla -> /evidence) */}
               <div className="space-y-1.5">
-                <h3 className="text-xs font-semibold text-foreground">{t('alerts.whyEvidence')}</h3>
+                <h3 className="text-xs font-medium text-foreground">{t('alerts.whyEvidence')}</h3>
                 <div className="flex flex-wrap gap-1.5">
                   {whyAlert.evidenceIds.map((evId) => (
                     <button
@@ -698,7 +695,7 @@ export function AlertsPage() {
                 data-testid="why-earth-rationale"
                 className="rounded-lg border border-border/70 bg-background/60 p-3 text-xs"
               >
-                <div className="font-semibold text-foreground">{t('alerts.whyEarthClass')}</div>
+                <div className="font-medium text-foreground">{t('alerts.whyEarthClass')}</div>
                 <p className="mt-1 text-[11px] text-muted-foreground">
                   {earthLink.config.blackout
                     ? t('alerts.whyEarthBlackout')

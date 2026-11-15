@@ -10,6 +10,8 @@ import {
   createDefaultEngineClient,
   isMockEngineRequested,
   registerRealEngineClientFactory,
+  usePresenterUiStore,
+  useSessionStore,
   useTelemetryStore,
 } from '@/ui/store'
 
@@ -38,6 +40,9 @@ beforeEach(() => {
 
 afterEach(() => {
   actions.setLanguage('en')
+  useSessionStore.setState({ demoMode: false })
+  usePresenterUiStore.setState({ helpOpen: false, drawerOpen: false })
+  document.documentElement.classList.remove('presenter')
 })
 
 describe('CockpitPage & AppShell (FAZ 9 §3.3–§3.6)', () => {
@@ -80,10 +85,11 @@ describe('CockpitPage & AppShell (FAZ 9 §3.3–§3.6)', () => {
     expect(screen.getByTestId('bone-indicative-estimate-badge')).toHaveTextContent(
       'Indicative estimate',
     )
+    // Açıklama artık bilgi ipucunda (erişilebilir adla duyurulur)
     expect(
-      screen.getByText(
-        'Indicative estimate — bone density is measured by scans before/after flight',
-      ),
+      screen.getByRole('button', {
+        name: /Indicative estimate — bone density is measured by scans before\/after flight/,
+      }),
     ).toBeInTheDocument()
   })
 
@@ -95,6 +101,12 @@ describe('CockpitPage & AppShell (FAZ 9 §3.3–§3.6)', () => {
     })
 
     render(<App />)
+
+    // Sunum kontrolleri ana ekranda yok: sunum modu (D) + çekmece (Shift+P)
+    expect(screen.queryByTestId('speed-preset-50')).not.toBeInTheDocument()
+    fireEvent.keyDown(window, { key: 'd' })
+    fireEvent.keyDown(window, { key: 'P', shiftKey: true })
+    expect(screen.getByTestId('presenter-controls')).toBeInTheDocument()
 
     // 50× hız seç
     fireEvent.click(screen.getByTestId('speed-preset-50'))
@@ -124,13 +136,15 @@ describe('CockpitPage & AppShell (FAZ 9 §3.3–§3.6)', () => {
     render(<App />)
 
     expect(screen.getByRole('note')).toHaveTextContent(
-      'Decision support prototype · synthetic data · not a medical device',
+      'Synthetic telemetry · Decision-support prototype, not a medical device · Thresholds labelled by evidence status',
     )
+    expect(screen.getByTestId('mission-environment')).toHaveTextContent('Mars transit')
 
     fireEvent.click(screen.getByTestId('lang-btn-tr'))
     expect(screen.getByRole('note')).toHaveTextContent(
-      'Karar destek prototipi · sentetik veri · tıbbi cihaz değildir',
+      'Sentetik telemetri · Karar destek prototipi, tıbbi cihaz değildir · Eşikler kanıt durumuna göre etiketlidir',
     )
+    expect(screen.getByTestId('mission-environment')).toHaveTextContent('Mars transferi')
     expect(screen.getByRole('heading', { level: 1, name: 'Kokpit' })).toBeInTheDocument()
 
     fireEvent.click(screen.getByTestId('lang-btn-en'))

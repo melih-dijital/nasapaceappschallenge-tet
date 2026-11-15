@@ -11,9 +11,15 @@ import { DEMO_MAIN_BOOKMARKS } from './crewProfiles'
 export const PRESENTER_SCENARIO_ID = 'demo_main'
 
 /** Kısayol yardım penceresinin açık/kapalı durumu (klavye `?` ve üst çubuk düğmesi paylaşır). */
-export const usePresenterUiStore = create<{ helpOpen: boolean }>(() => ({ helpOpen: false }))
+// Kısayol yardımı ve "Presenter controls" çekmecesi (Shift+P veya ?demo=1 iken üst çubuk düğmesi).
+export const usePresenterUiStore = create<{ helpOpen: boolean; drawerOpen: boolean }>(() => ({
+  helpOpen: false,
+  drawerOpen: false,
+}))
 export const setPresenterHelpOpen = (helpOpen: boolean): void =>
   usePresenterUiStore.setState({ helpOpen })
+export const setPresenterDrawerOpen = (drawerOpen: boolean): void =>
+  usePresenterUiStore.setState({ drawerOpen })
 
 export type PresenterCommand =
   | { type: 'TOGGLE' }
@@ -22,10 +28,12 @@ export type PresenterCommand =
   | { type: 'RESET' }
   | { type: 'EARTH_DELAY' }
   | { type: 'HELP' }
+  | { type: 'DRAWER' }
 
 export interface PresenterKeyInput {
   key: string
   ctrlKey?: boolean
+  shiftKey?: boolean
   metaKey?: boolean
   altKey?: boolean
   /** Odak yazı alanında (input/textarea/select/contenteditable) mı. */
@@ -42,6 +50,8 @@ export function resolvePresenterKey(
 ): PresenterCommand | null {
   if (ev.ctrlKey || ev.metaKey || ev.altKey || ev.inEditable || ev.repeat) return null
   const key = ev.key
+  // Shift+P: sunum kontrolleri çekmecesi (sunum modundan bağımsız; çekmece başka yoldan açılmaz)
+  if (ev.shiftKey && (key === 'P' || key === 'p')) return { type: 'DRAWER' }
   if (key === 'd' || key === 'D') return { type: 'TOGGLE' }
   if (!presenterOn) return null
   if (key === '?') return { type: 'HELP' }

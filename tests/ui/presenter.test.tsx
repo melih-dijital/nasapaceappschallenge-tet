@@ -46,7 +46,7 @@ beforeEach(() => {
   spy = spyClient()
   bindEngineClient(spy.client, { scenarioId: 'demo_main', speed: 1 })
   useSessionStore.setState({ demoMode: false, scenarioId: 'demo_main', running: false })
-  usePresenterUiStore.setState({ helpOpen: false })
+  usePresenterUiStore.setState({ helpOpen: false, drawerOpen: false })
   spy.sent.length = 0
 })
 afterEach(() => {
@@ -171,14 +171,16 @@ describe('Presenter Mode (AppShell)', () => {
     renderShell('/?demo=1')
     press('?')
     const dialog = await screen.findByRole('dialog', { name: 'Presenter shortcuts' })
-    for (const key of ['D', '1', '2', '3', '4', 'Space', 'R', 'E', '?']) {
+    for (const key of ['D', '1', '2', '3', '4', 'Space', 'R', 'E', '?', 'Shift+P']) {
       expect(dialog.querySelectorAll('kbd')).toSatisfy((kbds: NodeListOf<Element>) =>
         [...kbds].some((k) => k.textContent === key),
       )
     }
     act(() => usePresenterUiStore.setState({ helpOpen: false }))
     expect(screen.queryByRole('dialog')).toBeNull()
-    fireEvent.click(screen.getByTestId('presenter-help-btn'))
+    // Yardım düğmesi sunum kontrolleri çekmecesinde (üst çubuktaki düğmeyle açılır)
+    fireEvent.click(screen.getByTestId('presenter-controls-btn'))
+    fireEvent.click(await screen.findByTestId('presenter-help-btn'))
     expect(await screen.findByRole('dialog', { name: 'Presenter shortcuts' })).toBeInTheDocument()
   })
 
@@ -195,5 +197,39 @@ describe('Presenter Mode (AppShell)', () => {
     press('r', input)
     expect(spy.sent).toEqual([])
     input.remove()
+  })
+})
+
+describe('Sunum kontrolleri çekmecesi (Shift+P)', () => {
+  const renderShell = (entry = '/') =>
+    render(
+      <MemoryRouter initialEntries={[entry]}>
+        <AppShell>
+          <div>child</div>
+        </AppShell>
+      </MemoryRouter>,
+    )
+
+  it('çözümleyici Shift+P → DRAWER; düz P ve Ctrl+Shift+P yok sayılır', () => {
+    expect(resolvePresenterKey({ key: 'P', shiftKey: true }, false)).toEqual({ type: 'DRAWER' })
+    expect(resolvePresenterKey({ key: 'p', shiftKey: true }, true)).toEqual({ type: 'DRAWER' })
+    expect(resolvePresenterKey({ key: 'p' }, true)).toBeNull()
+    expect(resolvePresenterKey({ key: 'P', shiftKey: true, ctrlKey: true }, true)).toBeNull()
+  })
+
+  it('ana ekranda oynatma kontrolü yok; Shift+P çekmeceyi açar ve kapatır', async () => {
+    renderShell('/')
+    expect(screen.queryByTestId('sim-play-btn')).toBeNull()
+    expect(screen.queryByTestId('presenter-controls-btn')).toBeNull()
+    act(() => {
+      fireEvent.keyDown(window, { key: 'P', shiftKey: true })
+    })
+    expect(await screen.findByTestId('presenter-controls')).toBeInTheDocument()
+    expect(screen.getByTestId('sim-play-btn')).toBeInTheDocument()
+    expect(screen.getByTestId('speed-preset-50')).toBeInTheDocument()
+    act(() => {
+      fireEvent.keyDown(window, { key: 'P', shiftKey: true })
+    })
+    expect(usePresenterUiStore.getState().drawerOpen).toBe(false)
   })
 })

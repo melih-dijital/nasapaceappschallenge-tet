@@ -1,47 +1,23 @@
-/* FAZ 9 §3.1 — Görev Kontrol (Mission Control) Tasarım Jetonları
- * Koyu tema: çok koyu lacivert arka plan, hafif yükseltilmiş yüzeyler, camgöbeği vurgu.
+/* Uzay aracı sağlık konsolu — tasarım jetonları (renkler src/index.css :root'ta, tek kaynak).
+ * 8 px ızgara · 1 px kenar · gölge/parıltı yok · köşe 6–8 px · başlıklar "Sentence case".
  * Durum renkleri daima ikon + metinle birlikte kullanılır (PROJECT_MEMORY §10).
  */
 
 :root,
 .dark {
-  /* Yüzey katmanları (çok koyu lacivert zemin + yükseltilmiş paneller) */
-  --surface-0: oklch(0.14 0.03 262);
-  --surface-1: oklch(0.18 0.034 262);
-  --surface-2: oklch(0.22 0.038 262);
-  --surface-3: oklch(0.26 0.04 262);
-  --surface-glass: oklch(0.2 0.035 262 / 0.85);
+  /* Grafik renkleri: veri nötr; renk yalnızca durum çizgileri/eşikleri için */
+  --chart-line: #c5cdd8;
+  --chart-grid: #1e242c;
+  --chart-axis: #8a94a3;
+  --chart-band: #9aa9ba;
+  --chart-night: #9aa9ba;
 
-  /* Vurgu (camgöbeği / cyan) */
-  --accent-cyan: oklch(0.8 0.13 210);
-  --accent-cyan-muted: oklch(0.8 0.13 210 / 0.16);
-
-  /* Durum renkleri */
-  --status-info: oklch(0.72 0.15 245);
-  --status-advisory: oklch(0.86 0.16 92);
-  --status-warning: oklch(0.76 0.17 55);
-  /* FAZ 12 kontrast AA (WCAG 2.x): kritik metin 0.66 → 0.72 (muted/rozet zeminlerinde ≥ 4.5:1);
-     dolu kritik bant zemini ayrı ve koyu: beyaz metinle 5.61:1 */
-  --status-critical: oklch(0.72 0.23 25);
-  --status-critical-strong: oklch(0.54 0.2 25);
-
-  /* Boyut ölçeği (tipografi) */
-  --text-2xs: 0.6875rem; /* 11px */
-  --text-xs: 0.75rem;    /* 12px */
-  --text-sm: 0.875rem;   /* 14px */
-  --text-base: 1rem;     /* 16px */
-  --text-lg: 1.125rem;   /* 18px */
-  --text-xl: 1.25rem;    /* 20px */
-  --text-2xl: 1.5rem;    /* 24px */
-
-  /* Boşluk ölçeği */
-  --space-1: 0.25rem;  /* 4px */
-  --space-2: 0.5rem;   /* 8px */
-  --space-3: 0.75rem;  /* 12px */
-  --space-4: 1rem;     /* 16px */
-  --space-5: 1.25rem;  /* 20px */
-  --space-6: 1.5rem;   /* 24px */
-  --space-8: 2rem;     /* 32px */
+  /* Boşluk ölçeği (8 px ızgara) */
+  --space-1: 0.25rem; /* 4px */
+  --space-2: 0.5rem; /* 8px */
+  --space-3: 0.75rem; /* 12px */
+  --space-4: 1rem; /* 16px */
+  --space-6: 1.5rem; /* 24px */
 }
 
 /* Sayısal telemetri değerleri için sabit genişlikli rakamlar */
@@ -49,30 +25,26 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* Kritik durum için hafif nabız animasyonu */
-@keyframes status-critical-pulse {
-  0%,
-  100% {
-    opacity: 1;
-    box-shadow: 0 0 0 0 oklch(0.66 0.23 25 / 0.45);
-  }
-  50% {
-    opacity: 0.88;
-    box-shadow: 0 0 0 4px oklch(0.66 0.23 25 / 0);
-  }
-}
-
-.status-critical-pulse {
-  animation: status-critical-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-/* FAZ 12 erişilebilirlik — klavye odak halkası: yalnızca klavye odağında, her etkileşimli öğede görünür */
-:where(a, button, [role='button'], [role='tab'], [role='switch'], [role='slider'], [role='checkbox'], input, select, textarea, summary, [tabindex]:not([tabindex='-1'])):focus-visible {
+/* Erişilebilirlik — klavye odak halkası: yalnızca klavye odağında, her etkileşimli öğede görünür (8.07:1) */
+:where(
+  a,
+  button,
+  [role='button'],
+  [role='tab'],
+  [role='switch'],
+  [role='slider'],
+  [role='checkbox'],
+  input,
+  select,
+  textarea,
+  summary,
+  [tabindex]:not([tabindex='-1'])
+):focus-visible {
   outline: 2px solid var(--ring);
   outline-offset: 2px;
 }
 
-/* FAZ 12 Presenter Mode (?demo=1 / D): projeksiyonda okunabilirlik — rem tabanlı tüm metin %12.5 büyür;
+/* Presenter Mode (?demo=1 / D): projeksiyonda okunabilirlik — rem tabanlı tüm metin %12.5 büyür;
    piksel sabit küçük metinler (text-[10px]/[11px]) de en az 12/13 px olur. */
 html.presenter {
   font-size: 112.5%;
@@ -85,9 +57,6 @@ html.presenter .text-\[11px\] {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .status-critical-pulse {
-    animation: none !important;
-  }
   *,
   *::before,
   *::after {

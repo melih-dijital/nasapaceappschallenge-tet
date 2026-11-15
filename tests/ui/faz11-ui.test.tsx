@@ -207,7 +207,11 @@ describe('FAZ 11 UI — Bağlantı Rozeti, ?demo=1 & Ground Station (optional)',
   })
 
   it('GroundPage içinde "Ground station (optional)" paneli varsayılan kapalı olarak render edilir', () => {
-    render(<GroundPage />)
+    render(
+      <MemoryRouter>
+        <GroundPage />
+      </MemoryRouter>,
+    )
     const toggle = screen.getByTestId('ground-station-toggle')
     expect(toggle).toHaveAttribute('aria-expanded', 'false')
     expect(screen.queryByTestId('ground-station-ws-input')).not.toBeInTheDocument()

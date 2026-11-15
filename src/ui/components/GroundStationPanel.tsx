@@ -65,7 +65,7 @@ export function GroundStationPanel({ compact = false }: { compact?: boolean }) {
         <span
           data-testid="ground-station-status"
           className={cn(
-            'shrink-0 rounded px-1.5 py-0.5 font-mono text-[10px]',
+            'shrink-0 rounded px-1.5 py-0.5 tabular-nums text-[10px]',
             telemetrySource === 'ws' && wsConnected
               ? 'bg-status-info/20 text-status-info'
               : telemetrySource === 'ws'
@@ -101,7 +101,7 @@ export function GroundStationPanel({ compact = false }: { compact?: boolean }) {
               }}
               placeholder={t('groundStation.urlPlaceholder')}
               aria-label={t('groundStation.urlLabel')}
-              className="w-full rounded-md border border-border bg-background px-2.5 py-1.5 font-mono text-xs text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
+              className="w-full rounded-md border border-border bg-background px-2.5 py-1.5 tabular-nums text-xs text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
             />
             {urlError && (
               <p

@@ -1,6 +1,6 @@
-// FAZ 9 §3.1, §3.4 & §3.5 — MetricTile (Son değer, birim, z skoru, mini sparkline ve veri kalitesi rozeti).
+// Son değer karosu: büyük sayısal değer (mono, tabular-nums), küçük gri etiket, nötr mini çizgi.
+// Teknik veri kalitesi etiketleri (FAULT/stale) gösterilmez: sorun varsa gri "Data gap" notu.
 import { memo } from 'react'
-import { AlertTriangle } from 'lucide-react'
 import { getNumber } from '@/core/evidence/registry'
 import type { MetricId, Severity } from '@/core/types'
 import { cn } from '@/lib/utils'
@@ -18,17 +18,15 @@ export interface MetricTileProps {
   baselineMedian?: number
   sparkline?: readonly SeriesPoint[]
   learningBaseline?: boolean
+  /** Veri kalitesi sorunu (sensör arızası/bayat veri) → "Data gap". */
   sensorFault?: boolean
-  onToggleFault?: () => void
   className?: string
 }
 
-function buildSparklinePoints(points: readonly SeriesPoint[], width = 96, height = 24): string {
+function buildSparklinePoints(points: readonly SeriesPoint[], width = 64, height = 20): string {
   if (points.length === 0) return ''
   const slice = points.slice(-32)
-  if (slice.length === 1) {
-    return `0,${height / 2} ${width},${height / 2}`
-  }
+  if (slice.length === 1) return `0,${height / 2} ${width},${height / 2}`
   let min = slice[0]!.value
   let max = slice[0]!.value
   for (const p of slice) {
@@ -56,92 +54,57 @@ export const MetricTile = memo(function MetricTile({
   sparkline = [],
   learningBaseline = false,
   sensorFault = false,
-  onToggleFault,
   className,
 }: MetricTileProps) {
   const { t, formatNumber } = useT()
 
-  const zAdvisory = getNumber('det.z.advisory')
-  const zWarning = getNumber('det.z.warning')
-  const zCritical = getNumber('det.z.critical')
-
   const absZ = Math.abs(z)
-  const severity: DisplaySeverity = sensorFault
-    ? ('WARNING' satisfies Severity)
-    : learningBaseline
-      ? 'INFO'
-      : absZ >= zCritical
+  const severity: DisplaySeverity =
+    sensorFault || learningBaseline
+      ? 'NOMINAL'
+      : absZ >= getNumber('det.z.critical')
         ? ('CRITICAL' satisfies Severity)
-        : absZ >= zWarning
+        : absZ >= getNumber('det.z.warning')
           ? ('WARNING' satisfies Severity)
-          : absZ >= zAdvisory
+          : absZ >= getNumber('det.z.advisory')
             ? ('ADVISORY' satisfies Severity)
             : 'NOMINAL'
-
   const polyline = buildSparklinePoints(sparkline)
-  const formattedZ = `${z >= 0 ? '+' : ''}${z.toFixed(1)}`
 
   return (
     <div
       data-testid={`metric-tile-${metric}`}
+      data-severity={severity}
       className={cn(
-        'flex flex-col justify-between rounded-lg border border-border/70 bg-background/60 p-2.5 transition-colors',
-        sensorFault && 'border-status-warning/70 bg-status-warning/10',
-        !sensorFault && severity === 'CRITICAL' && 'border-status-critical/70 bg-status-critical/10',
+        'flex flex-col gap-1 rounded-md border border-border bg-background/40 px-2.5 py-2',
         className,
       )}
     >
-      <div className="flex items-start justify-between gap-1.5">
-        <span className="truncate text-[11px] font-medium text-muted-foreground">{label}</span>
-        <div className="flex items-center gap-1">
-          {onToggleFault && (
-            <button
-              type="button"
-              onClick={onToggleFault}
-              aria-label={`${t('cockpit.simulateSensorFault')}: ${label}`}
-              title={t('cockpit.simulateSensorFault')}
-              className="rounded px-1 py-0.5 font-mono text-[9px] text-muted-foreground hover:bg-muted hover:text-foreground"
-            >
-              FAULT
-            </button>
-          )}
-          <SeverityIcon severity={severity} className="size-3.5" />
-        </div>
+      <div className="flex items-center justify-between gap-1.5">
+        <span className="truncate text-xs text-muted-foreground">{label}</span>
+        {severity !== 'NOMINAL' && (
+          <span className="inline-flex items-center gap-0.5" title={t(`severity.${severity}`)}>
+            <SeverityIcon severity={severity} className="size-3.5" />
+            <span className="sr-only">{t(`severity.${severity}`)}</span>
+          </span>
+        )}
       </div>
 
-      {sensorFault && (
-        <div
-          role="status"
-          data-testid={`sensor-fault-${metric}`}
-          className="mt-1.5 inline-flex items-center gap-1 rounded border border-status-warning/50 bg-status-warning/20 px-1.5 py-0.5 font-mono text-[10px] font-medium text-status-warning"
-        >
-          <AlertTriangle aria-hidden="true" className="size-3 shrink-0" />
-          <span>⚠ {t('cockpit.sensorFaultStale')}</span>
+      <div className="flex items-end justify-between gap-2">
+        <div className="font-mono text-xl leading-none font-medium text-foreground tabular-nums">
+          {value !== undefined && !sensorFault ? formatNumber(value, digits) : '—'}
+          <span className="ml-1 font-sans text-xs font-normal text-muted-foreground">{unit}</span>
         </div>
-      )}
-
-      <div className="mt-1.5 flex items-baseline justify-between gap-2">
-        <div className="font-mono text-lg font-bold text-foreground tabular-nums">
-          {value !== undefined ? formatNumber(value, digits) : '—'}{' '}
-          <span className="text-xs font-normal text-muted-foreground">{unit}</span>
-        </div>
-
-        {polyline && (
+        {polyline && !sensorFault && (
           <svg
-            viewBox="0 0 96 24"
-            className="h-6 w-20 shrink-0 overflow-visible"
+            viewBox="0 0 64 20"
+            className="h-5 w-16 shrink-0 overflow-visible"
             aria-hidden="true"
           >
             <polyline
               fill="none"
-              stroke={
-                sensorFault
-                  ? 'var(--status-warning)'
-                  : severity === 'CRITICAL'
-                    ? 'var(--status-critical)'
-                    : 'var(--primary)'
-              }
-              strokeWidth="1.75"
+              stroke="#8a94a3"
+              strokeWidth="1.25"
               strokeLinecap="round"
               strokeLinejoin="round"
               points={polyline}
@@ -150,21 +113,30 @@ export const MetricTile = memo(function MetricTile({
         )}
       </div>
 
-      <div className="mt-1.5 flex items-center justify-between gap-1 border-t border-border/40 pt-1 text-[10px] text-muted-foreground tabular-nums">
-        {learningBaseline ? (
-          <span className="font-mono text-status-info">{t('cockpit.learningBaseline')}</span>
-        ) : (
-          <span className="font-mono">{t('cockpit.zScore', { z: formattedZ })}</span>
-        )}
-        {baselineMedian !== undefined && (
-          <span className="truncate font-mono">
-            {t('cockpit.baselineMedian', {
-              median: formatNumber(baselineMedian, digits),
-              unit,
-            })}
-          </span>
-        )}
-      </div>
+      {sensorFault ? (
+        <div
+          role="status"
+          data-testid={`sensor-fault-${metric}`}
+          className="text-[11px] text-muted-foreground"
+        >
+          {t('cockpit.dataGap')}
+        </div>
+      ) : (
+        <div className="flex flex-wrap items-center justify-between gap-x-2 text-[11px] text-muted-foreground tabular-nums">
+          {learningBaseline ? (
+            <span>{t('cockpit.learningBaseline')}</span>
+          ) : (
+            <span className="font-mono">
+              {t('cockpit.zScore', { z: `${z >= 0 ? '+' : ''}${z.toFixed(1)}` })}
+            </span>
+          )}
+          {baselineMedian !== undefined && (
+            <span className="font-mono">
+              {t('cockpit.baselineMedian', { median: formatNumber(baselineMedian, digits), unit })}
+            </span>
+          )}
+        </div>
+      )}
     </div>
   )
 })

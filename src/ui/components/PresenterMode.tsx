@@ -16,6 +16,7 @@ import {
   earthDelayCycleSec,
   presenterActions,
   resolvePresenterKey,
+  setPresenterDrawerOpen,
   setPresenterHelpOpen,
   usePresenterUiStore,
   type PresenterCommand,
@@ -88,6 +89,9 @@ export function PresenterController({ presenterOn }: { presenterOn: boolean }) {
           setAnnouncement(t(next ? 'presenter.announce.on' : 'presenter.announce.off'))
           return
         }
+        case 'DRAWER':
+          setPresenterDrawerOpen(!usePresenterUiStore.getState().drawerOpen)
+          return
         case 'HELP':
           setPresenterHelpOpen(!usePresenterUiStore.getState().helpOpen)
           return
@@ -118,6 +122,7 @@ export function PresenterController({ presenterOn }: { presenterOn: boolean }) {
         {
           key: ev.key,
           ctrlKey: ev.ctrlKey,
+          shiftKey: ev.shiftKey,
           metaKey: ev.metaKey,
           altKey: ev.altKey,
           repeat: ev.repeat,
@@ -142,12 +147,12 @@ export function PresenterController({ presenterOn }: { presenterOn: boolean }) {
       {presenterOn && announcement && (
         <div
           aria-hidden="true"
-          className="pointer-events-none fixed top-24 left-1/2 z-50 -translate-x-1/2 rounded-full border border-primary/50 bg-card px-4 py-1.5 font-mono text-sm font-semibold text-primary shadow-lg"
+          className="pointer-events-none fixed top-24 left-1/2 z-50 -translate-x-1/2 rounded-full border border-primary/50 bg-card px-4 py-1.5 font-mono text-sm font-medium text-primary"
         >
           {announcement}
         </div>
       )}
-      <PresenterHelpDialog open={presenterOn && helpOpen} onOpenChange={setPresenterHelpOpen} />
+      <PresenterHelpDialog open={helpOpen} onOpenChange={setPresenterHelpOpen} />
     </>
   )
 }
@@ -173,6 +178,7 @@ export function PresenterHelpDialog({
       label: t('presenter.key.earthDelay', { values: cycle.map(formatDelay).join(' → ') }),
     },
     { keys: '?', label: t('presenter.key.help') },
+    { keys: 'Shift+P', label: t('presenter.key.drawer') },
   ]
 
   return (

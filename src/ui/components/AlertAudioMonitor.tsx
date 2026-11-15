@@ -98,21 +98,19 @@ export function AlertAudioToggle() {
     <Button
       type="button"
       size="xs"
-      variant={muted ? 'ghost' : 'outline'}
+      variant="ghost"
       onClick={handleToggle}
       aria-pressed={muted}
       aria-label={muted ? t('alerts.audioUnmute') : t('alerts.audioMute')}
       data-testid="audio-mute-toggle"
-      className="gap-1.5 font-mono text-[11px]"
+      className="gap-1.5 text-muted-foreground"
     >
       {muted ? (
         <VolumeX aria-hidden="true" className="size-3.5 text-muted-foreground" />
       ) : (
-        <Volume2 aria-hidden="true" className="size-3.5 text-primary" />
+        <Volume2 aria-hidden="true" className="size-3.5" />
       )}
-      <span className="hidden xl:inline">
-        {muted ? t('alerts.audioMuted') : t('alerts.audioActive')}
-      </span>
+      <span className="sr-only">{muted ? t('alerts.audioMuted') : t('alerts.audioActive')}</span>
     </Button>
   )
 }

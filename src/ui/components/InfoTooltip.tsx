@@ -1,11 +1,6 @@
 // FAZ 9 §3.1 — InfoTooltip (Erişilebilir bilgi ipucu).
-import { HelpCircle } from 'lucide-react'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip'
+import { Info } from 'lucide-react'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
 
 export interface InfoTooltipProps {
@@ -23,11 +18,11 @@ export function InfoTooltip({ text, label = 'More information', className }: Inf
             type="button"
             aria-label={`${label}: ${text}`}
             className={cn(
-              'inline-flex size-5 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none',
+              'inline-flex size-5 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none',
               className,
             )}
           >
-            <HelpCircle aria-hidden="true" className="size-3.5" />
+            <Info aria-hidden="true" className="size-3.5" />
           </button>
         </TooltipTrigger>
         <TooltipContent side="top" className="max-w-xs text-xs">

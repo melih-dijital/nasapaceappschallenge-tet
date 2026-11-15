@@ -13,20 +13,15 @@ export interface SeverityIconProps {
 }
 
 const SEVERITY_COLOR_CLASS: Record<DisplaySeverity, string> = {
-  NOMINAL: 'text-primary',
+  NOMINAL: 'text-status-nominal',
   INFO: 'text-status-info',
   ADVISORY: 'text-status-advisory',
   WARNING: 'text-status-warning',
   CRITICAL: 'text-status-critical',
 }
 
-export function SeverityIcon({ severity, className, pulse = true }: SeverityIconProps) {
-  const baseClass = cn(
-    ' size-4 shrink-0',
-    SEVERITY_COLOR_CLASS[severity],
-    severity === 'CRITICAL' && pulse && 'status-critical-pulse rounded-full',
-    className,
-  )
+export function SeverityIcon({ severity, className }: SeverityIconProps) {
+  const baseClass = cn(' size-4 shrink-0', SEVERITY_COLOR_CLASS[severity], className)
 
   switch (severity) {
     case 'INFO':

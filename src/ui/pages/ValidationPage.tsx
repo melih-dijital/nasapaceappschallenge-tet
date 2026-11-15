@@ -49,9 +49,7 @@ export function ValidationPage() {
   if (!VALIDATION_SNAPSHOT.ok) {
     return (
       <div className="mx-auto max-w-[1440px] space-y-4" data-testid="validation-page">
-        <h1 className="text-lg font-bold tracking-tight text-foreground">
-          {t('validation.pageTitle')}
-        </h1>
+        <h1 className="text-base font-medium text-foreground">{t('validation.pageTitle')}</h1>
         <div role="alert" data-testid="validation-load-error">
           <EmptyState
             icon={<FileWarning aria-hidden="true" className="size-4" />}
@@ -96,18 +94,16 @@ export function ValidationPage() {
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="space-y-1">
           <div className="flex flex-wrap items-center gap-2">
-            <h1 className="text-lg font-bold tracking-tight text-foreground">
-              {t('validation.pageTitle')}
-            </h1>
+            <h1 className="text-base font-medium text-foreground">{t('validation.pageTitle')}</h1>
             <span
               data-testid="validation-fingerprint-badge"
               title={reportFingerprint}
-              className="rounded border border-border/70 bg-secondary px-2 py-0.5 font-mono text-[10px] text-muted-foreground"
+              className="rounded border border-border/70 bg-secondary px-2 py-0.5 tabular-nums text-[10px] text-muted-foreground"
             >
               {t('validation.fingerprint', { value: reportFingerprint })}
             </span>
             {report.quick && (
-              <span className="rounded border border-status-advisory/60 bg-status-advisory/10 px-2 py-0.5 font-mono text-[10px] text-status-advisory">
+              <span className="rounded border border-status-advisory/60 bg-status-advisory/10 px-2 py-0.5 tabular-nums text-[10px] text-status-advisory">
                 {t('validation.quickBadge')}
               </span>
             )}
@@ -157,7 +153,7 @@ export function ValidationPage() {
         <div
           role="alert"
           data-testid="validation-fingerprint-stale"
-          className="rounded-xl border border-status-warning/60 bg-status-warning/10 px-4 py-2.5 text-xs text-status-warning"
+          className="rounded-lg border border-status-warning/60 bg-status-warning/10 px-4 py-2.5 text-xs text-status-warning"
         >
           {t('validation.fingerprintStale', {
             report: reportFingerprint,
@@ -169,9 +165,9 @@ export function ValidationPage() {
       {/* Bilinen sınırlamalar (HER ZAMAN GÖRÜNÜR, rapordan) */}
       <div
         data-testid="validation-limitations-box"
-        className="rounded-xl border border-status-warning/60 bg-status-warning/10 p-4 text-xs"
+        className="rounded-lg border border-status-warning/60 bg-status-warning/10 p-4 text-xs"
       >
-        <h2 className="mb-2 flex items-center gap-2 font-semibold text-status-warning">
+        <h2 className="mb-2 flex items-center gap-2 font-medium text-status-warning">
           <AlertTriangle aria-hidden="true" className="size-4 shrink-0" />
           <span>{t('validation.limitationsTitle')}</span>
         </h2>
@@ -189,7 +185,7 @@ export function ValidationPage() {
             className="w-full border-collapse text-left text-xs"
             data-testid="validation-targets-table"
           >
-            <thead className="font-mono text-[11px] text-muted-foreground">
+            <thead className="tabular-nums text-[11px] text-muted-foreground">
               <tr>
                 <th className="p-2">{t('validation.colMetric')}</th>
                 <th className="p-2">{t('validation.colActual')}</th>
@@ -210,8 +206,8 @@ export function ValidationPage() {
                     <td className="p-2">
                       {t(`validation.target.${c.metricKey}` as Parameters<typeof t>[0])}
                     </td>
-                    <td className="p-2 font-mono tabular-nums">{fmt(c.actual)}</td>
-                    <td className="p-2 font-mono tabular-nums">
+                    <td className="p-2 tabular-nums">{fmt(c.actual)}</td>
+                    <td className="p-2 tabular-nums">
                       {c.comparator === 'LTE' ? '≤' : '≥'} {fmt(c.target)}
                     </td>
                     <td className="p-2">
@@ -251,7 +247,7 @@ export function ValidationPage() {
                 className="flex justify-between gap-3 border-b border-border/40 py-1"
               >
                 <dt className="text-muted-foreground">{r.label}</dt>
-                <dd className="font-mono tabular-nums text-foreground">{r.value}</dd>
+                <dd className="tabular-nums text-foreground">{r.value}</dd>
               </div>
             ))}
           </dl>
@@ -281,7 +277,7 @@ export function ValidationPage() {
             className="w-full border-collapse text-left text-xs"
             data-testid="validation-results-table"
           >
-            <thead className="bg-secondary/60 font-mono text-[11px] text-muted-foreground">
+            <thead className="bg-secondary/60 tabular-nums text-[11px] text-muted-foreground">
               <tr>
                 <th className="p-2.5">{t('validation.colScenario')}</th>
                 <th className="p-2.5">{t('validation.colStrength')}</th>
@@ -299,10 +295,10 @@ export function ValidationPage() {
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-border/50 font-mono text-[11px] tabular-nums">
+            <tbody className="divide-y divide-border/50 tabular-nums text-[11px]">
               {report.scenarios.map((row) => (
                 <tr key={row.scenarioId} className="hover:bg-secondary/20">
-                  <td className="p-2.5 font-sans font-semibold">
+                  <td className="p-2.5 font-sans font-medium">
                     {t(`scenario.${row.scenarioId}.title` as Parameters<typeof t>[0])}
                   </td>
                   <td className="p-2.5">{row.eventStrength}</td>
@@ -348,7 +344,7 @@ export function ValidationPage() {
             className="w-full border-collapse text-left text-xs"
             data-testid="validation-sensitivity-table"
           >
-            <thead className="bg-secondary/60 font-mono text-[11px] text-muted-foreground">
+            <thead className="bg-secondary/60 tabular-nums text-[11px] text-muted-foreground">
               <tr>
                 <th className="p-2.5">{t('validation.colParameter')}</th>
                 <th className="p-2.5">{t('validation.colDelta')}</th>
@@ -356,7 +352,7 @@ export function ValidationPage() {
                 <th className="p-2.5">{t('validation.colFpRange')}</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-border/50 font-mono text-[11px] tabular-nums">
+            <tbody className="divide-y divide-border/50 tabular-nums text-[11px]">
               {report.sensitivity.map((row) => {
                 const point = (label: 'minus' | 'base' | 'plus') =>
                   row.points.find((p) => p.label === label)
@@ -369,7 +365,7 @@ export function ValidationPage() {
                     .join(' / ')
                 return (
                   <tr key={row.parameter}>
-                    <td className="p-2.5 font-semibold">{row.parameter}</td>
+                    <td className="p-2.5 font-medium">{row.parameter}</td>
                     <td className="p-2.5">
                       ±{formatNumber(row.pct, 0)}% ({formatNumber(row.baseValue, 2)})
                     </td>

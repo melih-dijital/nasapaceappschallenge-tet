@@ -31,7 +31,6 @@ import type {
 } from '@/ui/store'
 import { getSimulatedSleepWindow, isWithinSleepWindow, useSessionStore } from '@/ui/store'
 import { EmptyState } from './EmptyState'
-import { Gauge } from './Gauge'
 import { ProvenanceTag } from './ProvenanceTag'
 import { SectionCard } from './SectionCard'
 import type { DisplaySeverity } from './SeverityIcon'
@@ -55,11 +54,12 @@ function formatSimHourLabel(tMs: number): string {
 
 function TimeCompressedBadge({ speed }: { speed: number }) {
   const { t } = useT()
-  if (speed < 20) return null
+  const presenter = useSessionStore((s) => s.demoMode)
+  if (!presenter || speed < 20) return null
   return (
     <span
       data-testid="time-compressed-badge"
-      className="inline-flex items-center gap-1 rounded border border-status-advisory/50 bg-status-advisory/15 px-1.5 py-0.5 font-mono text-[10px] font-medium text-status-advisory"
+      className="inline-flex items-center gap-1 text-[11px] text-muted-foreground"
     >
       <Clock aria-hidden="true" className="size-3" />
       <span>
@@ -75,7 +75,7 @@ function LearningBaselineBadge({ confidenceInfo }: { confidenceInfo: CrewConfide
   return (
     <span
       data-testid="chart-learning-baseline-badge"
-      className="inline-flex items-center gap-1 rounded border border-status-info/50 bg-status-info/15 px-2 py-0.5 font-mono text-[11px] font-medium text-status-info"
+      className="inline-flex items-center gap-1 text-[11px] text-status-info"
     >
       <span>
         {t('cockpit.learningBaselineDay', {
@@ -159,7 +159,7 @@ export const HrTelemetryChart = memo(function HrTelemetryChart({
   return (
     <SectionCard
       title={t('cockpit.hrChartTitle')}
-      subtitle={t('cockpit.hrChartSubtitle')}
+      tooltip={t('cockpit.hrChartSubtitle')}
       provenanceId="det.z.warning"
       headerRight={
         <div className="flex flex-wrap items-center gap-1.5">
@@ -172,22 +172,22 @@ export const HrTelemetryChart = memo(function HrTelemetryChart({
       <div className="mb-2 flex flex-wrap items-center justify-between gap-2 text-[11px] text-muted-foreground">
         <div className="flex flex-wrap items-center gap-3">
           <span className="inline-flex items-center gap-1.5">
-            <span className="inline-block h-0.5 w-3 bg-primary" />
+            <span className="inline-block h-0.5 w-3 bg-[var(--chart-line)]" />
             <span>{t('metric.hr')} (bpm)</span>
           </span>
           {!confidenceInfo.isLearning ? (
             <span
               data-testid="hr-baseline-band-legend"
-              className="inline-flex items-center gap-1.5 font-mono"
+              className="inline-flex items-center gap-1.5 tabular-nums"
             >
-              <span className="inline-block h-2.5 w-3 rounded-xs border border-primary/50 bg-primary/20" />
+              <span className="inline-block h-2.5 w-3 rounded-xs border border-[var(--chart-band)]/40 bg-[var(--chart-band)]/15" />
               <span>
                 {t('cockpit.baselineBandLabel', { z: zWarn })}: {formatNumber(bandLow, 1)}–
                 {formatNumber(bandHigh, 1)} bpm
               </span>
             </span>
           ) : (
-            <span className="font-mono text-status-info">
+            <span className="text-status-info">
               {t('cockpit.learningBaselineDay', {
                 day: confidenceInfo.learningDay,
                 target: confidenceInfo.targetDays,
@@ -195,7 +195,7 @@ export const HrTelemetryChart = memo(function HrTelemetryChart({
             </span>
           )}
           <span className="inline-flex items-center gap-1">
-            <Moon aria-hidden="true" className="size-3 text-indigo-300" />
+            <Moon aria-hidden="true" className="size-3 text-muted-foreground" />
             <span>{t('cockpit.nightSleepBlock')}</span>
           </span>
         </div>
@@ -228,19 +228,19 @@ export const HrTelemetryChart = memo(function HrTelemetryChart({
           initialDimension={{ width: 620, height: 185 }}
         >
           <ComposedChart data={chartData} margin={{ top: 8, right: 12, left: 0, bottom: 4 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="rgba(148, 163, 184, 0.14)" />
+            <CartesianGrid strokeDasharray="3 3" stroke="#1e242c" />
             <XAxis
               dataKey="t"
               type="number"
               domain={['dataMin', 'dataMax']}
               tickFormatter={formatSimHourLabel}
-              tick={{ fontSize: 10, fill: '#94a3b8' }}
+              tick={{ fontSize: 10, fill: '#8a94a3' }}
             />
             <YAxis
-              unit=" bpm"
               domain={[40, 110]}
-              tick={{ fontSize: 10, fill: '#94a3b8' }}
-              width={56}
+              ticks={[40, 60, 80, 100]}
+              tick={{ fontSize: 10, fill: '#8a94a3' }}
+              width={32}
             />
             <Tooltip
               isAnimationActive={false}
@@ -251,8 +251,8 @@ export const HrTelemetryChart = memo(function HrTelemetryChart({
                 return [String(val), String(name)]
               }}
               contentStyle={{
-                backgroundColor: '#0f172a',
-                borderColor: '#334155',
+                backgroundColor: '#12161c',
+                borderColor: '#1e242c',
                 fontSize: '11px',
               }}
             />
@@ -263,7 +263,7 @@ export const HrTelemetryChart = memo(function HrTelemetryChart({
                 key={`night-${idx}`}
                 x1={b.x1}
                 x2={b.x2}
-                fill="#6366f1"
+                fill="#9aa9ba"
                 fillOpacity={0.09}
               />
             ))}
@@ -274,14 +274,14 @@ export const HrTelemetryChart = memo(function HrTelemetryChart({
                 <ReferenceArea
                   y1={bandLow}
                   y2={bandHigh}
-                  fill="#38bdf8"
+                  fill="#9aa9ba"
                   fillOpacity={0.14}
-                  stroke="#38bdf8"
+                  stroke="#c5cdd8"
                   strokeOpacity={0.25}
                 />
                 <ReferenceLine
                   y={median}
-                  stroke="#38bdf8"
+                  stroke="#c5cdd8"
                   strokeDasharray="4 4"
                   strokeWidth={1.2}
                 />
@@ -293,7 +293,7 @@ export const HrTelemetryChart = memo(function HrTelemetryChart({
               <ReferenceLine
                 key={al.id}
                 x={al.firstSeenT}
-                stroke="#f97316"
+                stroke="#f0883e"
                 strokeDasharray="2 2"
                 strokeWidth={1.5}
               />
@@ -302,7 +302,7 @@ export const HrTelemetryChart = memo(function HrTelemetryChart({
             <Line
               type="monotone"
               dataKey="hr"
-              stroke="#38bdf8"
+              stroke="#c5cdd8"
               strokeWidth={2}
               dot={false}
               isAnimationActive={false}
@@ -343,18 +343,18 @@ export const Spo2TelemetryChart = memo(function Spo2TelemetryChart({
   return (
     <SectionCard
       title={t('cockpit.spo2ChartTitle')}
-      subtitle={t('cockpit.spo2ChartSubtitle')}
+      tooltip={t('cockpit.spo2ChartSubtitle')}
       provenanceId="spo2.critical"
       headerRight={<TimeCompressedBadge speed={speed} />}
     >
       <div className="mb-2 flex flex-wrap items-center justify-between gap-2 text-[11px] text-muted-foreground">
         <span className="inline-flex items-center gap-1.5">
-          <span className="inline-block h-0.5 w-3 bg-emerald-400" />
+          <span className="inline-block h-0.5 w-3 bg-[var(--chart-line)]" />
           <span>{t('metric.spo2')} (%)</span>
         </span>
         <span
           data-testid="spo2-critical-legend"
-          className="inline-flex items-center gap-1.5 font-mono text-status-critical"
+          className="inline-flex items-center gap-1.5 text-status-critical tabular-nums"
         >
           <span className="inline-block h-0.5 w-3 border-b border-dashed border-status-critical" />
           <span>
@@ -376,18 +376,18 @@ export const Spo2TelemetryChart = memo(function Spo2TelemetryChart({
           initialDimension={{ width: 620, height: 155 }}
         >
           <ComposedChart data={chartData} margin={{ top: 8, right: 12, left: 0, bottom: 4 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="rgba(148, 163, 184, 0.14)" />
+            <CartesianGrid strokeDasharray="3 3" stroke="#1e242c" />
             <XAxis
               dataKey="t"
               type="number"
               domain={['dataMin', 'dataMax']}
               tickFormatter={formatSimHourLabel}
-              tick={{ fontSize: 10, fill: '#94a3b8' }}
+              tick={{ fontSize: 10, fill: '#8a94a3' }}
             />
             <YAxis
               unit="%"
               domain={[86, 100]}
-              tick={{ fontSize: 10, fill: '#94a3b8' }}
+              tick={{ fontSize: 10, fill: '#8a94a3' }}
               width={48}
             />
             <Tooltip
@@ -395,22 +395,22 @@ export const Spo2TelemetryChart = memo(function Spo2TelemetryChart({
               labelFormatter={(val) => formatSimHourLabel(Number(val))}
               formatter={(val) => [`${Number(val).toFixed(1)}%`, t('metric.spo2')]}
               contentStyle={{
-                backgroundColor: '#0f172a',
-                borderColor: '#334155',
+                backgroundColor: '#12161c',
+                borderColor: '#1e242c',
                 fontSize: '11px',
               }}
             />
             <ReferenceLine
               y={criticalThreshold}
-              stroke="#ef4444"
+              stroke="#f26b66"
               strokeDasharray="4 3"
               strokeWidth={1.75}
             />
-            <ReferenceLine y={median} stroke="#34d399" strokeDasharray="2 4" strokeOpacity={0.5} />
+            <ReferenceLine y={median} stroke="#c5cdd8" strokeDasharray="2 4" strokeOpacity={0.5} />
             <Line
               type="monotone"
               dataKey="spo2"
-              stroke="#34d399"
+              stroke="#c5cdd8"
               strokeWidth={2}
               dot={false}
               isAnimationActive={false}
@@ -437,17 +437,17 @@ export const SleepActivityChart = memo(function SleepActivityChart({
   return (
     <SectionCard
       title={t('cockpit.sleepChartTitle')}
-      subtitle={t('cockpit.sleepChartSubtitle')}
+      tooltip={t('cockpit.sleepChartSubtitle')}
       provenanceId="det.trend.sleep.hoursBelow"
       headerRight={<LearningBaselineBadge confidenceInfo={confidenceInfo} />}
     >
       <div className="mb-2 flex flex-wrap items-center gap-3 text-[11px] text-muted-foreground">
         <span className="inline-flex items-center gap-1.5">
-          <span className="inline-block size-2.5 rounded-xs bg-primary" />
+          <span className="inline-block size-2.5 rounded-xs bg-[var(--chart-band)]" />
           <span>{t('metric.sleep.durationH')} (h)</span>
         </span>
-        <span className="inline-flex items-center gap-1.5 font-mono">
-          <span className="inline-block h-0.5 w-3 border-b border-dashed border-sky-300" />
+        <span className="inline-flex items-center gap-1.5 tabular-nums">
+          <span className="inline-block h-0.5 w-3 border-b border-dashed border-[var(--chart-band)]" />
           <span>Baseline {baselineH === null ? '—' : `${formatNumber(baselineH, 1)} h`}</span>
         </span>
         <span className="inline-flex items-center gap-1.5">
@@ -472,34 +472,34 @@ export const SleepActivityChart = memo(function SleepActivityChart({
             initialDimension={{ width: 620, height: 170 }}
           >
             <ComposedChart data={[...entries]} margin={{ top: 8, right: 12, left: 0, bottom: 4 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(148, 163, 184, 0.14)" />
-              <XAxis dataKey="label" tick={{ fontSize: 10, fill: '#94a3b8' }} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#1e242c" />
+              <XAxis dataKey="label" tick={{ fontSize: 10, fill: '#8a94a3' }} />
               <YAxis
                 unit=" h"
                 domain={[0, (max: number) => Math.max(10, Math.ceil(max))]}
-                tick={{ fontSize: 10, fill: '#94a3b8' }}
+                tick={{ fontSize: 10, fill: '#8a94a3' }}
                 width={44}
               />
               <Tooltip
                 isAnimationActive={false}
                 contentStyle={{
-                  backgroundColor: '#0f172a',
-                  borderColor: '#334155',
+                  backgroundColor: '#12161c',
+                  borderColor: '#1e242c',
                   fontSize: '11px',
                 }}
               />
               <Area
                 type="monotone"
                 dataKey="debtH"
-                fill="#f59e0b"
+                fill="#e2c04a"
                 fillOpacity={0.22}
-                stroke="#f59e0b"
+                stroke="#e2c04a"
                 strokeWidth={1.5}
                 isAnimationActive={false}
               />
               <Bar
                 dataKey="durationH"
-                fill="#38bdf8"
+                fill="#9aa9ba"
                 radius={[3, 3, 0, 0]}
                 barSize={16}
                 isAnimationActive={false}
@@ -507,7 +507,7 @@ export const SleepActivityChart = memo(function SleepActivityChart({
               {!confidenceInfo.isLearning && baselineH !== null && (
                 <ReferenceLine
                   y={baselineH}
-                  stroke="#e0f2fe"
+                  stroke="#9aa9ba"
                   strokeDasharray="4 4"
                   strokeWidth={1.5}
                 />
@@ -578,28 +578,65 @@ export const RadiationPanel = memo(function RadiationPanel({
   return (
     <SectionCard
       title={t('radiation.panelTitle')}
-      subtitle={t('radiation.panelSubtitle')}
+      tooltip={t('radiation.panelSubtitle')}
       provenanceId="rad.career.limit.msv"
       headerRight={<TimeCompressedBadge speed={speed} />}
     >
       <div className="grid grid-cols-1 gap-3 lg:grid-cols-12">
         {/* (a) Kümülatif Kariyer Doz Göstergesi (Gauge: 600 mSv, %50 / %80 eşikleri) */}
         <div className="lg:col-span-5">
-          <Gauge
-            value={summary.careerMsv}
-            max={summary.careerLimitMsv}
-            unit="mSv"
-            fraction={summary.careerFraction}
-            warnFraction={warnFraction}
-            criticalFraction={critFraction}
-            label={t('radiation.careerGaugeLabel')}
-            sublabel={`${t('radiation.priorDose', {
-              value: formatNumber(summary.priorCareerDoseMsv, 1),
-            })} · ${t('radiation.missionDose', {
-              value: formatNumber(summary.cumulativeMissionMsv, 2),
-            })}`}
-            provenanceId="rad.career.limit.msv"
-          />
+          <div className="space-y-1.5" data-testid="career-dose-box">
+            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+              <span>{t('radiation.careerGaugeLabel')}</span>
+              <ProvenanceTag evidenceId="rad.career.limit.msv" />
+            </div>
+            <div className="font-mono text-2xl leading-none font-medium text-foreground tabular-nums">
+              {formatNumber(summary.careerMsv, 1)}
+              <span className="ml-1 font-sans text-sm font-normal text-muted-foreground">
+                / {formatNumber(summary.careerLimitMsv, 0)} mSv
+              </span>
+            </div>
+            <div
+              role="meter"
+              aria-label={t('radiation.careerGaugeLabel')}
+              aria-valuemin={0}
+              aria-valuemax={summary.careerLimitMsv}
+              aria-valuenow={Number(summary.careerMsv.toFixed(1))}
+              className="relative h-2 w-full rounded-full bg-muted"
+            >
+              <div
+                className={cn(
+                  'h-full rounded-full',
+                  summary.careerFraction >= critFraction
+                    ? 'bg-status-critical'
+                    : summary.careerFraction >= warnFraction
+                      ? 'bg-status-warning'
+                      : 'bg-status-nominal',
+                )}
+                style={{ width: `${Math.max(1, Math.min(100, summary.careerFraction * 100))}%` }}
+              />
+              <span
+                aria-hidden="true"
+                className="absolute -top-0.5 h-3 w-px bg-status-warning"
+                style={{ left: `${warnFraction * 100}%` }}
+              />
+              <span
+                aria-hidden="true"
+                className="absolute -top-0.5 h-3 w-px bg-status-critical"
+                style={{ left: `${critFraction * 100}%` }}
+              />
+            </div>
+            <p className="text-xs text-muted-foreground tabular-nums">
+              {t('radiation.careerPctOfLimit', {
+                pct: Math.round(summary.careerFraction * 100),
+                limit: formatNumber(summary.careerLimitMsv, 0),
+              })}
+            </p>
+            <p className="text-xs text-muted-foreground tabular-nums">
+              {t('radiation.priorDose', { value: formatNumber(summary.priorCareerDoseMsv, 1) })} ·{' '}
+              {t('radiation.missionDose', { value: formatNumber(summary.cumulativeMissionMsv, 2) })}
+            </p>
+          </div>
         </div>
 
         {/* (b) Doz Hızı Grafiği & (c) SPE Durum Rozeti + 250 mSv Koruma Hedefi Çubuğu */}
@@ -608,7 +645,7 @@ export const RadiationPanel = memo(function RadiationPanel({
           <div className="rounded-lg border border-border/70 bg-background/50 p-2.5">
             <div className="mb-1.5 flex flex-wrap items-center justify-between gap-1.5">
               <div className="flex items-center gap-1.5 text-xs font-medium text-foreground">
-                <Radiation aria-hidden="true" className="size-3.5 text-primary" />
+                <Radiation aria-hidden="true" className="size-3.5 text-muted-foreground" />
                 <span>{t('radiation.rateChartTitle')}</span>
               </div>
               <div className="flex items-center gap-2">
@@ -635,18 +672,18 @@ export const RadiationPanel = memo(function RadiationPanel({
                   data={rateChartData}
                   margin={{ top: 4, right: 8, left: 0, bottom: 2 }}
                 >
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(148, 163, 184, 0.14)" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#1e242c" />
                   <XAxis
                     dataKey="t"
                     type="number"
                     domain={['dataMin', 'dataMax']}
                     tickFormatter={formatSimHourLabel}
-                    tick={{ fontSize: 9, fill: '#94a3b8' }}
+                    tick={{ fontSize: 9, fill: '#8a94a3' }}
                   />
                   <YAxis
                     unit=" mSv"
                     domain={[0, 'auto']}
-                    tick={{ fontSize: 9, fill: '#94a3b8' }}
+                    tick={{ fontSize: 9, fill: '#8a94a3' }}
                     width={46}
                   />
                   <Tooltip
@@ -657,27 +694,27 @@ export const RadiationPanel = memo(function RadiationPanel({
                       t('metric.rad.doseRateMsvDay'),
                     ]}
                     contentStyle={{
-                      backgroundColor: '#0f172a',
-                      borderColor: '#334155',
+                      backgroundColor: '#12161c',
+                      borderColor: '#1e242c',
                       fontSize: '11px',
                     }}
                   />
                   {/* Beklenen ISS/referans aralık bandı */}
-                  <ReferenceArea y1={issLow} y2={issHigh} fill="#38bdf8" fillOpacity={0.14} />
+                  <ReferenceArea y1={issLow} y2={issHigh} fill="#9aa9ba" fillOpacity={0.14} />
                   {/* SPE gölgeli aralıkları */}
                   {speShadedBlocks.map((b, idx) => (
                     <ReferenceArea
                       key={`spe-${idx}`}
                       x1={b.x1}
                       x2={b.x2}
-                      fill="#ef4444"
+                      fill="#f26b66"
                       fillOpacity={0.22}
                     />
                   ))}
                   <Line
                     type="monotone"
                     dataKey="doseRate"
-                    stroke="#f97316"
+                    stroke="#c5cdd8"
                     strokeWidth={2}
                     dot={false}
                     isAnimationActive={false}
@@ -751,7 +788,7 @@ export const RadiationPanel = memo(function RadiationPanel({
                       ? 'bg-status-critical'
                       : summary.speFractionOfLimit >= getNumber('rad.spe.warn.fraction')
                         ? 'bg-status-warning'
-                        : 'bg-primary',
+                        : 'bg-status-nominal',
                   )}
                   style={{ width: `${Math.max(2, speBarPct)}%` }}
                 />
@@ -775,13 +812,13 @@ export const BoneEstimateCard = memo(function BoneEstimateCard({ bone }: BoneEst
   return (
     <SectionCard
       title={t('bone.cardTitle')}
-      subtitle={t('bone.estimate.disclaimer')}
+      tooltip={t('bone.estimate.disclaimer')}
       provenanceId="bone.loss.pct_month"
       headerRight={
         <div className="flex items-center gap-1.5">
           <span
             data-testid="bone-indicative-estimate-badge"
-            className="inline-flex items-center gap-1 rounded border border-status-advisory/50 bg-status-advisory/15 px-2 py-0.5 font-mono text-[11px] font-semibold text-status-advisory"
+            className="inline-flex items-center gap-1 text-xs text-muted-foreground"
           >
             <ShieldAlert aria-hidden="true" className="size-3" />
             <span>{t('bone.indicativeBadge')}</span>
@@ -793,10 +830,10 @@ export const BoneEstimateCard = memo(function BoneEstimateCard({ bone }: BoneEst
       <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
         <div className="rounded-lg border border-border/70 bg-background/60 p-2.5">
           <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-            <Bone aria-hidden="true" className="size-3.5 text-primary" />
+            <Bone aria-hidden="true" className="size-3.5 text-muted-foreground" />
             <span>{t('bone.monthlyLoss')}</span>
           </div>
-          <div className="mt-1 font-mono text-base font-bold text-foreground tabular-nums">
+          <div className="mt-1 font-mono text-base font-medium text-foreground tabular-nums">
             {bone.estimatedMonthlyLossPct === null
               ? '—'
               : `−${formatNumber(bone.estimatedMonthlyLossPct, 2)}%`}{' '}
@@ -806,7 +843,7 @@ export const BoneEstimateCard = memo(function BoneEstimateCard({ bone }: BoneEst
 
         <div className="rounded-lg border border-border/70 bg-background/60 p-2.5">
           <div className="text-[11px] text-muted-foreground">{t('bone.cumulativeLoss')}</div>
-          <div className="mt-1 font-mono text-base font-bold text-foreground tabular-nums">
+          <div className="mt-1 font-mono text-base font-medium text-foreground tabular-nums">
             {bone.estimatedCumulativeLossPct === null
               ? '—'
               : `−${formatNumber(bone.estimatedCumulativeLossPct, 3)}%`}
@@ -815,7 +852,7 @@ export const BoneEstimateCard = memo(function BoneEstimateCard({ bone }: BoneEst
 
         <div className="rounded-lg border border-border/70 bg-background/60 p-2.5">
           <div className="text-[11px] text-muted-foreground">{t('bone.resistiveAdherence')}</div>
-          <div className="mt-1 font-mono text-base font-bold text-primary tabular-nums">
+          <div className="mt-1 font-mono text-base font-medium text-foreground tabular-nums">
             {bone.resistiveAdherence7d === null
               ? '—'
               : `${Math.round(bone.resistiveAdherence7d * 100)}%`}

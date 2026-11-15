@@ -63,7 +63,7 @@ describe('Kanıt sayfası özeti', () => {
     navigateTo('/evidence')
     render(<App />)
     const row = await screen.findByTestId('calibration-row-rad.doseRateMsvDay')
-    expect(row).toHaveTextContent('DEMO_PARAMETER')
+    expect(row).toHaveTextContent('Demo parameter')
     expect(row).not.toHaveTextContent('NASA_STD')
   })
 })

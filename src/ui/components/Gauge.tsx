@@ -109,11 +109,7 @@ export function Gauge({
       </div>
 
       <div className="my-1 flex flex-col items-center">
-        <svg
-          viewBox="0 0 200 112"
-          className="h-28 w-48 overflow-visible"
-          aria-hidden="true"
-        >
+        <svg viewBox="0 0 200 112" className="h-28 w-48 overflow-visible" aria-hidden="true">
           {/* Arka plan yarı-daire yay */}
           <path
             d={describeArc(cx, cy, r, -90, 90)}
@@ -188,8 +184,11 @@ export function Gauge({
         </svg>
 
         <div className="-mt-2 text-center">
-          <div className="font-mono text-base font-bold text-foreground tabular-nums">
-            {formatNumber(value, 1)} <span className="text-xs font-normal text-muted-foreground">/ {formatNumber(max, 0)} {unit}</span>
+          <div className="font-mono text-base font-medium text-foreground tabular-nums">
+            {formatNumber(value, 1)}{' '}
+            <span className="text-xs font-normal text-muted-foreground">
+              / {formatNumber(max, 0)} {unit}
+            </span>
           </div>
           <div className="font-mono text-[11px] text-muted-foreground tabular-nums">
             {pct}% of {max} {unit}

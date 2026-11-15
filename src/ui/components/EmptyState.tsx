@@ -24,7 +24,9 @@ export function EmptyState({ title, description, icon, action, className }: Empt
         {icon ?? <CheckCircle2 aria-hidden="true" className="size-4" />}
       </div>
       <div className="text-xs font-medium text-foreground">{title}</div>
-      {description && <p className="mt-1 max-w-xs text-[11px] text-muted-foreground">{description}</p>}
+      {description && (
+        <p className="mt-1 max-w-xs text-[11px] text-muted-foreground">{description}</p>
+      )}
       {action && <div className="mt-3">{action}</div>}
     </div>
   )

@@ -182,9 +182,7 @@ export function BehavioralPage() {
   return (
     <div className="mx-auto max-w-[1440px] space-y-4" data-testid="behavioral-page">
       <div>
-        <h1 className="text-lg font-bold tracking-tight text-foreground">
-          {t('behavioral.pageTitle')}
-        </h1>
+        <h1 className="text-base font-medium text-foreground">{t('behavioral.pageTitle')}</h1>
         <p className="text-xs text-muted-foreground">{t('behavioral.pageSubtitle')}</p>
       </div>
 
@@ -201,7 +199,7 @@ export function BehavioralPage() {
                 <label htmlFor="slider-stress" className="font-medium">
                   {t('metric.mood.stress')}
                 </label>
-                <span className="font-mono font-bold tabular-nums">{stress} / 10</span>
+                <span className="tabular-nums font-medium">{stress} / 10</span>
               </div>
               <Slider
                 id="slider-stress"
@@ -220,7 +218,7 @@ export function BehavioralPage() {
                 <label htmlFor="slider-mood" className="font-medium">
                   {t('metric.mood.mood')}
                 </label>
-                <span className="font-mono font-bold tabular-nums">{mood} / 10</span>
+                <span className="tabular-nums font-medium">{mood} / 10</span>
               </div>
               <Slider
                 id="slider-mood"
@@ -239,7 +237,7 @@ export function BehavioralPage() {
                 <label htmlFor="slider-motivation" className="font-medium">
                   {t('metric.mood.motivation')}
                 </label>
-                <span className="font-mono font-bold tabular-nums">{motivation} / 10</span>
+                <span className="tabular-nums font-medium">{motivation} / 10</span>
               </div>
               <Slider
                 id="slider-motivation"
@@ -258,7 +256,7 @@ export function BehavioralPage() {
                 <label htmlFor="journal-note-input" className="font-medium">
                   {t('behavioral.journalLabel')}
                 </label>
-                <span className="inline-flex items-center gap-1 font-mono text-[10px] text-primary">
+                <span className="inline-flex items-center gap-1 tabular-nums text-[10px] text-primary">
                   <Lock aria-hidden="true" className="size-3" />
                   <span>{t('behavioral.journalPrivacy')}</span>
                 </span>
@@ -283,7 +281,7 @@ export function BehavioralPage() {
               {savedBanner && (
                 <span
                   data-testid="checkin-saved-badge"
-                  className="font-mono text-[11px] font-semibold text-primary"
+                  className="tabular-nums text-[11px] font-medium text-primary"
                 >
                   ✓ {t('behavioral.checkinSubmittedToday')}
                 </span>
@@ -292,7 +290,7 @@ export function BehavioralPage() {
 
             {journals.length > 0 && (
               <div className="rounded-lg border border-border/60 bg-background/60 p-2 text-[11px] text-muted-foreground">
-                <span className="font-mono font-semibold text-foreground">
+                <span className="tabular-nums font-medium text-foreground">
                   Local entries ({journals.length}):
                 </span>{' '}
                 {journals[0]!.text}
@@ -317,7 +315,7 @@ export function BehavioralPage() {
                 if (e.key === 'Enter') handlePvtResponse()
               }}
               className={cn(
-                'flex h-44 cursor-pointer flex-col items-center justify-center rounded-xl border-2 p-4 text-center transition-colors select-none',
+                'flex h-44 cursor-pointer flex-col items-center justify-center rounded-lg border-2 p-4 text-center transition-colors select-none',
                 pvtPhase === 'STIMULUS'
                   ? 'border-primary bg-primary/25 text-primary'
                   : pvtPhase === 'WAITING'
@@ -328,20 +326,17 @@ export function BehavioralPage() {
               <Timer aria-hidden="true" className="mb-2 size-7" />
               {pvtPhase === 'IDLE' && <span>{t('behavioral.pvtStart')}</span>}
               {pvtPhase === 'WAITING' && (
-                <span className="font-mono font-semibold">{t('behavioral.pvtWait')}</span>
+                <span className="tabular-nums font-medium">{t('behavioral.pvtWait')}</span>
               )}
               {pvtPhase === 'STIMULUS' && (
-                <span
-                  data-testid="pvt-tap-cue"
-                  className="font-mono text-lg font-bold tracking-wider"
-                >
+                <span data-testid="pvt-tap-cue" className="tabular-nums text-lg font-medium">
                   {t('behavioral.pvtTapNow')}
                 </span>
               )}
               {pvtPhase === 'DONE' && pvtSummary && (
                 <span
                   data-testid="pvt-summary-text"
-                  className="font-mono font-semibold text-primary"
+                  className="tabular-nums font-medium text-primary"
                 >
                   {t('behavioral.pvtResult', {
                     median: pvtSummary.medianMs,
@@ -354,15 +349,13 @@ export function BehavioralPage() {
               {falseStartNotice && (
                 <span
                   data-testid="pvt-false-start-msg"
-                  className="mt-2 font-mono text-[11px] font-bold text-status-warning"
+                  className="mt-2 tabular-nums text-[11px] font-medium text-status-warning"
                 >
                   {t('behavioral.pvtFalseStart')}
                 </span>
               )}
               {lastRtMs !== null && pvtPhase !== 'DONE' && (
-                <span className="mt-2 font-mono text-xs text-foreground tabular-nums">
-                  {lastRtMs} ms
-                </span>
+                <span className="mt-2 tabular-nums text-xs text-foreground">{lastRtMs} ms</span>
               )}
             </div>
 
@@ -386,7 +379,7 @@ export function BehavioralPage() {
               )}
 
               {pvtHistory.length > 0 && (
-                <span className="font-mono text-[11px] text-muted-foreground tabular-nums">
+                <span className="tabular-nums text-[11px] text-muted-foreground">
                   Latest: {pvtHistory[pvtHistory.length - 1]!.medianMs} ms ·{' '}
                   {pvtHistory[pvtHistory.length - 1]!.lapses} lapses
                 </span>
@@ -411,7 +404,7 @@ export function BehavioralPage() {
               <span
                 data-testid="behavioral-sample-data-badge"
                 title={t('behavioral.sampleDataHint')}
-                className="inline-flex items-center gap-1 rounded border border-status-advisory/50 bg-status-advisory/15 px-2 py-0.5 font-mono text-[11px] font-semibold text-status-advisory"
+                className="inline-flex items-center gap-1 rounded border border-status-advisory/50 bg-status-advisory/15 px-2 py-0.5 tabular-nums text-[11px] font-medium text-status-advisory"
               >
                 <FlaskConical aria-hidden="true" className="size-3" />
                 <span>{t('behavioral.sampleDataBadge')}</span>
@@ -478,7 +471,7 @@ export function BehavioralPage() {
                       <div className="text-[10px] text-muted-foreground">
                         {t('behavioral.sleepRegularity')}
                       </div>
-                      <div className="mt-0.5 font-mono text-sm font-bold tabular-nums">
+                      <div className="mt-0.5 tabular-nums text-sm font-medium">
                         {Math.round(proxies.sleepRegularityIndex * 100)}%
                       </div>
                     </div>
@@ -486,7 +479,7 @@ export function BehavioralPage() {
                       <div className="text-[10px] text-muted-foreground">
                         {t('behavioral.missedExercise')}
                       </div>
-                      <div className="mt-0.5 font-mono text-sm font-bold tabular-nums">
+                      <div className="mt-0.5 tabular-nums text-sm font-medium">
                         {proxies.missedExerciseCount}
                       </div>
                     </div>
@@ -494,7 +487,7 @@ export function BehavioralPage() {
                       <div className="text-[10px] text-muted-foreground">
                         {t('behavioral.checkinCompliance')}
                       </div>
-                      <div className="mt-0.5 font-mono text-sm font-bold tabular-nums">
+                      <div className="mt-0.5 tabular-nums text-sm font-medium">
                         {proxies.checkInCompliancePct}%
                       </div>
                     </div>
@@ -504,7 +497,7 @@ export function BehavioralPage() {
                       </div>
                       <div
                         data-testid="passive-proxy-score"
-                        className="mt-0.5 font-mono text-sm font-bold text-primary tabular-nums"
+                        className="mt-0.5 tabular-nums text-sm font-medium text-primary"
                       >
                         {formatNumber(proxies.passiveProxyScore, 2)}
                       </div>
@@ -529,19 +522,17 @@ export function BehavioralPage() {
                   className="space-y-1.5 rounded-lg border border-border/70 bg-background/60 p-3 text-xs"
                 >
                   <div className="flex items-center justify-between">
-                    <span className="flex items-center gap-1.5 font-semibold">
+                    <span className="flex items-center gap-1.5 font-medium">
                       <Brain aria-hidden="true" className="size-3.5 text-primary" />
                       <span>{t(`state.${st.state}`)}</span>
                     </span>
-                    <span className="font-mono font-bold tabular-nums">
-                      {Math.round(st.score * 100)}%
-                    </span>
+                    <span className="tabular-nums font-medium">{Math.round(st.score * 100)}%</span>
                   </div>
                   <div className="space-y-1">
                     {st.contributors.slice(0, 3).map((c) => (
                       <div
                         key={c.metric}
-                        className="flex justify-between font-mono text-[10px] text-muted-foreground"
+                        className="flex justify-between tabular-nums text-[10px] text-muted-foreground"
                       >
                         <span>{t(`metric.${c.metric}`)}</span>
                         <span>
