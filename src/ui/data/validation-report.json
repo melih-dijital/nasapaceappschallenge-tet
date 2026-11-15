@@ -1,9 +1,9 @@
 {
-  "generatedAt": "2026-11-15T02:56:33.425Z",
+  "generatedAt": "2026-11-15T06:27:18.237Z",
   "command": "npm run validate",
   "report": {
     "params": {
-      "evidenceFingerprint": "fnv1a-0af1f79b4d5f4413",
+      "evidenceFingerprint": "fnv1a-b7dcb2979372397d",
       "paramsVersion": "demo-parameters-v1",
       "tuningSeeds": [
         1,

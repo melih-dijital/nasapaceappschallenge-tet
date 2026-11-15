@@ -32,6 +32,7 @@ export const EVIDENCE_IDS = [
   'det.z.advisory',
   'det.z.critical',
   'det.z.warning',
+  'earth.downlinkBatchMin',
   'earth.groundProcessingMin',
   'earth.oneWayDelaySec.mars_max',
   'earth.oneWayDelaySec.mars_min',

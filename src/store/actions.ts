@@ -8,12 +8,14 @@ export function initSimulation(opts: {
   scenarioId?: ScenarioId
   seed?: number
   speed?: number
+  autoStart?: boolean
 } = {}): void {
   getEngineClient().send({
     type: 'INIT',
     scenarioId: opts.scenarioId ?? 'demo_main',
     ...(opts.seed !== undefined ? { seed: opts.seed } : {}),
     speed: opts.speed ?? 1,
+    ...(opts.autoStart !== undefined ? { autoStart: opts.autoStart } : {}),
   })
 }
 

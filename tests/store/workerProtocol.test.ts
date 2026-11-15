@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { containsForbiddenPrivacyKey } from '@/core/earthlink/packets'
 import { MemoryFrameStore } from '@/core/storage'
 import type { IntervalScheduler } from '@/core/telemetry'
 import type { DailyFrame } from '@/core/types'
@@ -44,7 +45,7 @@ describe('Worker protokolü ve handleMessage (Worker olmadan)', () => {
     handler.dispose()
   })
 
-  it('INIT -> START -> PAUSE -> SEEK_BOOKMARK -> RESET -> SET_SCENARIO yaşam döngüsü', () => {
+  it('INIT autoStart varsayılanı true: demo_main 1x hızda kendiliğinden başlar ve backfill + canlı telemetri üretir', () => {
     const out: WorkerToUiMessage[] = []
     const scheduler = new FakeWorkerScheduler()
     const handler = createWorkerHandler({
@@ -52,9 +53,52 @@ describe('Worker protokolü ve handleMessage (Worker olmadan)', () => {
       scheduler,
     })
 
-    handler.handleMessage({ type: 'INIT', scenarioId: 'demo_main', speed: 50 })
+    handler.handleMessage({ type: 'INIT', scenarioId: 'demo_main', speed: 1 })
+    expect(out.some((m) => m.type === 'READY')).toBe(true)
+
+    const statuses = out.filter(
+      (m): m is Extract<WorkerToUiMessage, { type: 'STATUS' }> => m.type === 'STATUS',
+    )
+    expect(statuses.at(-1)?.status).toMatchObject({
+      scenarioId: 'demo_main',
+      speed: 1,
+      running: true,
+    })
+
+    // INIT sırasında backfill otomatik yayılmış olmalı
+    const backfillBatch = out.find(
+      (m): m is Extract<WorkerToUiMessage, { type: 'FRAMES_BATCH' }> => m.type === 'FRAMES_BATCH',
+    )
+    expect(backfillBatch).toBeDefined()
+    expect(backfillBatch!.frames.every((f) => f.t < 0)).toBe(true)
+
+    // START göndermeden doğrudan tick ilerletildiğinde canlı çerçeveler gelir
+    out.length = 0
+    scheduler.step(1)
+    const liveBatches = out.filter(
+      (m): m is Extract<WorkerToUiMessage, { type: 'FRAMES_BATCH' }> => m.type === 'FRAMES_BATCH',
+    )
+    expect(liveBatches.length).toBeGreaterThan(0)
+    expect(liveBatches[0]!.frames.every((f) => f.t >= 0)).toBe(true)
+
+    handler.dispose()
+  })
+
+  it('INIT (autoStart: false) -> START -> PAUSE -> SEEK_BOOKMARK -> RESET -> SET_SCENARIO yaşam döngüsü', () => {
+    const out: WorkerToUiMessage[] = []
+    const scheduler = new FakeWorkerScheduler()
+    const handler = createWorkerHandler({
+      postMessage: (m) => out.push(m),
+      scheduler,
+    })
+
+    handler.handleMessage({ type: 'INIT', scenarioId: 'demo_main', speed: 50, autoStart: false })
     expect(out.some((m) => m.type === 'READY')).toBe(true)
     expect(out.some((m) => m.type === 'SNAPSHOT')).toBe(true)
+    const initStatus = [...out]
+      .reverse()
+      .find((m): m is Extract<WorkerToUiMessage, { type: 'STATUS' }> => m.type === 'STATUS')
+    expect(initStatus?.status.running).toBe(false)
 
     out.length = 0
     handler.handleMessage({ type: 'START' })
@@ -90,7 +134,7 @@ describe('Worker protokolü ve handleMessage (Worker olmadan)', () => {
     handler.dispose()
   })
 
-  it('demo_main seed 42 → D+003 12:30: ACT_SHELTER kartı, egzersiz iptali + SHELTER bloğu, 840 sn gecikme, ~+43 dk bekleyen cevap ve karar komutları', () => {
+  it('demo_main seed 42 → D+003 12:30: ACT_SHELTER kartı, egzersiz iptali + SHELTER bloğu, 1200 sn gecikme, ~+55 dk bekleyen cevap, groundMirror/downlink ve karar komutları', () => {
     const out: WorkerToUiMessage[] = []
     const scheduler = new FakeWorkerScheduler()
     // tickMs=125 ve speed=5/3 => her tick tam 15 sim-dakika (900_000 ms) ilerler
@@ -101,11 +145,10 @@ describe('Worker protokolü ve handleMessage (Worker olmadan)', () => {
     })
 
     handler.handleMessage({ type: 'INIT', scenarioId: 'demo_main', seed: 42, speed: 5 / 3 })
-    handler.handleMessage({ type: 'START' })
     // Bookmark 3 = SPE_START (D+003 12:00 = 3.5 * MS_PER_DAY)
     handler.handleMessage({ type: 'SEEK_BOOKMARK', index: 3 })
 
-    // D+003 12:00 -> 12:15 (1. tick) -> 12:30 (2. tick) -> 12:30 çerçevelerini üretmek için 3. tick
+    // D+003 12:00 -> 12:15 (1. tick) -> 12:30 (2. tick)
     out.length = 0
     scheduler.step(2)
 
@@ -148,13 +191,28 @@ describe('Worker protokolü ve handleMessage (Worker olmadan)', () => {
       }),
     ).toBe(true)
 
-    // 3. Earth Link tek yön 840 sn (14 dk)
-    expect(decisionSnap!.earth.config.oneWayDelaySec).toBe(840)
+    // 3. Earth Link tek yön 1200 sn (20 dk)
+    expect(decisionSnap!.earth.config.oneWayDelaySec).toBe(1200)
+    expect(latestOut.groundMirror?.delaySec).toBe(1200)
+    expect(latestOut.groundMirror?.linkUp).toBe(true)
+    // D+003 12:30'da yerel ACT_SHELTER kartı oluştuğunda Dünya henüz 12:00 verisini görmektedir (12:15 ve 12:30 yoldadır)
+    expect(latestOut.groundMirror?.asOfT).toBe(3 * MS_PER_DAY + 12 * MS_PER_HOUR)
+    expect(
+      latestOut.groundMirror?.activeAlerts.some(
+        (a) => a.state === 'radiation_event' && a.severity === 'CRITICAL',
+      ),
+    ).toBe(false)
+    expect(latestOut.downlink?.inFlight).toBeGreaterThanOrEqual(2)
+    expect(
+      latestOut.downlink?.recent.some(
+        (r) => r.kind === 'TELEMETRY_BATCH' && r.createdT === 3 * MS_PER_DAY + 12.5 * MS_PER_HOUR,
+      ),
+    ).toBe(true)
 
-    // 4. En az 1 bekleyen cevap ETA ≈ +43 dk (~2580 sn)
+    // 4. En az 1 bekleyen cevap ETA ≈ +55 dk (2*20 + 15 = 55 dk)
     expect(decisionSnap!.earth.pending.length).toBeGreaterThanOrEqual(1)
     const pendingEtaMin = decisionSnap!.earth.pending.map((p) => p.remainingMs / minToMs(1))
-    expect(pendingEtaMin.some((m) => Math.abs(m - 43) <= 1)).toBe(true)
+    expect(pendingEtaMin.some((m) => Math.abs(m - 55) <= 1)).toBe(true)
 
     // 5. Karar ve Earth Link komutları: ACCEPT_ACTION, COMPLETE_ACTION, DISMISS_ACTION, SET_EARTH_LINK, SET_CONSENT, GROUND_REPLY
     out.length = 0
@@ -253,6 +311,9 @@ describe('Worker protokolü ve handleMessage (Worker olmadan)', () => {
     )
     expect(batches).toHaveLength(2)
 
+    // 15-dk telemetri paketinin üretilip Dünya aynasına (groundMirror) ulaşması için tick ilerlet
+    scheduler.step(5)
+
     // FrameStore'da aynı gün için tek birleşik DailyFrame bulunur
     const storedDaily = (await frameStore.query({ crewId: 'cdr', kind: 'daily', fromT: 0 })).filter(
       (f): f is DailyFrame => f.kind === 'daily' && f.day === 0,
@@ -262,7 +323,9 @@ describe('Worker protokolü ve handleMessage (Worker olmadan)', () => {
     expect(storedDaily[0]?.mood).toEqual({ stress: 8, mood: 4, motivation: 5 })
     expect(storedDaily[0]?.pvt).toEqual({ medianMs: 325, lapses: 5 })
 
-    // journalText hiçbir mesajda, motorda, FrameStore'da veya Earth Link paketinde yer almaz
+    // Derin gizlilik taraması: journalText hiçbir mesajda, motorda, FrameStore'da, outbox'ta veya groundMirror'da yer almaz
+    expect(containsForbiddenPrivacyKey(out)).toBe(false)
+    expect(containsForbiddenPrivacyKey(storedDaily)).toBe(false)
     expect(JSON.stringify(out)).not.toContain(secretJournal)
     expect(JSON.stringify(storedDaily)).not.toContain(secretJournal)
 

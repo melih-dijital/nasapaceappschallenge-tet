@@ -7,14 +7,28 @@ import {
 } from '../earthlink/link'
 import type { EarthConsentCategory } from '../earthlink/packets'
 import { registry as defaultRegistry, type EvidenceRegistry } from '../evidence/registry'
+import { extractFrameMetrics } from '../pipeline/buffer'
 import type { EngineContext, EngineStage } from '../pipeline/stages'
 import type { ActionCard, ActionCardState, ActionId, ActionKind } from '../types/action'
-import type { Alert, EarthDelayClass, Severity, WhyKey } from '../types/alert'
+import type { Alert, AlertEvent, EarthDelayClass, Severity, WhyKey } from '../types/alert'
 import type { CrewProfile, CrewRole } from '../types/crew'
-import type { EarthLinkConfig, EarthLinkPreset, Message } from '../types/earthlink'
-import type { CrewId, SimTimeMs } from '../types/frame'
+import type {
+  DownlinkState,
+  EarthLinkConfig,
+  EarthLinkPreset,
+  GroundMirror,
+  Message,
+} from '../types/earthlink'
+import type {
+  CrewId,
+  DailyFrame,
+  RadiationFrame,
+  SimTimeMs,
+  VitalsFrame,
+} from '../types/frame'
 import type { DaySchedule, ScheduleDiffItem } from '../types/schedule'
-import { MIN_PER_HOUR, MS_PER_DAY } from '../units'
+import type { StateEstimate } from '../types/state'
+import { MIN_PER_HOUR, minToMs, MS_PER_DAY } from '../units'
 import { ACTION_CATALOG } from './actions'
 import { applyAdjustments, buildBaseSchedule, type ActiveActionInput, type PlannerResult } from './planner'
 import { classify, resolveTimeToHarmMin } from './triage'
@@ -63,6 +77,8 @@ export interface DecisionStageSnapshot {
   hydrationTargetL: number
   schedulesByCrew: Record<CrewId, CrewScheduleOutput>
   earth: EarthLinkState
+  groundMirror: GroundMirror
+  downlink: DownlinkState
   triagedAlerts: Alert[]
 }
 
@@ -188,6 +204,17 @@ export class DecisionStage implements EngineStage {
   private lastSimT: SimTimeMs = 0
   private lastSnapshot: DecisionStageSnapshot | null = null
 
+  // Sürekli telemetri downlink paketleme durumu (earth.downlinkBatchMin)
+  private nextBatchT: SimTimeMs | null = null
+  private hasSeenLive = false
+  private pendingVitals: VitalsFrame[] = []
+  private pendingRadiation: RadiationFrame[] = []
+  private pendingDaily: DailyFrame[] = []
+  private pendingAlertEvents: AlertEvent[] = []
+  private readonly latestMetrics = new Map<string, number>()
+  private latestStates: StateEstimate[] = []
+  private readonly latestCumulativeDoseByCrew = new Map<CrewId, number>()
+
   constructor(opts: DecisionStageOptions = {}) {
     this.evidence = opts.evidence ?? defaultRegistry
     this.scenario = opts.scenario
@@ -219,47 +246,131 @@ export class DecisionStage implements EngineStage {
     this.recordBaselineMedians(ctx)
 
     const hasAlertEvents = (ctx.output.alertEvents?.length ?? 0) > 0
-    if (ctx.isBackfillOnly || (ctx.liveFrames.length === 0 && !hasAlertEvents)) {
+    if (ctx.isBackfillOnly || (ctx.liveFrames.length === 0 && !hasAlertEvents && !this.hasSeenLive)) {
       return
     }
-
+    this.hasSeenLive = true
     this.lastSimT = ctx.simT
 
-    for (const frame of ctx.liveFrames) {
+    if (ctx.output.states && ctx.output.states.length > 0) {
+      this.latestStates = ctx.output.states.map((s) => ({
+        ...s,
+        contributors: s.contributors.map((c) => ({ ...c })),
+      }))
+    }
+    for (const report of ctx.output.moduleReports ?? []) {
+      if (report.module === 'radiation' && typeof report.payload?.cumulativeMissionMsv === 'number') {
+        this.latestCumulativeDoseByCrew.set(report.crewId, report.payload.cumulativeMissionMsv)
+      }
+    }
+
+    const batchIntervalMs = Math.max(1, minToMs(this.evidence.getNumber('earth.downlinkBatchMin')))
+    const sortedFrames = [...ctx.liveFrames].sort((a, b) => a.t - b.t)
+    const sortedEvents = [...(ctx.output.alertEvents ?? [])].sort((a, b) => a.t - b.t)
+
+    if (this.nextBatchT === null) {
+      let minT = ctx.simT
+      if (sortedFrames[0] && sortedFrames[0].t < minT) minT = sortedFrames[0].t
+      if (sortedEvents[0] && sortedEvents[0].t < minT) minT = sortedEvents[0].t
+      this.nextBatchT = Math.max(0, Math.floor(minT / batchIntervalMs) * batchIntervalMs)
+    }
+
+    let frameIdx = 0
+    let eventIdx = 0
+
+    const consumeFrame = (frame: (typeof sortedFrames)[number]): void => {
       if (!this.crewProfiles.has(frame.crewId)) {
         this.crewProfiles.set(frame.crewId, createDefaultCrewProfile(frame.crewId, this.evidence))
       }
+      for (const { metric, value } of extractFrameMetrics(frame)) {
+        this.latestMetrics.set(`${frame.crewId}|${metric}`, value)
+      }
+      if (frame.kind === 'vitals') {
+        this.pendingVitals.push(frame)
+      } else if (frame.kind === 'radiation') {
+        this.pendingRadiation.push(frame)
+      } else if (frame.kind === 'daily') {
+        this.pendingDaily.push(frame)
+      }
     }
 
-    const events = ctx.output.alertEvents ?? []
-    if (events.length > 0) {
-      const eventsByT = new Map<SimTimeMs, typeof events>()
-      for (const ev of events) {
-        const list = eventsByT.get(ev.t)
-        if (list) list.push(ev)
-        else eventsByT.set(ev.t, [ev])
-      }
-      const sortedTimes = [...eventsByT.keys()].sort((a, b) => a - b)
-      for (const t of sortedTimes) {
-        this.applyScenarioLinkEvents(t)
-        const linkConfigAtT = this.earthLink.getConfig()
+    const consumeAlertEvent = (event: AlertEvent): void => {
+      this.applyScenarioLinkEvents(event.t)
+      this.earthLink.tick(event.t)
+      const linkConfigAtT = this.earthLink.getConfig()
+      const result = classify(event.alert, linkConfigAtT, this.evidence)
+      event.alert.earthDelayClass = result.cls
+      event.alert.timeToHarmMin = result.timeToHarmMin
+      this.triagedById.set(event.alert.id, {
+        earthDelayClass: result.cls,
+        timeToHarmMin: result.timeToHarmMin,
+      })
 
-        for (const event of eventsByT.get(t) ?? []) {
-          const result = classify(event.alert, linkConfigAtT, this.evidence)
-          event.alert.earthDelayClass = result.cls
-          event.alert.timeToHarmMin = result.timeToHarmMin
-          this.triagedById.set(event.alert.id, {
-            earthDelayClass: result.cls,
-            timeToHarmMin: result.timeToHarmMin,
-          })
-
-          if (event.type === 'RESOLVED') {
-            this.activeAlerts.delete(event.alert.id)
-          } else {
-            this.activeAlerts.set(event.alert.id, { ...event.alert })
-          }
-        }
+      if (event.type === 'RESOLVED') {
+        this.activeAlerts.delete(event.alert.id)
+      } else {
+        this.activeAlerts.set(event.alert.id, { ...event.alert })
       }
+      this.pendingAlertEvents.push(event)
+    }
+
+    while (this.nextBatchT !== null && this.nextBatchT <= ctx.simT) {
+      const windowEndT: SimTimeMs = this.nextBatchT
+      while (frameIdx < sortedFrames.length && sortedFrames[frameIdx]!.t <= windowEndT) {
+        consumeFrame(sortedFrames[frameIdx]!)
+        frameIdx += 1
+      }
+      while (eventIdx < sortedEvents.length && sortedEvents[eventIdx]!.t <= windowEndT) {
+        consumeAlertEvent(sortedEvents[eventIdx]!)
+        eventIdx += 1
+      }
+
+      this.applyScenarioLinkEvents(windowEndT)
+      this.earthLink.tick(windowEndT)
+      this.reclassifyActiveAlerts(this.earthLink.getConfig())
+
+      for (const alert of this.activeAlerts.values()) {
+        this.earthLink.reportAlert(alert)
+      }
+
+      const hasBatchContent =
+        this.pendingVitals.length > 0 ||
+        this.pendingRadiation.length > 0 ||
+        this.pendingDaily.length > 0 ||
+        this.pendingAlertEvents.length > 0 ||
+        this.latestMetrics.size > 0
+      if (hasBatchContent) {
+        this.earthLink.sendTelemetryBatch(
+          {
+            t: windowEndT,
+            fromT: Math.max(0, windowEndT - batchIntervalMs),
+            vitalsFrames: this.pendingVitals,
+            radiationFrames: this.pendingRadiation,
+            dailyFrames: this.pendingDaily,
+            latest: Object.fromEntries(this.latestMetrics),
+            states: this.latestStates,
+            activeAlerts: [...this.activeAlerts.values()],
+            alertEvents: this.pendingAlertEvents,
+            cumulativeDoseByCrew: Object.fromEntries(this.latestCumulativeDoseByCrew),
+          },
+          windowEndT,
+        )
+        this.pendingVitals = []
+        this.pendingRadiation = []
+        this.pendingDaily = []
+        this.pendingAlertEvents = []
+      }
+
+      this.nextBatchT = windowEndT + batchIntervalMs
+    }
+
+    while (frameIdx < sortedFrames.length) {
+      consumeFrame(sortedFrames[frameIdx]!)
+      frameIdx += 1
+    }
+    while (eventIdx < sortedEvents.length) {
+      consumeAlertEvent(sortedEvents[eventIdx]!)
+      eventIdx += 1
     }
 
     this.applyScenarioLinkEvents(ctx.simT)
@@ -275,6 +386,8 @@ export class DecisionStage implements EngineStage {
     const snapshot = this.buildAndStoreSnapshot(ctx.simT)
     ctx.output.decisions ??= []
     ctx.output.decisions.push(snapshot)
+    ctx.output.groundMirror = snapshot.groundMirror
+    ctx.output.downlink = snapshot.downlink
     ctx.scratch[DECISION_SNAPSHOT_SCRATCH_KEY] = snapshot
     ctx.scratch[DECISION_CARDS_SCRATCH_KEY] = snapshot.cards
     ctx.scratch[EARTH_LINK_STATE_SCRATCH_KEY] = snapshot.earth
@@ -425,6 +538,15 @@ export class DecisionStage implements EngineStage {
     this.auditLog.length = 0
     this.lastSimT = 0
     this.lastSnapshot = null
+    this.nextBatchT = null
+    this.hasSeenLive = false
+    this.pendingVitals = []
+    this.pendingRadiation = []
+    this.pendingDaily = []
+    this.pendingAlertEvents = []
+    this.latestMetrics.clear()
+    this.latestStates = []
+    this.latestCumulativeDoseByCrew.clear()
     this.earthLink = new EarthLink(this.initialEarthLinkOptions)
   }
 
@@ -681,6 +803,7 @@ export class DecisionStage implements EngineStage {
       hydrationTargetL: 0,
     }
 
+    const earth = this.earthLink.getState()
     return {
       t: simT,
       cardsCount: cards.length,
@@ -689,7 +812,9 @@ export class DecisionStage implements EngineStage {
       diff: primary.diff,
       hydrationTargetL: primary.hydrationTargetL,
       schedulesByCrew,
-      earth: this.earthLink.getState(),
+      earth,
+      groundMirror: earth.groundMirror,
+      downlink: earth.downlink,
       triagedAlerts: this.getTriagedAlerts(),
     }
   }

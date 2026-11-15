@@ -177,4 +177,98 @@ describe('EarthLink Simulator (Faz 7 §3.4)', () => {
     ).toThrow(/privacy policy violation/i)
     expect(link.getState().outbox).toHaveLength(0)
   })
+
+  it('sendTelemetryBatch: oneWayDelaySec sonra groundMirror ve downlink güncellenir; kesintide (blackout) kuyrukta bekler ve bağlantı dönünce sırayla ulaşır', () => {
+    const link = new EarthLink({
+      preset: 'MARS_MIN', // 180 sn tek yön
+      initialSimT: 0,
+    })
+
+    // Başlangıçta henüz Dünya'ya ulaşmış veri yok
+    expect(link.getGroundMirror().asOfT).toBeNull()
+    expect(link.getDownlink()).toMatchObject({
+      queued: 0,
+      inFlight: 0,
+      lastDeliveredT: null,
+    })
+
+    const batch0 = link.sendTelemetryBatch(
+      {
+        t: 0,
+        fromT: 0,
+        latest: { 'cdr|hr': 62 },
+        states: [
+          {
+            crewId: 'cdr',
+            state: 'fatigue',
+            t: 0,
+            score: 0.2,
+            confidence: 1,
+            contributors: [],
+          },
+        ],
+        activeAlerts: [],
+        cumulativeDoseByCrew: { cdr: 0.1 },
+      },
+      0,
+    )
+    expect(batch0).not.toBeNull()
+    expect(batch0?.status).toBe('IN_FLIGHT')
+    expect(link.getDownlink().inFlight).toBe(1)
+    expect(link.getGroundMirror().asOfT).toBeNull()
+
+    // oneWayDelaySec (180 sn) tamamlanınca Dünya aynası (groundMirror) güncellenir
+    link.tick(batch0!.arriveT!)
+    expect(link.getGroundMirror()).toMatchObject({
+      asOfT: 0,
+      delaySec: 180,
+      linkUp: true,
+      latest: { 'cdr|hr': 62 },
+      cumulativeDoseByCrew: { cdr: 0.1 },
+    })
+    expect(link.getDownlink()).toMatchObject({
+      queued: 0,
+      inFlight: 0,
+      lastDeliveredT: batch0!.arriveT!,
+    })
+
+    // Kesinti (blackout) başlar: t=15 dk ve t=30 dk paketleri kuyrukta bekler; groundMirror asOfT=0'da sabit kalır
+    link.setBlackout(true, 'SCENARIO')
+    const t15 = minToMs(15)
+    const t30 = minToMs(30)
+    link.tick(t15)
+    link.sendTelemetryBatch({ t: t15, fromT: 0, latest: { 'cdr|hr': 68 } }, t15)
+    link.tick(t30)
+    link.sendTelemetryBatch({ t: t30, fromT: t15, latest: { 'cdr|hr': 74 } }, t30)
+
+    expect(link.getGroundMirror()).toMatchObject({
+      asOfT: 0,
+      linkUp: false,
+      latest: { 'cdr|hr': 62 },
+    })
+    expect(link.getDownlink().queued).toBe(2)
+    expect(link.getDownlink().inFlight).toBe(0)
+
+    // Bağlantı t=45 dk'da geri gelir: paketler sırayla yola çıkar ve oneWayDelaySec sonra sırayla ulaşır
+    const t45 = minToMs(45)
+    link.tick(t45)
+    link.setBlackout(false, 'SCENARIO')
+    expect(link.getGroundMirror().linkUp).toBe(true)
+    expect(link.getDownlink().queued).toBe(0)
+    expect(link.getDownlink().inFlight).toBe(2)
+
+    const recentInFlight = link.getDownlink().recent.filter((r) => r.status === 'IN_FLIGHT')
+    expect(recentInFlight.map((r) => r.createdT)).toEqual([t15, t30])
+    expect(recentInFlight[0]!.arriveT!).toBeLessThan(recentInFlight[1]!.arriveT!)
+
+    // İlk paket (t=15 dk) ulaştığında groundMirror asOfT=t15 olur
+    link.tick(recentInFlight[0]!.arriveT!)
+    expect(link.getGroundMirror().asOfT).toBe(t15)
+    expect(link.getGroundMirror().latest['cdr|hr']).toBe(68)
+
+    // İkinci paket (t=30 dk) ulaştığında groundMirror asOfT=t30 olur
+    link.tick(recentInFlight[1]!.arriveT!)
+    expect(link.getGroundMirror().asOfT).toBe(t30)
+    expect(link.getGroundMirror().latest['cdr|hr']).toBe(74)
+  })
 })

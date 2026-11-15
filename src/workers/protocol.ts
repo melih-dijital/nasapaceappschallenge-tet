@@ -10,7 +10,9 @@ import type {
   Alert,
   AlertEvent,
   CrewId,
+  DownlinkState,
   EarthLinkConfig,
+  GroundMirror,
   MetricId,
   ScenarioId,
   SimTimeMs,
@@ -40,6 +42,10 @@ export interface EngineOutputLite {
   moduleReports?: ModuleReport[]
   /** Faz 7: bu batch'in karar, plan farkı ve Earth Link anlık görüntüleri. */
   decisions?: DecisionSnapshot[]
+  /** Faz 7: Dünya'ya ulaşmış verilerden oluşan gecikmeli görünüm aynası. */
+  groundMirror?: GroundMirror
+  /** Faz 7: Sürekli telemetri ve uyarı downlink kuyruk/uçuş/teslim durumu. */
+  downlink?: DownlinkState
 }
 
 export interface EngineSnapshot {
@@ -54,6 +60,10 @@ export interface EngineSnapshot {
   modules?: Record<CrewId, ModuleReport[]>
   /** Faz 7: son karar, plan farkı ve Earth Link durumu. */
   decision?: DecisionSnapshot
+  /** Faz 7: Dünya'ya ulaşmış verilerden oluşan gecikmeli görünüm aynası. */
+  groundMirror?: GroundMirror
+  /** Faz 7: Sürekli telemetri ve uyarı downlink kuyruk/uçuş/teslim durumu. */
+  downlink?: DownlinkState
 }
 
 export const latestKey = (crewId: CrewId, metric: MetricId): string => `${crewId}|${metric}`
@@ -70,6 +80,8 @@ export type UiToWorkerMessage =
       scenarioId: ScenarioId
       seed?: number
       speed: number
+      /** Varsayılan true: uygulama açılınca simülasyon kendiliğinden başlar. */
+      autoStart?: boolean
       source?: TelemetrySourceChoice
       wsUrl?: string
     }

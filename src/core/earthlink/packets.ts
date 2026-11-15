@@ -1,8 +1,8 @@
 // Earth Link paket oluşturucu (FAZ_07 §3.4):
 // Yalnızca onaylı kategorileri (consentCategories) taşır; journal metni ve ham check-in notları ASLA pakete girmez.
-import type { Alert, WhyKey } from '../types/alert'
-import type { CrewId, SimTimeMs } from '../types/frame'
-import type { StateId } from '../types/state'
+import type { Alert, AlertEvent, WhyKey } from '../types/alert'
+import type { CrewId, DailyFrame, RadiationFrame, SimTimeMs, VitalsFrame } from '../types/frame'
+import type { StateEstimate, StateId } from '../types/state'
 
 export const EARTH_CONSENT_CATEGORIES = [
   'VITALS_SUMMARY',
@@ -118,6 +118,49 @@ export interface DailySummaryPacketPayload {
     pvtLapses?: number
   }
   alertCount?: number
+}
+
+export interface SanitizedDailyFrame {
+  kind: 'daily'
+  t: SimTimeMs
+  crewId: CrewId
+  day: number
+  sleep?: DailyFrame['sleep']
+  activity?: DailyFrame['activity']
+  hydrationL?: number
+  cabinCo2ppm?: number
+  mood?: DailyFrame['mood']
+  pvt?: DailyFrame['pvt']
+  userSubmitted?: boolean
+  source: DailyFrame['source']
+}
+
+export interface TelemetryBatchInput {
+  t: SimTimeMs
+  fromT: SimTimeMs
+  vitalsFrames?: readonly VitalsFrame[]
+  radiationFrames?: readonly RadiationFrame[]
+  dailyFrames?: readonly DailyFrame[]
+  latest?: Record<string, number>
+  states?: readonly StateEstimate[]
+  activeAlerts?: readonly Alert[]
+  alertEvents?: readonly AlertEvent[]
+  cumulativeDoseByCrew?: Record<CrewId, number>
+}
+
+export interface TelemetryBatchPacketPayload {
+  kind: 'TELEMETRY_BATCH'
+  t: SimTimeMs
+  fromT: SimTimeMs
+  consentedCategories: EarthConsentCategory[]
+  vitalsFrames: VitalsFrame[]
+  radiationFrames: RadiationFrame[]
+  dailyFrames: SanitizedDailyFrame[]
+  latest: Record<string, number>
+  states: StateEstimate[]
+  activeAlerts: Alert[]
+  alertEvents: AlertEvent[]
+  cumulativeDoseByCrew: Record<CrewId, number>
 }
 
 function pickVitalsOnly(latest: Record<string, number>): Record<string, number> {
@@ -269,6 +312,188 @@ export function buildDailySummary(
   }
 
   return payload
+}
+
+function sanitizeAlert(alert: Alert): Alert {
+  return {
+    id: alert.id,
+    crewId: alert.crewId,
+    kind: alert.kind,
+    severity: alert.severity,
+    ...(alert.state ? { state: alert.state } : {}),
+    ...(alert.metric ? { metric: alert.metric } : {}),
+    titleKey: alert.titleKey,
+    whyKeys: sanitizeWhyKeys(alert.whyKeys),
+    evidenceIds: [...alert.evidenceIds],
+    suggestedActionIds: [...alert.suggestedActionIds],
+    earthDelayClass: alert.earthDelayClass,
+    ...(alert.timeToHarmMin !== undefined ? { timeToHarmMin: alert.timeToHarmMin } : {}),
+    confidence: alert.confidence,
+    status: alert.status,
+    firstSeenT: alert.firstSeenT,
+    lastSeenT: alert.lastSeenT,
+    ...(alert.ackT !== undefined ? { ackT: alert.ackT } : {}),
+    ...(alert.resolvedT !== undefined ? { resolvedT: alert.resolvedT } : {}),
+  }
+}
+
+function filterLatestByConsent(
+  latest: Record<string, number> | undefined,
+  consent: ReadonlySet<EarthConsentCategory>,
+): Record<string, number> {
+  const out: Record<string, number> = {}
+  if (!latest) return out
+  for (const [key, val] of Object.entries(latest)) {
+    if (PRIVATE_KEY_PATTERN.test(key)) continue
+    if (typeof val !== 'number' || !Number.isFinite(val)) continue
+    if (key.includes('|rad.')) {
+      if (consent.has('RADIATION')) out[key] = val
+    } else if (key.includes('|mood.') || key.includes('|pvt.')) {
+      if (consent.has('BEHAVIOR_SUMMARY')) out[key] = val
+    } else {
+      if (consent.has('VITALS_SUMMARY')) out[key] = val
+    }
+  }
+  return out
+}
+
+function isStateConsented(stateId: StateId, consent: ReadonlySet<EarthConsentCategory>): boolean {
+  if (stateId === 'radiation_event') return consent.has('RADIATION')
+  if (stateId === 'stress' || stateId === 'mood_decline') return consent.has('BEHAVIOR_SUMMARY')
+  return consent.has('VITALS_SUMMARY')
+}
+
+export function buildTelemetryBatchPacket(
+  input: TelemetryBatchInput,
+  consentCategories: readonly EarthConsentCategory[] = EARTH_CONSENT_CATEGORIES,
+): TelemetryBatchPacketPayload | null {
+  const consent = new Set(consentCategories)
+  if (consent.size === 0) return null
+
+  const vitalsFrames: VitalsFrame[] = consent.has('VITALS_SUMMARY')
+    ? (input.vitalsFrames ?? []).map((f) => ({
+        kind: 'vitals',
+        t: f.t,
+        crewId: f.crewId,
+        hr: f.hr,
+        spo2: f.spo2,
+        ...(f.hrv !== undefined ? { hrv: f.hrv } : {}),
+        source: f.source,
+      }))
+    : []
+
+  const radiationFrames: RadiationFrame[] = consent.has('RADIATION')
+    ? (input.radiationFrames ?? []).map((f) => ({
+        kind: 'radiation',
+        t: f.t,
+        crewId: f.crewId,
+        doseRateMsvDay: f.doseRateMsvDay,
+        ...(f.protonFluxPfu !== undefined ? { protonFluxPfu: f.protonFluxPfu } : {}),
+        environment: f.environment,
+        source: f.source,
+      }))
+    : []
+
+  const dailyFrames: SanitizedDailyFrame[] =
+    consent.has('VITALS_SUMMARY') || consent.has('BEHAVIOR_SUMMARY')
+      ? (input.dailyFrames ?? []).map((f) => ({
+          kind: 'daily',
+          t: f.t,
+          crewId: f.crewId,
+          day: f.day,
+          ...(consent.has('VITALS_SUMMARY')
+            ? {
+                sleep: {
+                  durationH: f.sleep.durationH,
+                  efficiency: f.sleep.efficiency,
+                  midpointShiftMin: f.sleep.midpointShiftMin,
+                },
+                activity: {
+                  exerciseMin: f.activity.exerciseMin,
+                  resistiveMin: f.activity.resistiveMin,
+                },
+                hydrationL: f.hydrationL,
+                ...(f.cabinCo2ppm !== undefined ? { cabinCo2ppm: f.cabinCo2ppm } : {}),
+              }
+            : {}),
+          ...(consent.has('BEHAVIOR_SUMMARY')
+            ? {
+                ...(f.mood
+                  ? {
+                      mood: {
+                        stress: f.mood.stress,
+                        mood: f.mood.mood,
+                        motivation: f.mood.motivation,
+                      },
+                    }
+                  : {}),
+                ...(f.pvt
+                  ? {
+                      pvt: {
+                        medianMs: f.pvt.medianMs,
+                        lapses: f.pvt.lapses,
+                      },
+                    }
+                  : {}),
+                ...(f.userSubmitted !== undefined ? { userSubmitted: f.userSubmitted } : {}),
+              }
+            : {}),
+          source: f.source,
+        }))
+      : []
+
+  const states: StateEstimate[] = (input.states ?? [])
+    .filter((s) => isStateConsented(s.state, consent))
+    .map((s) => ({
+      crewId: s.crewId,
+      state: s.state,
+      t: s.t,
+      score: s.score,
+      confidence: s.confidence,
+      contributors: s.contributors.map((c) => ({
+        metric: c.metric,
+        z: c.z,
+        weight: c.weight,
+        contribution: c.contribution,
+      })),
+    }))
+
+  const activeAlerts: Alert[] = consent.has('ALERTS')
+    ? (input.activeAlerts ?? []).map((a) => sanitizeAlert(a))
+    : []
+
+  const alertEvents: AlertEvent[] = consent.has('ALERTS')
+    ? (input.alertEvents ?? []).map((ev) => ({
+        type: ev.type,
+        t: ev.t,
+        alert: sanitizeAlert(ev.alert),
+      }))
+    : []
+
+  const cumulativeDoseByCrew: Record<CrewId, number> = {}
+  if (consent.has('RADIATION') && input.cumulativeDoseByCrew) {
+    for (const [crewId, val] of Object.entries(input.cumulativeDoseByCrew)) {
+      if (PRIVATE_KEY_PATTERN.test(crewId)) continue
+      if (typeof val === 'number' && Number.isFinite(val)) {
+        cumulativeDoseByCrew[crewId] = val
+      }
+    }
+  }
+
+  return {
+    kind: 'TELEMETRY_BATCH',
+    t: input.t,
+    fromT: input.fromT,
+    consentedCategories: EARTH_CONSENT_CATEGORIES.filter((c) => consent.has(c)),
+    vitalsFrames,
+    radiationFrames,
+    dailyFrames,
+    latest: filterLatestByConsent(input.latest, consent),
+    states,
+    activeAlerts,
+    alertEvents,
+    cumulativeDoseByCrew,
+  }
 }
 
 const utf8Encoder = new TextEncoder()

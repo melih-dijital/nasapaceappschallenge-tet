@@ -52,6 +52,8 @@ const DEFAULT_TICK_MS = 100
 
 function toOutputLite(output: EngineOutput, totalDataQualityCount: number, warning?: StorageWarning): EngineOutputLite {
   const lastDecision = output.decisions?.at(-1)
+  const groundMirror = output.groundMirror ?? lastDecision?.groundMirror
+  const downlink = output.downlink ?? lastDecision?.downlink
   return {
     t: output.t,
     ...(output.baselines && output.baselines.length > 0 ? { baselines: output.baselines } : {}),
@@ -60,6 +62,8 @@ function toOutputLite(output: EngineOutput, totalDataQualityCount: number, warni
     ...(output.moduleReports && output.moduleReports.length > 0 ? { moduleReports: output.moduleReports } : {}),
     ...(output.decisions && output.decisions.length > 0 ? { decisions: output.decisions } : {}),
     ...(lastDecision ? { cards: lastDecision.cards } : {}),
+    ...(groundMirror ? { groundMirror } : {}),
+    ...(downlink ? { downlink } : {}),
     dataQualityCount: totalDataQualityCount,
     ...(output.dataQuality.length > 0 ? { dataQuality: output.dataQuality } : {}),
     ...(output.faults.length > 0 ? { faults: output.faults } : {}),
@@ -228,6 +232,9 @@ export function createWorkerHandler<THandle = unknown>(
         if (source && engine) {
           deps.postMessage({ type: 'STATUS', status: source.getStatus() })
           deps.postMessage({ type: 'SNAPSHOT', snapshot: engine.snapshot() })
+          if (msg.autoStart ?? true) {
+            source.start()
+          }
         }
         return
       }
@@ -301,6 +308,8 @@ export function createWorkerHandler<THandle = unknown>(
               alertEvents: [event],
               cards: snap.cards,
               ...(snap.decision ? { decisions: [snap.decision] } : {}),
+              ...(snap.groundMirror ? { groundMirror: snap.groundMirror } : {}),
+              ...(snap.downlink ? { downlink: snap.downlink } : {}),
               dataQualityCount: snap.dataQualityCount,
             },
           })
@@ -316,7 +325,7 @@ export function createWorkerHandler<THandle = unknown>(
         const key = `${msg.crewId}|${day}`
         const existingDayFrame = dailyByCrewDay.get(key)
         const prevFrame = existingDayFrame ?? latestDailyByCrew.get(msg.crewId)
-        const frameT = Math.max(currentSimT, prevFrame?.t ?? currentSimT)
+        const frameT = existingDayFrame ? existingDayFrame.t : Math.max(currentSimT, prevFrame?.t ?? currentSimT)
 
         getCrewSim?.().recordUserSubmission(
           msg.crewId,
@@ -393,6 +402,8 @@ export function createWorkerHandler<THandle = unknown>(
             t: snap.t,
             cards: snap.cards,
             ...(snap.decision ? { decisions: [snap.decision] } : {}),
+            ...(snap.groundMirror ? { groundMirror: snap.groundMirror } : {}),
+            ...(snap.downlink ? { downlink: snap.downlink } : {}),
             dataQualityCount: snap.dataQualityCount,
           },
         })
@@ -409,6 +420,8 @@ export function createWorkerHandler<THandle = unknown>(
             t: snap.t,
             cards: snap.cards,
             ...(snap.decision ? { decisions: [snap.decision] } : {}),
+            ...(snap.groundMirror ? { groundMirror: snap.groundMirror } : {}),
+            ...(snap.downlink ? { downlink: snap.downlink } : {}),
             dataQualityCount: snap.dataQualityCount,
           },
         })
@@ -425,6 +438,8 @@ export function createWorkerHandler<THandle = unknown>(
             t: snap.t,
             cards: snap.cards,
             ...(snap.decision ? { decisions: [snap.decision] } : {}),
+            ...(snap.groundMirror ? { groundMirror: snap.groundMirror } : {}),
+            ...(snap.downlink ? { downlink: snap.downlink } : {}),
             dataQualityCount: snap.dataQualityCount,
           },
         })
@@ -441,6 +456,8 @@ export function createWorkerHandler<THandle = unknown>(
             t: snap.t,
             cards: snap.cards,
             ...(snap.decision ? { decisions: [snap.decision] } : {}),
+            ...(snap.groundMirror ? { groundMirror: snap.groundMirror } : {}),
+            ...(snap.downlink ? { downlink: snap.downlink } : {}),
             dataQualityCount: snap.dataQualityCount,
           },
         })
@@ -457,6 +474,8 @@ export function createWorkerHandler<THandle = unknown>(
             t: snap.t,
             cards: snap.cards,
             ...(snap.decision ? { decisions: [snap.decision] } : {}),
+            ...(snap.groundMirror ? { groundMirror: snap.groundMirror } : {}),
+            ...(snap.downlink ? { downlink: snap.downlink } : {}),
             dataQualityCount: snap.dataQualityCount,
           },
         })
@@ -473,6 +492,8 @@ export function createWorkerHandler<THandle = unknown>(
             t: snap.t,
             cards: snap.cards,
             ...(snap.decision ? { decisions: [snap.decision] } : {}),
+            ...(snap.groundMirror ? { groundMirror: snap.groundMirror } : {}),
+            ...(snap.downlink ? { downlink: snap.downlink } : {}),
             dataQualityCount: snap.dataQualityCount,
           },
         })

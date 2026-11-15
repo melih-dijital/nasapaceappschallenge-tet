@@ -398,6 +398,19 @@
     "scope": "detection.L2"
   },
   {
+    "id": "earth.downlinkBatchMin",
+    "value": 15,
+    "unit": "dk",
+    "sourceType": "DEMO_PARAMETER",
+    "sourceTitle": "DEMO parametreleri — kaynağı olmayan algılama/baseline/earthlink eşikleri",
+    "sourceUrl": "—",
+    "note": "sürekli telemetri downlink paketleme aralığı",
+    "verificationStatus": "UNVERIFIED",
+    "verified": false,
+    "owner": "Kişi B (FAZ_01 başlangıç değerleri)",
+    "scope": "earthlink"
+  },
+  {
     "id": "earth.groundProcessingMin",
     "value": 15,
     "unit": "dk",

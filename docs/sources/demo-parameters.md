@@ -94,6 +94,7 @@ Kaynağı olmayan tüm eşik ve parametreler. Hepsi DEMO_PARAMETER ve UNVERIFIED
 | earth.groundProcessingMin | demo | 15 | dk | UNVERIFIED | earthlink | gidiş-dönüşe eklenen yer ekibi işlem süresi |
 | earth.uplink.kbps | demo | 64 | kbps | UNVERIFIED | earthlink | |
 | earth.outbox.capacity | demo | 200 | mesaj | UNVERIFIED | earthlink | |
+| earth.downlinkBatchMin | demo | 15 | dk | UNVERIFIED | earthlink | sürekli telemetri downlink paketleme aralığı |
 | plan.sleep.durationH | demo | 8 | h | UNVERIFIED | decision.planner | |
 | plan.rest.durationMin | demo | 45 | dk | UNVERIFIED | decision.planner | |
 | plan.sleepShiftMin | demo | 30 | dk | UNVERIFIED | decision.planner | |

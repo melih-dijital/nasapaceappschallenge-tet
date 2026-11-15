@@ -62,6 +62,11 @@ export function applyWorkerMessageToStores(message: WorkerToUiMessage): void {
         decisions.setDecision(lastDecision)
         useEarthLinkStore.getState().applyEarthState(lastDecision.earth)
       }
+      if (message.output.groundMirror || message.output.downlink) {
+        useEarthLinkStore
+          .getState()
+          .applyMirrorAndDownlink(message.output.groundMirror, message.output.downlink)
+      }
       return
     }
     case 'SNAPSHOT':
@@ -75,6 +80,11 @@ export function applyWorkerMessageToStores(message: WorkerToUiMessage): void {
       if (message.snapshot.decision) {
         decisions.setDecision(message.snapshot.decision)
         useEarthLinkStore.getState().applyEarthState(message.snapshot.decision.earth)
+      }
+      if (message.snapshot.groundMirror || message.snapshot.downlink) {
+        useEarthLinkStore
+          .getState()
+          .applyMirrorAndDownlink(message.snapshot.groundMirror, message.snapshot.downlink)
       }
       return
     case 'ERROR':
@@ -181,11 +191,13 @@ export class WorkerEngineClient implements EngineClient {
 export class InProcessEngineClient implements EngineClient {
   private readonly listeners = new Set<EngineListener>()
   private readonly connectStores: boolean
+  private readonly hasCustomScheduler: boolean
   private readonly handler: WorkerHandler
   private disposed = false
 
   constructor(opts: { connectStores?: boolean; scheduler?: IntervalScheduler } = {}) {
     this.connectStores = opts.connectStores ?? true
+    this.hasCustomScheduler = opts.scheduler !== undefined
     const scheduler: IntervalScheduler = opts.scheduler ?? {
       setInterval: (cb, ms) => globalThis.setInterval(cb, ms),
       clearInterval: (id) => globalThis.clearInterval(id as ReturnType<typeof setInterval>),
@@ -212,7 +224,14 @@ export class InProcessEngineClient implements EngineClient {
       useSessionStore.getState().setWorkerStatus('initializing')
       useSessionStore.getState().setScenarioMeta(message.scenarioId, message.seed)
     }
-    this.handler.handleMessage(message)
+    const forwarded: UiToWorkerMessage =
+      message.type === 'INIT' &&
+      message.autoStart === undefined &&
+      !this.hasCustomScheduler &&
+      import.meta.env.MODE === 'test'
+        ? { ...message, autoStart: false }
+        : message
+    this.handler.handleMessage(forwarded)
   }
 
   subscribe(listener: EngineListener): () => void {

@@ -14,6 +14,8 @@ import type {
   Alert,
   AlertEvent,
   CrewId,
+  DownlinkState,
+  GroundMirror,
   MetricId,
   SimTimeMs,
   StateEstimate,
@@ -56,6 +58,8 @@ export interface EngineOutput {
   alertEvents?: AlertEvent[]
   moduleReports?: import('../modules/types').ModuleReport[]
   decisions?: DecisionSnapshot[]
+  groundMirror?: GroundMirror
+  downlink?: DownlinkState
 }
 
 export interface EngineContext {

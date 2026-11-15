@@ -11,7 +11,9 @@ import type {
   AlertEvent,
   CrewId,
   CrewProfile,
+  DownlinkState,
   EarthLinkConfig,
+  GroundMirror,
   Message,
   SimTimeMs,
 } from '../types'
@@ -188,6 +190,25 @@ export class Engine {
         decision = stage.snapshotDecision(this.simT)
       }
     }
+    const groundMirror: GroundMirror = decision
+      ? decision.groundMirror
+      : {
+          asOfT: null,
+          delaySec: this.evidence.getNumber('earth.oneWayDelaySec.mars_min'),
+          linkUp: true,
+          latest: {},
+          activeAlerts: [],
+          states: [],
+          cumulativeDoseByCrew: {},
+        }
+    const downlink: DownlinkState = decision
+      ? decision.downlink
+      : {
+          queued: 0,
+          inFlight: 0,
+          lastDeliveredT: null,
+          recent: [],
+        }
     return {
       t: this.simT,
       latest: this.buffers.getLatestSnapshot(),
@@ -197,6 +218,8 @@ export class Engine {
       dataQualityCount: this.dataQualityCount,
       modules,
       ...(decision ? { decision } : {}),
+      groundMirror,
+      downlink,
     }
   }
 

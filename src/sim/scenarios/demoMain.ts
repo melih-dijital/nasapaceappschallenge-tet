@@ -56,7 +56,7 @@ export const demoMainScenario: Scenario = {
       crewIds: 'ALL',
       fromT: SPE_START,
       toT: SPE_END,
-      oneWayDelaySec: 840,
+      oneWayDelaySec: 1200,
     },
   ],
   expected: [

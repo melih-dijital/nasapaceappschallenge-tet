@@ -12,6 +12,7 @@ export const UiToWorkerMessageSchema = z.discriminatedUnion('type', [
     scenarioId: ScenarioIdSchema,
     seed: finite().optional(),
     speed: finite(),
+    autoStart: z.boolean().optional(),
     source: z.enum(['local', 'ws']).optional(),
     wsUrl: z.string().min(1).optional(),
   }),

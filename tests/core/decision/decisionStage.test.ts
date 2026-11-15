@@ -209,7 +209,7 @@ describe('DecisionStage birim ve motor entegrasyonu', () => {
     expect(decision.getAuditLog().map((a) => a.decision)).toEqual(['ACCEPTED', 'DISMISSED', 'DONE'])
   })
 
-  it('demo_main uçtan uca: SPE + 14 dk gecikmede CRITICAL ACT_NOW, ACT_SHELTER kartı, egzersiz iptali ve yer cevabı akışı', () => {
+  it('demo_main uçtan uca: SPE + 20 dk gecikmede CRITICAL ACT_NOW, ACT_SHELTER kartı (Dünya veriyi görmeden önce), egzersiz iptali ve yer cevabı akışı', () => {
     const { scenario, sim, engine, decision } = buildDecisionPipeline('demo_main')
     engine.ingest(sim.backfill(), 0)
 
@@ -230,7 +230,7 @@ describe('DecisionStage birim ve motor entegrasyonu', () => {
       }
     }
 
-    // SPE başlangıcında EARTH_DELAY (840 sn) devreye girmiş ve CRITICAL radiation_event ACT_NOW olmuş olmalı
+    // SPE başlangıcında EARTH_DELAY (1200 sn = 20 dk tek yön) devreye girmiş ve CRITICAL radiation_event ACT_NOW olmuş olmalı
     const speAlertEvents = speWindowEvents.filter(
       (e) => e.alert.state === 'radiation_event' && e.alert.severity === 'CRITICAL',
     )
@@ -238,10 +238,20 @@ describe('DecisionStage birim ve motor entegrasyonu', () => {
     expect(speAlertEvents.every((e) => e.alert.earthDelayClass === 'ACT_NOW')).toBe(true)
 
     expect(speSnap).toBeDefined()
-    expect(speSnap!.earth.config.oneWayDelaySec).toBe(840)
+    expect(speSnap!.earth.config.oneWayDelaySec).toBe(1200)
     const shelterCard = speSnap!.cards.find((c) => c.actionId === 'ACT_SHELTER')
     expect(shelterCard).toBeDefined()
     expect(shelterCard!.earthDelayClass).toBe('ACT_NOW')
+
+    // Kanıt: yerel kart ve takvim farkı, Dünya henüz 12:30 SPE verisini görmeden (groundMirror.asOfT <= 12:00) ve yer cevabı yokken oluşur
+    expect(speSnap!.groundMirror.asOfT).not.toBeNull()
+    expect(speSnap!.groundMirror.asOfT!).toBeLessThan(speSnap!.t)
+    expect(
+      speSnap!.groundMirror.activeAlerts.some(
+        (a) => a.state === 'radiation_event' && a.severity === 'CRITICAL',
+      ),
+    ).toBe(false)
+    expect(speSnap!.downlink.inFlight).toBeGreaterThan(0)
 
     // Plan diff'inde egzersiz blokları kaldırılmış olmalı
     const crewDiff = speSnap!.schedulesByCrew[shelterCard!.crewId]?.diff ?? []
@@ -258,7 +268,7 @@ describe('DecisionStage birim ve motor entegrasyonu', () => {
       ),
     ).toBe(true)
 
-    // Gidiş-dönüş süresi (2*14 + 15 = 43 dk) + aktarım sonrası yer cevabı inbox'a ulaşır
+    // Gidiş-dönüş süresi (2*20 + 15 = 55 dk) + aktarım sonrası yer cevabı inbox'a ulaşır ve groundMirror SPE uyarısını görür
     const afterRoundTripT = speEvent.fromT + minToMs(180)
     let latestAfterReply: DecisionStageSnapshot | undefined
     for (let t = speEvent.fromT + minToMs(135); t <= afterRoundTripT; t += step) {
@@ -268,6 +278,7 @@ describe('DecisionStage birim ve motor entegrasyonu', () => {
     }
 
     expect(latestAfterReply?.earth.inbox.length).toBeGreaterThan(0)
+    expect(latestAfterReply?.groundMirror.asOfT).toBeGreaterThanOrEqual(speSnap!.t)
     expect(decision.getEarthLink().getState().stats.delivered).toBeGreaterThan(0)
   })
 
@@ -320,5 +331,55 @@ describe('DecisionStage birim ve motor entegrasyonu', () => {
     expect(decision.getTriagedAlerts()).toEqual([])
     expect(decision.getAuditLog()).toEqual([])
     expect(decision.getLastSnapshot()).toBeNull()
+  })
+
+  it('earth.downlinkBatchMin (15 dk) periyoduyla sürekli TELEMETRY_BATCH paketleri üretir ve comm_blackout sırasında kuyrukta bekletip bağlantı dönünce sırayla iletir', () => {
+    const { scenario, sim, engine } = buildDecisionPipeline('comm_blackout')
+    engine.ingest(sim.backfill(), 0)
+
+    const batchMin = registry.getNumber('earth.downlinkBatchMin')
+    expect(batchMin).toBe(15)
+    const step = minToMs(batchMin)
+
+    // İlk 60 dakikada (t = 0, 15, 30, 45, 60 dk) 5 adet TELEMETRY_BATCH paketi üretilmeli
+    let outAt60 = engine.ingest(sim.advanceTo(step), step)
+    for (let t = 2 * step; t <= 4 * step; t += step) {
+      outAt60 = engine.ingest(sim.advanceTo(t), t)
+    }
+
+    const recentAt60 = outAt60.downlink?.recent.filter((r) => r.kind === 'TELEMETRY_BATCH') ?? []
+    expect(recentAt60.map((r) => r.createdT)).toEqual([0, step, 2 * step, 3 * step, 4 * step])
+    expect(outAt60.groundMirror?.linkUp).toBe(true)
+    // comm_blackout MARS_MAX (1320 sn = 22 dk tek yön) kullanır: t=60 dk'da t=30 dk (varış ~52 dk) ulaşmış, t=45 ve t=60 dk yoldadır
+    expect(outAt60.groundMirror?.asOfT).toBe(2 * step)
+
+    // comm_blackout penceresine ilerle
+    const blackoutEvent = scenario.events.find((e) => e.kind === 'COMM_BLACKOUT')!
+    let snapDuringBlackout: DecisionStageSnapshot | undefined
+    for (let t = 5 * step; t <= blackoutEvent.fromT + 4 * step; t += step) {
+      const out = engine.ingest(sim.advanceTo(t), t)
+      snapDuringBlackout = out.decisions?.at(-1)
+    }
+
+    expect(snapDuringBlackout).toBeDefined()
+    expect(snapDuringBlackout!.groundMirror.linkUp).toBe(false)
+    expect(snapDuringBlackout!.downlink.queued).toBeGreaterThanOrEqual(4)
+    // Kesinti boyunca Dünya aynasının son veri zamanı (asOfT) kesinti öncesinde sabit kalır
+    expect(snapDuringBlackout!.groundMirror.asOfT!).toBeLessThan(blackoutEvent.fromT)
+
+    // Kesinti bittikten sonra kuyruktaki paketler sırayla yola çıkar ve oneWayDelaySec sonra groundMirror güncellenir
+    let snapAfterRecovery: DecisionStageSnapshot | undefined
+    for (
+      let t = blackoutEvent.fromT + 5 * step;
+      t <= blackoutEvent.toT + 3 * step;
+      t += step
+    ) {
+      const out = engine.ingest(sim.advanceTo(t), t)
+      snapAfterRecovery = out.decisions?.at(-1)
+    }
+
+    expect(snapAfterRecovery!.groundMirror.linkUp).toBe(true)
+    expect(snapAfterRecovery!.downlink.queued).toBe(0)
+    expect(snapAfterRecovery!.groundMirror.asOfT!).toBeGreaterThanOrEqual(blackoutEvent.toT)
   })
 })

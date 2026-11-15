@@ -265,4 +265,26 @@ Kokpit konsol yeniden tasarımında eklenen arayüz anahtarları (üst çubuk, k
 | `evidence.statusHelp.PARTIAL.term` | Partial | Kısmi |
 | `evidence.statusHelp.CONFLICTING.term` | Conflicting | Çelişkili |
 | `evidence.statusHelp.UNVERIFIED.term` | Unverified / demo | Doğrulanmamış / demo |
+| `evidence.statusHelp.UNVERIFIED.text` | synthetic demo threshold; not a clinical or agency limit. | sentetik demo eşiği; klinik veya ajans limiti değildir. |
 | `evidence.statusHelp.CLINICAL_CONVENTION.term` | Clinical convention | Klinik konvansiyon |
+
+---
+
+## 6. Veri Kalitesi Olay Türleri (`src/core/ingest/dataQuality.ts` — `DataQualityEvent`)
+
+Nominal simülasyon (`nominal`, `demo_main` ve diğer tüm standart senaryolar) sırasında `IngestStage` (`IngestNormalizer` + `DataQualityTracker`) ve `Engine` **hiçbir** `DataQualityEvent` veya `EngineFault` üretmez (`dataQualityCount === 0`):
+- Simülatördeki tüm metrikler `METRIC_META[metric].plausibleMin..plausibleMax` aralığına sıkıştırılır (`clampPlausible`).
+- Çerçeve zaman damgaları (`t`) her `(crewId, kind)` akışında kesin artandır; kullanıcı check-in/PVT güncellemeleri aynı günün `DailyFrame` kaydını `userSubmitted: true` bayrağıyla yerinde günceller.
+- Canlı vitals/radyasyon çerçeveleri her 15 sim-dakikada (`stale.vitals.minutes = 60` dk eşiğinin altında), günlük çerçeveler her 24 sim-saatte (`stale.daily.hours = 48` sa eşiğinin altında) üretilir.
+- Eski kokpit tasarımında metrik kartlarının sağ üst köşesinde görünen `"FAULT"` etiketi motordan gelen bir veri kalitesi hatası değil, sunumcunun sensör arızası enjekte etmesi için konmuş bir tetikleme düğmesiydi; yeni konsol tasarımında bu kontrol `Shift+P` sunumcu çekmecesine (`presenterControls.dataGap` / `"Simulate data gap"`) taşınmış ve yalnızca aktif veri boşluğu varken `cockpit.dataGap` (`"Data gap" / "Veri boşluğu"`) rozeti gösterilecek şekilde güncellenmiştir.
+
+| `DataQualityKind` | Üreten Bileşen | Anlamı ve Tetiklenme Koşulu |
+|---|---|---|
+| `PLAUSIBILITY_REJECTED` | `IngestNormalizer` | Gelen çerçevedeki bir metrik fizyolojik/fiziksel makullük sınırlarının (`plausibleMin..plausibleMax` veya `NaN`/`±Infinity`) dışında kaldığı için çerçeve reddedildi (ör. `hr = 900` veya `spo2 = 200`). |
+| `SCHEMA_INVALID` | `IngestNormalizer` | Gelen ham veri `TelemetryFrameSchema` (Zod) doğrulamasından geçemedi (eksik zorunlu alan, geçersiz `kind` veya tip uyuşmazlığı). |
+| `NON_MONOTONIC_TIME` | `IngestNormalizer` | Aynı `(crewId, kind)` akışında son kabul edilen zaman damgasından (`lastT`) daha eski (`t < lastT`) bir çerçeve geldiği için reddedildi. |
+| `DUPLICATE_FRAME` | `IngestNormalizer` | Aynı `(crewId, kind, t)` anahtarına sahip mükerrer çerçeve geldi ve `userSubmitted: true` olmadığı için bastırıldı. |
+| `STALE_SENSOR` | `DataQualityTracker` | Bir `(crewId, kind)` akışından `stale.vitals.minutes` (60 sim-dk) veya `stale.daily.hours` (48 sim-sa) boyunca yeni çerçeve alınmadı (veri boşluğu / sensör kopması). |
+| `STORAGE_WARNING` | `PersistStage` / `FrameStore` | IndexedDB (`DexieFrameStore`) yazma veya oturum açma hatası oluştu; motor `MemoryFrameStore` yedeğine düşerek kesintisiz çalışmaya devam eder. |
+| `ENGINE_FAULT` | `Engine.ingest` | Boru hattındaki bir aşama (`EngineStage.process`) çalışma zamanında beklenmeyen bir istisna fırlattı; hata yalıtılır ve diğer aşamalar çalışmaya devam eder. |
+

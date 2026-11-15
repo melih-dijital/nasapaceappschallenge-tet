@@ -3,11 +3,13 @@ import {
   buildAlertPacket,
   buildDailySummary,
   buildStatusPacket,
+  buildTelemetryBatchPacket,
   containsForbiddenPrivacyKey,
   EARTH_CONSENT_CATEGORIES,
   estimatePacketBytes,
 } from '@/core/earthlink/packets'
 import type { Alert } from '@/core/types/alert'
+import type { DailyFrame } from '@/core/types/frame'
 
 describe('Earth Link Packets & Privacy Gate (Faz 7 §3.4)', () => {
   const sampleAlert: Alert = {
@@ -90,5 +92,91 @@ describe('Earth Link Packets & Privacy Gate (Faz 7 §3.4)', () => {
     expect(JSON.stringify(daily)).not.toContain('BU_DA_GIRMEMELI')
     expect(daily?.behavior).toEqual({ checkinCompleted: true, moodScore: 60 })
     expect(estimatePacketBytes(daily)).toBeGreaterThan(0)
+  })
+
+  it('buildTelemetryBatchPacket: tüm telemetri türlerini paketler, onay filtrelerine uyar ve derin gizlilik taramasını geçer', () => {
+    const unsafeDaily = {
+      kind: 'daily' as const,
+      t: 900_000,
+      crewId: 'cdr',
+      day: 0,
+      sleep: { durationH: 7.2, efficiency: 0.9, midpointShiftMin: 10 },
+      activity: { exerciseMin: 45, resistiveMin: 30 },
+      hydrationL: 2.4,
+      cabinCo2ppm: 2800,
+      mood: { stress: 4, mood: 7, motivation: 8 },
+      pvt: { medianMs: 260, lapses: 1 },
+      userSubmitted: true,
+      source: 'SYNTHETIC' as const,
+      journalText: 'COK_GIZLI_GUNLUK_ASLA_SIZMAMALI',
+      rawCheckinNote: 'HAM_CHECKIN_NOTU_ASLA_SIZMAMALI',
+      privateNote: 'OZEL_NOT_ASLA_SIZMAMALI',
+    } as unknown as DailyFrame
+
+    const batch = buildTelemetryBatchPacket(
+      {
+        t: 900_000,
+        fromT: 0,
+        vitalsFrames: [
+          { kind: 'vitals', t: 900_000, crewId: 'cdr', hr: 64, spo2: 98, hrv: 54, source: 'SYNTHETIC' },
+        ],
+        radiationFrames: [
+          {
+            kind: 'radiation',
+            t: 900_000,
+            crewId: 'cdr',
+            doseRateMsvDay: 0.42,
+            protonFluxPfu: 1.2,
+            environment: 'MARS_TRANSIT',
+            source: 'SYNTHETIC',
+          },
+        ],
+        dailyFrames: [unsafeDaily],
+        latest: {
+          'cdr|hr': 64,
+          'cdr|rad.doseRateMsvDay': 0.42,
+          'cdr|mood.stress': 4,
+          'cdr|journalSecret': 999,
+        },
+        states: [
+          {
+            crewId: 'cdr',
+            state: 'fatigue',
+            t: 900_000,
+            score: 0.35,
+            confidence: 1,
+            contributors: [{ metric: 'hr', z: 0.5, weight: 0.1, contribution: 0.05 }],
+          },
+        ],
+        activeAlerts: [sampleAlert],
+        alertEvents: [{ type: 'OPENED', t: 900_000, alert: sampleAlert }],
+        cumulativeDoseByCrew: { cdr: 1.25 },
+      },
+      EARTH_CONSENT_CATEGORIES,
+    )
+
+    expect(batch).not.toBeNull()
+    expect(batch?.kind).toBe('TELEMETRY_BATCH')
+    expect(batch?.vitalsFrames).toHaveLength(1)
+    expect(batch?.radiationFrames).toHaveLength(1)
+    expect(batch?.dailyFrames).toHaveLength(1)
+    expect(batch?.states).toHaveLength(1)
+    expect(batch?.activeAlerts).toHaveLength(1)
+    expect(batch?.alertEvents).toHaveLength(1)
+    expect(batch?.cumulativeDoseByCrew).toEqual({ cdr: 1.25 })
+    expect(batch?.latest).toEqual({
+      'cdr|hr': 64,
+      'cdr|rad.doseRateMsvDay': 0.42,
+      'cdr|mood.stress': 4,
+    })
+
+    // Derin gizlilik taraması: hiçbir düğümde journal / rawCheckin / privateNote anahtarı veya değeri bulunmamalı
+    expect(containsForbiddenPrivacyKey(batch)).toBe(false)
+    const serialized = JSON.stringify(batch)
+    expect(serialized).not.toContain('COK_GIZLI_GUNLUK_ASLA_SIZMAMALI')
+    expect(serialized).not.toContain('HAM_CHECKIN_NOTU_ASLA_SIZMAMALI')
+    expect(serialized).not.toContain('OZEL_NOT_ASLA_SIZMAMALI')
+    expect(serialized).not.toContain('GIZLI_GUNLUK_METNI_ASLA_GITMEMELI')
+    expect(serialized).not.toContain('HAM_NOT_ASLA_GITMEMELI')
   })
 })
